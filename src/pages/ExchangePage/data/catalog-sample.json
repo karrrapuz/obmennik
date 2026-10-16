@@ -1,0 +1,482 @@
+[
+  {
+    "id": 1,
+    "name": "Artisan Brick",
+    "collectionId": "6005797617768858105",
+    "model": "#1000",
+    "modelName": "Pro Gamer",
+    "image": "/gifts/models/1.webp",
+    "price": "2.000",
+    "symbol": {
+      "name": "Shuriken",
+      "image": "/gifts/symbols/1.png",
+      "rarity": "0.7%"
+    },
+    "backdrop": {
+      "name": "Black",
+      "rarity": "1.2%",
+      "centerColor": "#363738",
+      "edgeColor": "#0e0f0f",
+      "patternColor": "#6c6868",
+      "textColor": "#8c8f91"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/artisan_brick/pro_gamer.webp",
+    "demo": true
+  },
+  {
+    "id": 2,
+    "name": "Astral Shard",
+    "collectionId": "5933629604416717361",
+    "model": "#1001",
+    "modelName": "Ethereal",
+    "image": "/gifts/models/2.webp",
+    "price": "2.750",
+    "symbol": {
+      "name": "Star",
+      "image": "/gifts/symbols/2.png",
+      "rarity": "0.8%"
+    },
+    "backdrop": {
+      "name": "Electric Purple",
+      "rarity": "1.5%",
+      "centerColor": "#ca70c6",
+      "edgeColor": "#9662d4",
+      "patternColor": "#620fb4",
+      "textColor": "#ebceff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/astral_shard/ethereal.webp",
+    "demo": true
+  },
+  {
+    "id": 3,
+    "name": "B-Day Candle",
+    "collectionId": "5782984811920491178",
+    "model": "#1002",
+    "modelName": "Multicolor",
+    "image": "/gifts/models/3.webp",
+    "price": "3.500",
+    "symbol": {
+      "name": "Star",
+      "image": "/gifts/symbols/3.png",
+      "rarity": "0.4%"
+    },
+    "backdrop": {
+      "name": "Lavender",
+      "rarity": "2%",
+      "centerColor": "#b789e4",
+      "edgeColor": "#8a5abc",
+      "patternColor": "#5b10ab",
+      "textColor": "#e8d1ff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/bday_candle/multicolor.webp",
+    "demo": true
+  },
+  {
+    "id": 4,
+    "name": "Berry Box",
+    "collectionId": "5882252952218894938",
+    "model": "#1003",
+    "modelName": "Rose Gold",
+    "image": "/gifts/models/4.webp",
+    "price": "4.250",
+    "symbol": {
+      "name": "Lips",
+      "image": "/gifts/symbols/4.png",
+      "rarity": "1.1%"
+    },
+    "backdrop": {
+      "name": "Cyberpunk",
+      "rarity": "1%",
+      "centerColor": "#858ff3",
+      "edgeColor": "#865fd3",
+      "patternColor": "#4318a6",
+      "textColor": "#e0d9ff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/berry_box/rose_gold.webp",
+    "demo": true
+  },
+  {
+    "id": 5,
+    "name": "Big Year",
+    "collectionId": "6028283532500009446",
+    "model": "#1004",
+    "modelName": "Frida Kahlo",
+    "image": "/gifts/models/5.webp",
+    "price": "5.000",
+    "symbol": {
+      "name": "Origami",
+      "image": "/gifts/symbols/5.png",
+      "rarity": "0.5%"
+    },
+    "backdrop": {
+      "name": "Electric Indigo",
+      "rarity": "1.5%",
+      "centerColor": "#a980f3",
+      "edgeColor": "#5b62d8",
+      "patternColor": "#3722ab",
+      "textColor": "#d8d8ff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/big_year/frida_kahlo.webp",
+    "demo": true
+  },
+  {
+    "id": 6,
+    "name": "Bling Binky",
+    "collectionId": "5902339509239940491",
+    "model": "#1005",
+    "modelName": "Cthulhu",
+    "image": "/gifts/models/6.webp",
+    "price": "5.750",
+    "symbol": {
+      "name": "Sushi Rolls",
+      "image": "/gifts/symbols/6.png",
+      "rarity": "0.7%"
+    },
+    "backdrop": {
+      "name": "Neon Blue",
+      "rarity": "1.2%",
+      "centerColor": "#7596f9",
+      "edgeColor": "#6862e4",
+      "patternColor": "#2828bc",
+      "textColor": "#cfddff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/bling_binky/cthulhu.webp",
+    "demo": true
+  },
+  {
+    "id": 7,
+    "name": "Bonded Ring",
+    "collectionId": "5870661333703197240",
+    "model": "#1006",
+    "modelName": "Hourglass",
+    "image": "/gifts/models/7.webp",
+    "price": "6.500",
+    "symbol": {
+      "name": "Bonsai",
+      "image": "/gifts/symbols/7.png",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "name": "Navy Blue",
+      "rarity": "1.2%",
+      "centerColor": "#6c9edd",
+      "edgeColor": "#5c6ec9",
+      "patternColor": "#1239a2",
+      "textColor": "#d3e1ff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/bonded_ring/hourglass.webp",
+    "demo": true
+  },
+  {
+    "id": 8,
+    "name": "Bow Tie",
+    "collectionId": "5895544372761461960",
+    "model": "#1007",
+    "modelName": "Football",
+    "image": "/gifts/models/8.webp",
+    "price": "7.250",
+    "symbol": {
+      "name": "Ramen",
+      "image": "/gifts/symbols/8.png",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "name": "Sapphire",
+      "rarity": "1.5%",
+      "centerColor": "#58a3c8",
+      "edgeColor": "#5379c2",
+      "patternColor": "#0d45b6",
+      "textColor": "#c1deff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/bow_tie/football.webp",
+    "demo": true
+  },
+  {
+    "id": 9,
+    "name": "Bunny Muffin",
+    "collectionId": "5935936766358847989",
+    "model": "#1008",
+    "modelName": "Ice Cream",
+    "image": "/gifts/models/9.webp",
+    "price": "8.000",
+    "symbol": {
+      "name": "Lips",
+      "image": "/gifts/symbols/9.png",
+      "rarity": "0.6%"
+    },
+    "backdrop": {
+      "name": "Sky Blue",
+      "rarity": "2%",
+      "centerColor": "#58b4c8",
+      "edgeColor": "#538bc2",
+      "patternColor": "#07609b",
+      "textColor": "#cde8fd"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/bunny_muffin/ice_cream.webp",
+    "demo": true
+  },
+  {
+    "id": 10,
+    "name": "Candy Cane",
+    "collectionId": "6003373314888696650",
+    "model": "#1009",
+    "modelName": "Toxicane",
+    "image": "/gifts/models/10.webp",
+    "price": "8.750",
+    "symbol": {
+      "name": "New Year’s Eve",
+      "image": "/gifts/symbols/10.png",
+      "rarity": "2.4%"
+    },
+    "backdrop": {
+      "name": "Azure Blue",
+      "rarity": "1%",
+      "centerColor": "#5db1cb",
+      "edgeColor": "#448bab",
+      "patternColor": "#025074",
+      "textColor": "#b5ecff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/candy_cane/toxicane.webp",
+    "demo": true
+  },
+  {
+    "id": 11,
+    "name": "Clover Pin",
+    "collectionId": "5960747083030856414",
+    "model": "#1010",
+    "modelName": "Crystal Hearts",
+    "image": "/gifts/models/11.webp",
+    "price": "9.500",
+    "symbol": {
+      "name": "Shuriken",
+      "image": "/gifts/symbols/11.png",
+      "rarity": "0.4%"
+    },
+    "backdrop": {
+      "name": "Pacific Cyan",
+      "rarity": "1.2%",
+      "centerColor": "#5abea6",
+      "edgeColor": "#3d95ba",
+      "patternColor": "#02648d",
+      "textColor": "#b6efff"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/clover_pin/crystal_hearts.webp",
+    "demo": true
+  },
+  {
+    "id": 12,
+    "name": "Cookie Heart",
+    "collectionId": "6001538689543439169",
+    "model": "#1011",
+    "modelName": "Midsummer",
+    "image": "/gifts/models/12.webp",
+    "price": "10.250",
+    "symbol": {
+      "name": "Hot Drink",
+      "image": "/gifts/symbols/12.png",
+      "rarity": "0.8%"
+    },
+    "backdrop": {
+      "name": "Aquamarine",
+      "rarity": "2%",
+      "centerColor": "#60b195",
+      "edgeColor": "#46abb4",
+      "patternColor": "#035f67",
+      "textColor": "#c7fdfe"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/cookie_heart/midsummer.webp",
+    "demo": true
+  },
+  {
+    "id": 13,
+    "name": "Crystal Ball",
+    "collectionId": "5841336413697606412",
+    "model": "#1012",
+    "modelName": "Silver",
+    "image": "/gifts/models/13.webp",
+    "price": "11.000",
+    "symbol": {
+      "name": "Spooky Cat",
+      "image": "/gifts/symbols/13.png",
+      "rarity": "2.4%"
+    },
+    "backdrop": {
+      "name": "Pacific Green",
+      "rarity": "1%",
+      "centerColor": "#6fc793",
+      "edgeColor": "#3b9c84",
+      "patternColor": "#006149",
+      "textColor": "#c6fff0"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/crystal_ball/silver.webp",
+    "demo": true
+  },
+  {
+    "id": 14,
+    "name": "Cupid Charm",
+    "collectionId": "5868561433997870501",
+    "model": "#1013",
+    "modelName": "Ruby Red",
+    "image": "/gifts/models/14.webp",
+    "price": "11.750",
+    "symbol": {
+      "name": "Tetsubin",
+      "image": "/gifts/symbols/14.png",
+      "rarity": "0.7%"
+    },
+    "backdrop": {
+      "name": "Emerald",
+      "rarity": "1%",
+      "centerColor": "#78c585",
+      "edgeColor": "#42a171",
+      "patternColor": "#006532",
+      "textColor": "#b9f9d9"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/cupid_charm/ruby_red.webp",
+    "demo": true
+  },
+  {
+    "id": 15,
+    "name": "Desk Calendar",
+    "collectionId": "5782988952268964995",
+    "model": "#1014",
+    "modelName": "Crunch Time",
+    "image": "/gifts/models/15.webp",
+    "price": "12.500",
+    "symbol": {
+      "name": "Candy",
+      "image": "/gifts/symbols/15.png",
+      "rarity": "0.5%"
+    },
+    "backdrop": {
+      "name": "Mint Green",
+      "rarity": "1.5%",
+      "centerColor": "#7ecb82",
+      "edgeColor": "#459e5a",
+      "patternColor": "#026b22",
+      "textColor": "#bdffcc"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/desk_calendar/crunch_time.webp",
+    "demo": true
+  },
+  {
+    "id": 16,
+    "name": "Diamond Ring",
+    "collectionId": "5868503709637411929",
+    "model": "#1015",
+    "modelName": "Copper Rose",
+    "image": "/gifts/models/16.webp",
+    "price": "13.250",
+    "symbol": {
+      "name": "Two Katanas",
+      "image": "/gifts/symbols/16.png",
+      "rarity": "0.5%"
+    },
+    "backdrop": {
+      "name": "Malachite",
+      "rarity": "1.5%",
+      "centerColor": "#95b457",
+      "edgeColor": "#3d9755",
+      "patternColor": "#046b06",
+      "textColor": "#c2efbe"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/diamond_ring/copper_rose.webp",
+    "demo": true
+  },
+  {
+    "id": 17,
+    "name": "Easter Egg",
+    "collectionId": "5773668482394620318",
+    "model": "#1016",
+    "modelName": "Choco Bunny",
+    "image": "/gifts/models/17.webp",
+    "price": "14.000",
+    "symbol": {
+      "name": "Two Katanas",
+      "image": "/gifts/symbols/17.png",
+      "rarity": "0.3%"
+    },
+    "backdrop": {
+      "name": "Shamrock Green",
+      "rarity": "1%",
+      "centerColor": "#8ab163",
+      "edgeColor": "#559345",
+      "patternColor": "#126b00",
+      "textColor": "#d5fbc8"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/easter_egg/choco_bunny.webp",
+    "demo": true
+  },
+  {
+    "id": 18,
+    "name": "Electric Skull",
+    "collectionId": "5846192273657692751",
+    "model": "#1017",
+    "modelName": "Nightfall",
+    "image": "/gifts/models/18.webp",
+    "price": "14.750",
+    "symbol": {
+      "name": "Teru Bōzu",
+      "image": "/gifts/symbols/18.png",
+      "rarity": "0.4%"
+    },
+    "backdrop": {
+      "name": "Lemongrass",
+      "rarity": "1.2%",
+      "centerColor": "#aeb85a",
+      "edgeColor": "#559345",
+      "patternColor": "#466a07",
+      "textColor": "#d8f2c2"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/electric_skull/nightfall.webp",
+    "demo": true
+  },
+  {
+    "id": 19,
+    "name": "Eternal Candle",
+    "collectionId": "5821205665758053411",
+    "model": "#1018",
+    "modelName": "Tortuga",
+    "image": "/gifts/models/19.webp",
+    "price": "15.500",
+    "symbol": {
+      "name": "Cauldron",
+      "image": "/gifts/symbols/19.png",
+      "rarity": "1.8%"
+    },
+    "backdrop": {
+      "name": "Light Olive",
+      "rarity": "2%",
+      "centerColor": "#c2af64",
+      "edgeColor": "#887e45",
+      "patternColor": "#594c04",
+      "textColor": "#f5ebbc"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/eternal_candle/tortuga.webp",
+    "demo": true
+  },
+  {
+    "id": 20,
+    "name": "Eternal Rose",
+    "collectionId": "5882125812596999035",
+    "model": "#1019",
+    "modelName": "Halftone",
+    "image": "/gifts/models/20.webp",
+    "price": "16.250",
+    "symbol": {
+      "name": "Lovebirds",
+      "image": "/gifts/symbols/20.png",
+      "rarity": "1.1%"
+    },
+    "backdrop": {
+      "name": "Satin Gold",
+      "rarity": "2%",
+      "centerColor": "#bf9b47",
+      "edgeColor": "#8d7739",
+      "patternColor": "#5d3b00",
+      "textColor": "#fee4a9"
+    },
+    "source": "https://raw.githubusercontent.com/ssamy2/TelegramGiftsAssests/main/models/eternal_rose/halftone.webp",
+    "demo": true
+  }
+]

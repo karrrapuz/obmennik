@@ -1,0 +1,53 @@
+.shortage-notice {
+  box-sizing: border-box;
+  width: 200px;
+  height: 40px;
+  border-radius: 15px;
+  background: rgba(47, 47, 47, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-18px);
+  transition: opacity 280ms ease, transform 280ms cubic-bezier(.22,1,.36,1), background-color 180ms ease;
+}
+
+.shortage-notice[data-glass='false'] {
+  background: #191919;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.shortage-notice[data-visible='true'] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shortage-notice__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  font: 600 12px/18px 'Onest', Arial, sans-serif;
+}
+
+.shortage-notice__amount {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #06d7a0;
+  font-variant-numeric: tabular-nums;
+}
+
+.shortage-notice__ton {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  background: #06d7a0;
+  -webkit-mask: url('../../../../assets/ton.svg') center / contain no-repeat;
+  mask: url('../../../../assets/ton.svg') center / contain no-repeat;
+}

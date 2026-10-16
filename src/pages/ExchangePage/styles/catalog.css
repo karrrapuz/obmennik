@@ -1,0 +1,366 @@
+/* Каталог: начало на y=322, внутри exchange-content с y=178 */
+.exchange-catalog {
+  position: relative;
+  margin-top: 78px;
+  width: 100%;
+  min-height: 522px;
+  padding: 16px 16px 190px;
+  background: #131313;
+  border-radius: 20px 20px 0 0;
+}
+
+/* Поиск и две кнопки: 242 + 12 + 46 + 12 + 46 */
+.exchange-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px 46px;
+  gap: 12px;
+  height: 46px;
+}
+
+.exchange-search,
+.exchange-icon-button {
+  display: flex;
+  height: 46px;
+  align-items: center;
+  background: #0d0d0d;
+  border: 0;
+  border-radius: 20px;
+}
+
+.exchange-search {
+  gap: 10px;
+  padding: 14px 20px 14px 16px;
+}
+
+.exchange-search img {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.exchange-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+}
+
+.exchange-search input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.exchange-search:focus-within {
+  outline: 1px solid #06d7a0;
+}
+
+.exchange-icon-button {
+  position: relative;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.exchange-icon-button__count {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 21px;
+  background: rgba(44, 91, 78, 0.1);
+  backdrop-filter: blur(5px);
+  color: #06d7a0;
+  font: 600 10px/18px 'Onest', Arial, sans-serif;
+}
+
+.exchange-clear-actions {
+  display: grid;
+  grid-template-columns: 160px 186px;
+  gap: 12px;
+  height: 40px;
+  margin-top: 8px;
+}
+
+.exchange-clear-actions button {
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 17px;
+  background: #0d0d0d;
+  color: #fff;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.exchange-clear-actions__sort {
+  grid-column: 2;
+}
+
+.exchange-icon-button img {
+  width: 14px;
+  height: 16px;
+}
+
+.exchange-icon-button:last-child img {
+  width: 16px;
+  height: 12px;
+}
+
+/* Карточки: x=16/201, y=74/289 относительно панели */
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.exchange-empty {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 320px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.exchange-empty strong,
+.exchange-empty p {
+  position: absolute;
+  left: 50%;
+  width: 190px;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.exchange-empty strong {
+  font-weight: 600;
+}
+
+.exchange-empty p {
+  font-weight: 500;
+}
+
+.exchange-empty--inventory strong {
+  top: 208px;
+}
+
+.exchange-empty--inventory p {
+  top: 230px;
+  width: 170px;
+}
+
+.exchange-empty--results strong {
+  top: 219px;
+  width: 170px;
+}
+
+.exchange-empty button,
+.exchange-empty__action {
+  position: absolute;
+  top: 263px;
+  left: 50%;
+  display: grid;
+  width: 115px;
+  height: 40px;
+  place-items: center;
+  transform: translateX(-50%);
+  border: 0;
+  border-radius: 17px;
+  background: rgba(44, 91, 78, 0.1);
+  color: #06d7a0;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+}
+
+.exchange-empty button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.exchange-empty--inventory .exchange-empty__action {
+  top: 274px;
+}
+
+.gift-card {
+  position: relative;
+  height: 203px;
+  overflow: hidden;
+  background: #0d0d0d;
+  border-radius: 20px;
+}
+
+.gift-card__visual {
+  position: relative;
+  height: 173px;
+  overflow: hidden;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* Вся карточка открывает подробности, плюсик остаётся отдельным действием */
+.gift-card__details {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gift-card__details:focus-visible {
+  outline: 2px solid #06d7a0;
+  outline-offset: -2px;
+}
+
+.gift-card__price {
+  pointer-events: none;
+}
+
+.gift-card__backdrop {
+  position: absolute;
+  top: -34px;
+  left: -34px;
+  width: 240px;
+  height: 240px;
+  opacity: 0.08;
+}
+
+.gift-card__icon {
+  position: absolute;
+  top: 37px;
+  left: 37px;
+  width: 100px;
+  height: 100px;
+}
+
+/* Стеклянная подпись внизу изображения */
+.gift-card__meta {
+  position: absolute;
+  top: 126px;
+  left: 0;
+  width: 173px;
+  height: 47px;
+  background: linear-gradient(360deg, rgba(13, 13, 13, 0.2), rgba(13, 13, 13, 0));
+  -webkit-backdrop-filter: blur(7.8px);
+  backdrop-filter: blur(7.8px);
+  border-radius: 0 0 20px 20px;
+}
+
+.gift-card__meta strong {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  height: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  right: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exchange-catalog__status {
+  padding: 48px 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.exchange-catalog__status button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #0d0d0d;
+  color: #06d7a0;
+  cursor: pointer;
+}
+
+.gift-card__meta div > span {
+  position: absolute;
+  top: 28px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  height: 7px;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+/* Выбор подарка в правом верхнем углу карточки */
+.gift-card__select {
+  pointer-events: auto;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 9px;
+  background: rgba(13, 13, 13, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.gift-card__select > img:first-child {
+  width: 16px;
+  height: 16px;
+}
+
+.gift-card__status {
+  position: absolute;
+  top: -3px;
+  left: 22px;
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  background: rgba(44, 91, 78, 0.1);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border-radius: 21px;
+}
+
+.gift-card__status img {
+  width: 6px;
+  height: 5px;
+}
+
+/* Цена: центр строки на y=188 */
+.gift-card__price {
+  position: absolute;
+  top: 183px;
+  left: 60px;
+  display: flex;
+  width: 53px;
+  height: 10px;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.gift-card__price img {
+  width: 10px;
+  height: 10px;
+  flex: none;
+}

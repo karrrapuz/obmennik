@@ -1,0 +1,16 @@
+#root {
+  min-height: 100svh;
+  background: #0d0d0d;
+}
+
+.app-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell__main {
+  width: min(100%, 1120px);
+  flex: 1;
+  margin: 0 auto;
+}

@@ -1,0 +1,478 @@
+.profile-modal-layer {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  background: rgba(13, 13, 13, 0);
+  backdrop-filter: blur(0);
+  transition: background 300ms ease, backdrop-filter 300ms ease;
+}
+
+.profile-modal-layer[data-visible='true'] {
+  background: rgba(13, 13, 13, 0.5);
+  backdrop-filter: blur(15px);
+}
+
+.profile-modal-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+}
+
+.profile-modal {
+  position: absolute;
+  bottom: 0;
+  width: min(100%, 390px);
+  height: min(728px, calc(100dvh - 24px));
+  color: #fff;
+  font-family: 'Onest', Arial, sans-serif;
+  transform: translateY(100%);
+  transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1), height 300ms ease;
+}
+
+.profile-modal[data-short='true'] {
+  height: min(328px, calc(100dvh - 24px));
+}
+
+.profile-modal[data-kind='withdraw-choice'] { height: min(252px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='deposit-choice'] { height: min(330px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='withdraw-amount'],
+.profile-modal[data-kind='deposit-amount'],
+.profile-modal[data-kind='result-success'],
+.profile-modal[data-kind='result-error'] { height: min(328px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='gift-result-success'],
+.profile-modal[data-kind='gift-deposit'],
+.profile-modal[data-kind='gift-result-error'],
+.profile-modal[data-kind='gift-empty'] { height: min(352px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='crypto-amount'] { height: min(246px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='crypto-amount'] .balance-withdraw__input { top: 0; }
+.profile-modal__gift-deposit { position: absolute; top: 130px; left: 50%; width: 208px; transform: translateX(-50%); text-align: center; }
+.profile-modal__gift-deposit p { margin: 0 0 12px; font: 500 14px/18px 'Onest', Arial, sans-serif; }
+.profile-modal__gift-deposit button { width: 115px; height: 40px; border: 0; border-radius: 17px; background: rgba(44,91,78,0.1); color: #06d7a0; font: 600 14px/18px 'Onest', Arial, sans-serif; cursor: pointer; }
+.profile-modal[data-kind='gift-result-error'] .profile-modal__result-icon { background: rgba(137,36,38,0.1); }
+.profile-modal[data-kind^='gift-result-'] .profile-modal__result p { top: 134px; max-width: 294px; margin: 0 auto; max-height: 48px; overflow: auto; }
+.profile-modal__recipient {
+  position: absolute; top: 78px; left: calc(50% - 68px); display: flex; align-items: center;
+  width: 136px; height: 46px; gap: 7px; padding: 10px 12px; border-radius: 20px;
+  background: #0d0d0d; font: 600 12px/18px 'Onest', Arial, sans-serif;
+}
+.profile-modal__recipient img { width: 26px; height: 26px; border-radius: 16px; }
+.profile-modal__gift-grid {
+  position: absolute; top: 164px; bottom: 102px; left: 16px; right: 16px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start;
+  gap: 12px; overflow-y: auto; scrollbar-width: none;
+}
+.profile-modal__empty-gifts { position: absolute; top: 114px; left: calc(50% - 85px); width: 170px; text-align: center; font: 500 14px/18px 'Onest', Arial, sans-serif; }
+.profile-modal__empty-gifts strong { display: block; font-weight: 600; }
+.profile-modal__empty-gifts p { margin: 8px 0 12px; }
+.profile-modal__empty-gifts button { width: 115px; height: 40px; border: 0; border-radius: 17px; background: rgba(44,91,78,0.1); color: #06d7a0; font: 600 14px/18px 'Onest', Arial, sans-serif; cursor: pointer; }
+.profile-modal .profile-modal__bottom--glass { background: rgba(47,47,47,0.2); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); }
+
+.profile-modal::before {
+  position: absolute;
+  inset: 0;
+  background: #131313;
+  content: '';
+  -webkit-mask: url('../../../ExchangePage/components/GiftDetailsModal/assets/sheet-mask.svg') top center / 100% 728px no-repeat;
+  mask: url('../../../ExchangePage/components/GiftDetailsModal/assets/sheet-mask.svg') top center / 100% 728px no-repeat;
+  pointer-events: none;
+}
+
+.profile-modal-layer[data-visible='true'] .profile-modal {
+  transform: translateY(0);
+}
+
+.profile-modal__handle {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: calc(50% - 49px);
+  width: 98px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.profile-modal__header {
+  position: relative;
+  height: 78px;
+}
+
+.profile-modal__header h2 {
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.profile-modal__close,
+.profile-modal__back {
+  position: absolute;
+  top: 16px;
+  display: grid;
+  width: 40px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: #0d0d0d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.profile-modal__close {
+  right: 16px;
+}
+
+.profile-modal__back {
+  left: 16px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.profile-modal__close img {
+  width: 8px;
+  height: 8px;
+}
+
+.profile-modal__choices {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: 0 16px;
+}
+
+.profile-modal__choices button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  grid-template-rows: 25px 25px;
+  column-gap: 10px;
+  width: 100%;
+  min-height: 66px;
+  align-items: center;
+  padding: 8px;
+  border: 0;
+  border-radius: 20px;
+  background: #0d0d0d;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-modal__choices img {
+  grid-row: 1 / 3;
+  width: 50px;
+  height: 50px;
+  padding: 8px;
+  border-radius: 17px;
+  background: #131313;
+}
+
+.profile-modal__choices button::after {
+  position: absolute; right: 17px; top: 27px;
+  width: 8px; height: 8px; border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-right: 2px solid rgba(255, 255, 255, 0.2); transform: rotate(45deg); content: '';
+}
+
+.profile-modal__choices span {
+  align-self: end;
+  line-height: 18px;
+  grid-column: 2;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-modal__choices small {
+  align-self: start;
+  line-height: 18px;
+  grid-column: 2;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+}
+
+.profile-modal__message {
+  position: relative;
+  display: flex;
+  min-height: calc(100% - 78px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 30px 60px;
+  text-align: center;
+}
+
+/* Не подключён кошелёк: сообщение по центру окна, кнопка внизу. */
+.profile-modal__wallet-warning {
+  position: absolute;
+  inset: 78px 16px 30px;
+}
+
+.profile-modal__wallet-warning p {
+  position: absolute;
+  top: 86px;
+  left: 50%;
+  width: 170px;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  text-align: center;
+  font: 500 14px/18px 'Onest', Arial, sans-serif;
+}
+
+.profile-modal__wallet-warning button {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: rgba(47, 47, 47, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  color: #fff;
+  font: 600 16px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.profile-modal__message h3,
+.profile-modal__message p {
+  margin: 0;
+}
+
+.profile-modal__message h3 {
+  font-size: 18px;
+}
+
+.profile-modal__message p {
+  max-width: 270px;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.profile-modal__message button,
+.profile-modal__form > button,
+.profile-modal__result button {
+  min-width: 173px;
+  height: 56px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 20px;
+  background: #06d7a0;
+  color: #fff;
+  font: 600 16px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.profile-modal__form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 16px;
+}
+
+.profile-modal__account {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: #0d0d0d;
+  font-size: 14px;
+}
+
+.profile-modal__account img {
+  width: 22px;
+  height: 22px;
+}
+
+.profile-modal__available {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.profile-modal__form label {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-radius: 20px;
+  background: #0d0d0d;
+  font-size: 14px;
+}
+
+.profile-modal__form input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+}
+
+.profile-modal__form input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.profile-modal__form > button {
+  align-self: stretch;
+  margin-top: 10px;
+}
+
+.profile-modal__form > button:disabled,
+.profile-modal__bottom:disabled {
+  background: rgba(47, 47, 47, 0.2);
+  color: rgba(255, 255, 255, 0.2);
+  cursor: default;
+}
+
+.profile-modal__gift-list {
+  position: relative;
+  display: grid;
+  max-height: calc(100% - 180px);
+  align-content: start;
+  gap: 12px;
+  margin: 0 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.profile-modal__gift {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 125px;
+  grid-template-columns: 125px 1fr;
+  grid-template-rows: 32px 25px 1fr;
+  gap: 0 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #0d0d0d;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-modal__gift > span {
+  grid-row: 1 / 4;
+  display: grid;
+  width: 125px;
+  height: 125px;
+  place-items: center;
+  border-radius: 20px;
+  background: rgba(47, 47, 47, 0.2);
+}
+
+.profile-modal__gift > span img {
+  width: 80px;
+  height: 80px;
+}
+
+.profile-modal__gift strong {
+  align-self: end;
+  font-size: 16px;
+}
+
+.profile-modal__gift small {
+  align-self: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 14px;
+}
+
+.profile-modal__gift em {
+  align-self: start;
+  width: max-content;
+  padding: 10px;
+  border-radius: 17px;
+  background: #131313;
+  font-size: 14px;
+  font-style: normal;
+}
+
+.profile-modal__gift[aria-pressed='true'] {
+  outline: 1px solid #06d7a0;
+}
+
+.profile-modal__bottom {
+  position: absolute;
+  right: 16px;
+  bottom: 30px;
+  left: 16px;
+  height: 56px;
+  border: 0;
+  border-radius: 20px;
+  background: #06d7a0;
+  color: #fff;
+  font: 600 16px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.profile-modal__result { position: absolute; inset: 78px 16px 30px; text-align: center; }
+.profile-modal__result-icon {
+  display: grid; place-items: center; width: 124px; height: 124px;
+  margin: 0 auto; border-radius: 40px; background: rgba(44, 91, 78, 0.1);
+}
+.profile-modal[data-kind='result-error'] .profile-modal__result-icon { background: rgba(137, 36, 38, 0.1); }
+.profile-modal__result-icon img { width: auto; height: 116px; }
+.profile-modal__result p {
+  position: absolute; top: 133px; left: 0; right: 0; margin: 0;
+  color: rgba(255, 255, 255, 0.2); font: 500 14px/18px 'Onest', Arial, sans-serif;
+}
+.profile-modal__result button {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  background: rgba(47, 47, 47, 0.2); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
+}
+
+/* Иконки выбора способа: плашка 50, круг 34, сам знак 14 px. */
+.profile-modal__choice-icon {
+  grid-row: 1 / 3; display: grid; place-items: center;
+  width: 50px; height: 50px; border-radius: 17px; background: #131313;
+}
+.profile-modal__choice-icon > i {
+  display: grid; place-items: center; width: 34px; height: 34px;
+  border-radius: 50%; background: rgba(44, 91, 78, 0.1);
+}
+.profile-modal__choices .profile-modal__choice-icon img { width: 14px; height: 14px; padding: 0; border-radius: 0; background: none; }
+.profile-modal__choices button:first-child .profile-modal__choice-icon img { height: 13px; }
+.profile-modal__choices .profile-modal__choice-icon--crypto img { width: 22px; height: 12px; }
+
+/* Баланс: кошелёк, сумма и действие в окне высотой 328 px. */
+.balance-withdraw { position: absolute; inset: 78px 16px 30px; }
+.balance-withdraw__wallet {
+  display: flex; align-items: center; gap: 7px; width: 188px; height: 46px;
+  margin: 0 auto; padding: 10px 12px; border-radius: 20px; background: #0d0d0d;
+  font: 600 12px/18px 'Onest', Arial, sans-serif;
+}
+.balance-withdraw__wallet > span:first-child { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 50%; background: #0fbd8f; }
+.balance-withdraw__wallet img { width: 12px; height: 11px; }
+.balance-withdraw__input {
+  position: absolute; top: 62px; left: 0; right: 0; display: flex; align-items: center;
+  gap: 10px; height: 66px; padding: 8px 16px 8px 8px; border-radius: 20px; background: #0d0d0d;
+}
+.balance-withdraw__coin { display: grid; place-items: center; flex: none; width: 50px; height: 50px; border-radius: 17px; background: #131313; }
+.balance-withdraw__coin i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #587ffe; }
+.balance-withdraw__coin img { width: 13.85px; height: 13.85px; transform: translateY(1.15px); }
+.balance-withdraw input { width: 0; flex: 1; min-width: 0; border: 0; padding: 0; outline: none; background: transparent; color: #fff; font: 600 16px/18px 'Onest', Arial, sans-serif; }
+.balance-withdraw input::placeholder, .balance-withdraw input:disabled { color: rgba(255,255,255,0.2); -webkit-text-fill-color: rgba(255,255,255,0.2); opacity: 1; }
+.balance-withdraw small { flex: none; max-width: 46%; color: rgba(255,255,255,0.2); text-align: right; font: 500 12px/18px 'Onest', Arial, sans-serif; }
+.balance-withdraw__available { position: absolute; top: 135px; left: 0; right: 0; margin: 0; text-align: center; color: rgba(255,255,255,0.2); font: 500 12px/18px 'Onest', Arial, sans-serif; }
+.balance-withdraw > button { position: absolute; bottom: 0; left: 0; width: 100%; height: 56px; padding: 0; border: 0; border-radius: 20px; background: #06d7a0; color: #fff; font: 600 16px/18px 'Onest', Arial, sans-serif; cursor: pointer; }
+.balance-withdraw > button:disabled { background: rgba(47,47,47,0.2); color: rgba(255,255,255,0.2); backdrop-filter: blur(15px); cursor: default; }
+.balance-withdraw__dots { display: inline-block; animation: balance-dots 1.2s steps(4, end) infinite; }
+@keyframes balance-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33.333% 0 0); } }

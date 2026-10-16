@@ -1,0 +1,428 @@
+/* Выезжающее окно подарка */
+.gift-details {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: transparent;
+  color: #fff;
+  font-family: 'Onest', Arial, sans-serif;
+}
+
+.gift-details::backdrop {
+  background: transparent;
+}
+
+.gift-details__scrim {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(13, 13, 13, 0.5);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 300ms ease;
+}
+
+.gift-details[data-visible='true'] .gift-details__scrim {
+  opacity: 1;
+}
+
+.gift-details__sheet {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  width: min(390px, 100%);
+  height: min(728px, calc(100dvh - min(116px, 15dvh)));
+  overflow: hidden;
+  background: transparent;
+  transform: translate3d(-50%, calc(100% + 24px), 0);
+  transform-origin: 50% 100%;
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Та же форма Subtract, что используется у остальных модалок */
+.gift-details__sheet::before {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #131313;
+  content: '';
+  -webkit-mask: url('./assets/sheet-mask.svg') top center / 100% 100% no-repeat;
+  mask: url('./assets/sheet-mask.svg') top center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.gift-details[data-visible='true'] .gift-details__sheet {
+  transform: translate3d(-50%, 0, 0);
+}
+
+.gift-details button {
+  border: 0;
+  color: inherit;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.gift-details button:focus-visible {
+  outline: 2px solid #06d7a0;
+  outline-offset: 3px;
+}
+
+.gift-details__header {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 56px;
+}
+
+.gift-details__handle {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 49px);
+  width: 98px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gift-details__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 40px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  border-radius: 11px;
+  background: #0d0d0d;
+}
+
+.gift-details__close img {
+  width: 8px;
+  height: 8px;
+}
+
+.gift-details__scroll {
+  position: absolute;
+  z-index: 1;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 0 16px;
+  scroll-padding-bottom: 102px;
+}
+
+/* Запас под плавающую кнопку позволяет доскроллить последний блок выше неё */
+.gift-details__body {
+  padding-bottom: calc(102px + env(safe-area-inset-bottom));
+}
+
+.gift-details__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Изображение 230 x 230, цена и стеклянная подпись */
+.gift-details__art {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #0d0d0d;
+}
+
+.gift-details__image {
+  position: absolute;
+  top: 42px;
+  left: 42px;
+  width: 146px;
+  height: 146px;
+}
+
+.gift-details__price {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 17px;
+  background: rgba(13, 13, 13, 0.2);
+  backdrop-filter: blur(15px);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gift-details__price > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gift-details__price img {
+  width: 10px;
+  height: 10px;
+}
+
+.gift-details__caption {
+  position: absolute;
+  inset: auto 0 0;
+  height: 66px;
+  padding: 12px 16px;
+  background: linear-gradient(0deg, rgba(13, 13, 13, 0.2), transparent);
+  backdrop-filter: blur(7.8px);
+}
+
+.gift-details__caption h2 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.gift-details__caption > span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Характеристики: две колонки 136 / 214 px с промежутком 8 px */
+.gift-details__traits {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.gift-details__traits > div {
+  display: grid;
+  grid-template-columns: minmax(0, 136fr) minmax(0, 214fr);
+  gap: 8px;
+  min-height: 46px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gift-details__traits dt,
+.gift-details__traits dd {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  background: #0d0d0d;
+}
+
+.gift-details__traits dt {
+  padding: 10px 20px;
+  border-radius: 20px 0 0 20px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.gift-details__traits dd {
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 22px;
+  border-radius: 0 20px 20px 0;
+}
+
+.gift-details__traits small {
+  color: #06d7a0;
+  font-size: 10px;
+}
+
+.gift-details__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gift-details__actions button {
+  position: relative;
+  display: block;
+  height: 46px;
+  padding: 0;
+  border-radius: 20px;
+  background: #0d0d0d;
+}
+
+.gift-details__actions button:first-child {
+  color: #06d7a0;
+}
+
+.gift-details__actions img {
+  position: absolute;
+  left: 16px;
+  width: 14px;
+}
+
+.gift-details__actions button:first-child img {
+  top: 17px;
+  height: 12px;
+}
+
+.gift-details__actions button:last-child img {
+  top: 16px;
+  height: 14px;
+}
+
+.gift-details__actions button span {
+  position: absolute;
+  top: 18px;
+  display: flex;
+  height: 10px;
+  align-items: center;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+  white-space: nowrap;
+}
+
+.gift-details__actions button:first-child span {
+  left: calc(50% - 83px / 2 + 5px);
+  width: 83px;
+}
+
+.gift-details__actions button:last-child span {
+  left: calc(50% - 82px / 2 + 4.5px);
+  width: 82px;
+}
+
+/* Предложения обмена и залога */
+.gift-details__offer {
+  position: relative;
+  height: 104px;
+  margin-top: 12px;
+  padding: 16px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #0d0d0d;
+  isolation: isolate;
+}
+
+/* Свет из макета: пятно частично находится за правым нижним краем */
+.gift-details__offer::after {
+  position: absolute;
+  z-index: -1;
+  top: 76px;
+  left: 283px;
+  width: 133px;
+  height: 133px;
+  background: #06d7a0;
+  filter: blur(60px);
+  content: '';
+  pointer-events: none;
+}
+
+.gift-details__offer h3 {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.gift-details__offer p {
+  position: absolute;
+  top: 46px;
+  left: 16px;
+  width: min(186px, calc(100% - 168px));
+  margin: 0;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.gift-details__offer button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 140px;
+  height: 42px;
+  border-radius: 15px;
+  background: #06d7a0;
+}
+
+.gift-details__notice {
+  color: #06d7a0;
+  font-size: 12px;
+  text-align: center;
+}
+
+.gift-details__footer {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(30px + env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  height: 56px;
+}
+
+.gift-details .gift-details__done {
+  width: 100%;
+  height: 56px;
+  border-radius: 20px;
+  background: rgba(47, 47, 47, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  font-size: 16px;
+  transition: background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.gift-details__footer[data-at-end='true'] .gift-details__done {
+  background: #06d7a0;
+}
+
+.gift-details__preview {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+  background: #131313;
+  z-index: 5;
+}
+
+.gift-details__preview > img {
+  width: 75%;
+  max-height: 60%;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-details__done {
+    transition-duration: 1ms;
+  }
+}

@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@500;600&display=swap');
+
+:root {
+  font-family: 'Onest', Arial, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #ffffff;
+  background: #0d0d0d;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  html {
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100svh;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep masked artwork and glass overlays in one clipped layer during iOS scrolling. */
+@supports (-webkit-touch-callout: none) {
+  :is(.gift-card, .pledge-card, .profile-gifts__card) {
+    isolation: isolate;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .catalog-artwork {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .page-footer {
+    transform: translate3d(-50%, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}

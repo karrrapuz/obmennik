@@ -1,0 +1,133 @@
+/* Хейдер: 358 x 46 px, left: 16 px, top: 116 px */
+.exchange-header {
+  position: fixed;
+  z-index: 4;
+  top: 116px;
+  left: 50%;
+  display: flex;
+  width: 358px;
+  height: 46px;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 390px) {
+  .exchange-header {
+    width: calc(100% - 32px);
+  }
+}
+
+.exchange-user,
+.exchange-balance-group,
+.exchange-balance {
+  display: flex;
+  align-items: center;
+}
+
+.exchange-user,
+.exchange-balance {
+  height: 46px;
+  background: rgba(47, 47, 47, 0.2);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+}
+
+.exchange-user {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 140px;
+  right: auto;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 6px 14px 6px 6px;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.exchange-user img {
+  width: 34px;
+  height: 34px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.exchange-user span {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.exchange-balance-group {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 60.89%;
+  width: auto;
+  height: 46px;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  gap: 10px;
+  isolation: isolate;
+}
+
+.exchange-balance {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 140px;
+  gap: 7px;
+  justify-content: flex-start;
+  padding: 10px 12px;
+  z-index: 0;
+}
+
+.exchange-balance__amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 8px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.exchange-ton-icon {
+  position: relative;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  background: #587ffe;
+  border-radius: 50%;
+}
+
+.exchange-ton-icon img {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  opacity: 1;
+}
+
+.exchange-balance__add {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  place-items: center;
+  padding: 8px;
+  background: rgba(44, 91, 78, 0.1);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.exchange-balance__add img {
+  width: 10px;
+  height: 10px;
+}

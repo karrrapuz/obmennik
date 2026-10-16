@@ -1,0 +1,140 @@
+/* Общая геометрия трёх состояний футера из макета. */
+.page-footer {
+  position: fixed;
+  z-index: 9;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 50%;
+  width: 358px;
+  height: 118px;
+  transform: translateX(-50%);
+  font-family: 'Onest', Arial, sans-serif;
+}
+
+.page-footer::before {
+  position: absolute;
+  inset: 46px 0 0;
+  background: rgba(47, 47, 47, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  clip-path: path('M338 0C349.046 0 358 8.95431 358 20V72H0V20C0 8.95431 8.95431 0 20 0H118.552C128.064 0 135.881 7.04902 140.978 15.0802C148.959 27.6545 163.005 36 179 36C194.995 36 209.041 27.6545 217.022 15.0802C222.119 7.04902 229.936 0 239.448 0H338Z');
+  content: '';
+  pointer-events: none;
+}
+
+.page-footer__item {
+  position: absolute;
+  top: 46px;
+  width: 50px;
+  height: 55px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.2);
+  font: 600 10px/18px 'Onest', Arial, sans-serif;
+  cursor: pointer;
+}
+
+.page-footer__item--deposit { left: 51px; }
+.page-footer__item--profile { left: 258px; }
+.page-footer__item[aria-current='page'] { color: #06d7a0; }
+
+.page-footer__item > span {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 7px;
+}
+
+.page-footer__icon {
+  position: absolute;
+  top: 16px;
+  left: calc(50% - 10px);
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.page-footer__item--profile .page-footer__icon {
+  left: calc(50% - 9px);
+  width: 18px;
+}
+
+/* Ползунок и мягкий свет только у выбранного бокового раздела. */
+.page-footer__light { display: none; pointer-events: none; }
+.page-footer__item[aria-current='page'] .page-footer__light {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: -50px;
+  width: 150px;
+  height: 72px;
+  overflow: hidden;
+}
+
+.page-footer__light::before {
+  position: absolute;
+  top: 0;
+  left: 40px;
+  width: 70px;
+  height: 53px;
+  background: radial-gradient(37.14% 69.81% at 50% 0%, rgba(6, 215, 160, 0.4), rgba(6, 215, 160, 0));
+  filter: blur(25px);
+  content: '';
+}
+
+.page-footer__item--deposit .page-footer__light::before {
+  background: radial-gradient(38.53% 69.81% at 50% 0%, rgba(6, 215, 160, 0.4), rgba(6, 215, 160, 0));
+}
+
+.page-footer__light::after {
+  position: absolute;
+  top: -5px;
+  left: 50px;
+  width: 50px;
+  height: 8px;
+  border-radius: 0 0 8px 8px;
+  background: #06d7a0;
+  content: '';
+}
+
+/* Центральный круг всегда остаётся на своём месте. */
+.page-footer__item--exchange {
+  top: 0;
+  left: 121px;
+  width: 117px;
+  height: 99px;
+}
+
+.page-footer__item--exchange::before {
+  position: absolute;
+  top: 0;
+  left: 21px;
+  width: 74px;
+  height: 74px;
+  border-radius: 37px;
+  background: rgba(47, 47, 47, 0.2);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  content: '';
+}
+
+.page-footer__item--exchange[aria-current='page']::before {
+  background: radial-gradient(96.79% 96.79% at 77.52% 3.21%, #16ffc2 0%, #05dda4 47.13%, #078b68 100%);
+  box-shadow: 0 0 20px rgba(17, 245, 185, 0.5);
+}
+
+.page-footer__item--exchange .page-footer__icon { top: 27px; left: 48px; }
+.page-footer__item--exchange[aria-current='page'] .page-footer__icon { background: #fff; }
+.page-footer__item--exchange > span { top: 92px; }
+.page-footer__item--exchange[aria-current='page'] .page-footer__light { display: none; }
+.page-footer__item:focus-visible { outline: 2px solid #06d7a0; outline-offset: 4px; }
+
+@media (max-width: 389px) {
+  .page-footer { zoom: calc((100vw - 32px) / 358px); }
+}

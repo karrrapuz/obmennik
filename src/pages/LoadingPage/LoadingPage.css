@@ -1,0 +1,10 @@
+.loading-page { position: relative; width: min(100%,390px); height: 100dvh; min-height: 320px; margin: 0 auto; background: #0d0d0d; color: #fff; font: 600 14px/18px 'Onest',Arial,sans-serif; }
+.loading-page__spinner { position: absolute; top: calc(50% - 62px); left: calc(50% - 62px); width: 124px; height: 124px; display: grid; place-items: center; }
+.loading-page__spinner img { width: 58px; height: 58px; animation: loading-page-spin 1s linear infinite; }
+.loading-page__title,.loading-page__caption { position: absolute; left: 0; width: 100%; margin: 0; display: flex; justify-content: center; }
+.loading-page__title { top: calc(50% + 58px); }
+.loading-page__caption { bottom: 66px; color: #fff3; font-weight: 500; }
+.loading-page__dots { display: inline-block; clip-path: inset(0 100% 0 0); animation: loading-page-dots 1.2s steps(4,end) infinite; }
+.loading-page__year { position: absolute; bottom: 26px; left: 0; width: 100%; text-align: center; color: #06d7a0; font-weight: 500; }
+@keyframes loading-page-spin { to { transform: rotate(360deg); } }
+@keyframes loading-page-dots { to { clip-path: inset(0 -34% 0 0); } }

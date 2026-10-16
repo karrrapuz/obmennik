@@ -1,0 +1,102 @@
+.deposit-page {
+  position: relative;
+  width: min(100%, 390px);
+  min-height: max(844px, 100dvh);
+  margin: 0 auto;
+  padding-top: 362px;
+  background: #0d0d0d;
+  color: #fff;
+  font: 600 14px/18px 'Onest', Arial, sans-serif;
+}
+
+.deposit-page button { color: inherit; cursor: pointer; border: 0; }
+.pledge-header { position: absolute; top: 116px; left: 16px; right: 16px; display: flex; justify-content: space-between; height: 46px; }
+.pledge-header > button { display: flex; align-items: center; gap: 7px; height: 46px; padding: 6px 12px 6px 6px; border-radius: 20px; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); font-size: 12px; }
+.pledge-header > button:first-child { width: 140px; gap: 10px; }
+.pledge-header > button > img { width: 34px; height: 34px; border-radius: 16px; }
+.pledge-header > button > i { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #587ffe; }
+.pledge-header i img { width: 12px; height: 12px; }
+.pledge-header button > span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(44,91,78,.1); color: #06d7a0; font-size: 18px; }
+.pledge-banner { position: absolute; top: 174px; left: 16px; right: 16px; height: 110px; overflow: hidden; border-radius: 20px; background: #0d0d0d; isolation: isolate; }
+.pledge-banner__art { position: absolute; top: 0; right: 0; width: 358px; height: 110px; pointer-events: none; }
+.pledge-banner__art::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 190px 155px at 100% 118%, rgba(6,215,160,.62), rgba(6,215,160,.12) 65%, transparent 100%); }
+.pledge-banner h1 { position: absolute; left: 28px; top: 28px; height: 14px; display: flex; align-items: center; margin: 0; font-size: 20px; line-height: 18px; }
+.pledge-banner p { position: absolute; left: 28px; top: 58px; width: 184px; height: 26px; display: flex; align-items: center; margin: 0; font-size: 12px; line-height: 18px; color: #fff3; }
+.pledge-banner__gift { position: absolute; left: 183px; top: 20px; width: 87.29px; height: 87.29px; border-radius: 20px; transform: rotate(-8deg); display: grid; place-items: center; background: linear-gradient(160deg,#0d0d0d 20%,#0d1e19 100%); }
+.pledge-banner__gift > span { width: 43.85px; height: 43.85px; background: linear-gradient(180deg,#1e3435,#102b24); mask: url('../ExchangePage/assets/obmen_gift_active.svg') center / contain no-repeat; }
+.pledge-banner__exchange { position: absolute; left: 256.5px; top: 36.51px; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#0c211b,#153e34); }
+.pledge-banner__exchange img { position: absolute; width: 38px; height: 38px; left: -2px; top: -2px; }
+.pledge-banner__ton { position: absolute; display: grid; place-items: center; border-radius: 50%; background: #587ffe; }
+.pledge-banner__ton img { width: 46.16%; height: 46.16%; transform: translateY(1px); }
+.pledge-banner__ton--back { left: 289.55px; top: 30.55px; width: 31px; height: 31px; transform: rotate(10deg); background: linear-gradient(114.22deg,#587ffe 44.81%,#2c4597 118.57%); }
+.pledge-banner__ton--front { left: 312px; top: 38px; width: 38.55px; height: 38.55px; transform: rotate(-16deg); }
+.pledge-banner__ton--bottom { left: 289px; top: 65px; width: 26.59px; height: 26.59px; transform: rotate(18deg); }
+@media (max-width: 370px) { .pledge-banner__art { transform: scale(.82); transform-origin: right center; } .pledge-banner h1,.pledge-banner p { left: 16px; } .pledge-banner p { width: 170px; } }
+.pledge-tabs { position: absolute; top: 300px; left: 16px; right: 16px; height: 46px; display: flex; isolation: isolate; }
+.pledge-tabs::before { content: ''; position: absolute; inset: 0; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 20px; z-index: 1; }
+.pledge-tabs > span { position: absolute; top: 34px; left: calc(25% - 10px); width: 20px; height: 16px; background: #06d7a0; transition: left 360ms cubic-bezier(.22,1,.36,1); }
+.pledge-tabs[data-active='pledges'] > span { left: calc(75% - 10px); }
+.pledge-tabs button { z-index: 2; width: 50%; background: transparent; color: #fff3; }
+.pledge-tabs button[aria-selected='true'] { color: white; }
+.pledge-catalog { min-height: max(522px, calc(100dvh - 362px)); background: #131313; border-radius: 20px 20px 0 0; padding: 16px 16px 150px; }
+.pledge-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.pledge-card { position: relative; padding: 0; border-radius: 20px; background: #0d0d0d; text-align: left; }
+.pledge-card__art { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 20px; background: radial-gradient(ellipse at center, #252525, #0d0d0d); display: grid; place-items: center; }
+.pledge-card__art > img { width: 58%; height: 58%; }
+.pledge-card__caption { position: absolute; bottom: 0; left: 0; right: 0; height: 47px; padding: 7px 12px; background: linear-gradient(0deg,#0d0d0d33,transparent); backdrop-filter: blur(7.8px); }
+.pledge-card strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.pledge-card small { display: block; font-size: 10px; color: #fff3; }
+.pledge-card__price { display: flex; align-items: center; justify-content: center; gap: 5px; height: 30px; }
+.pledge-card__price img { width: 10px; height: 10px; }
+.pledge-card__status { position: absolute; right: 8px; top: 8px; border-radius: 10px; padding: 4px 7px; background: #0d0d0d99; color: #06d7a0; font-size: 10px; }
+.pledge-empty--inventory { padding-top: 126px; text-align: center; }
+.pledge-empty--inventory strong { display: block; font-size: 14px; line-height: 18px; font-weight: 600; }
+.pledge-empty--inventory p { width: 170px; margin: 4px auto 16px; color: #fff; font-size: 14px; font-weight: 500; line-height: 18px; }
+.deposit-page .pledge-empty--inventory button { width: 115px; height: 40px; padding: 0; background: rgba(44,91,78,.1); color: #06d7a0; border-radius: 17px; font-size: 14px; }
+.pledge-empty-loans { position: relative; height: 173px; }
+.pledge-empty-loans__cards { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.pledge-empty-loans > p { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #fff3; text-align: center; font-size: 14px; line-height: 18px; font-weight: 500; }
+.deposit-page button:focus-visible { outline: 2px solid #06d7a0; outline-offset: 2px; }
+.pledge-tab-count { position: absolute; top: 5px; left: calc(75% + 18.5px); display: grid; place-items: center; min-width: 20px; height: 20px; padding: 2px; border-radius: 21px; background: rgba(44,91,78,.1); backdrop-filter: blur(5px); color: #06d7a0; font: 600 10px/18px 'Onest',Arial,sans-serif; }
+.pledge-card__open { display: block; width: 100%; padding: 0; background: none; text-align: left; border-radius: 20px; }
+.pledge-card__open:disabled { cursor: default; }
+.pledge-card__locked { position: absolute; inset: 0; background: rgba(13,13,13,.6); backdrop-filter: blur(2.5px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #fff; }
+.pledge-card__locked > img { width: 32px; height: 36px; flex: none; }
+.pledge-card__locked span { font: 600 10px/14px 'Onest',Arial,sans-serif; }
+.pledge-card[data-loan='true']::after { content: ''; position: absolute; z-index: 2; inset: 0; border: 1px solid #06d7a0; border-radius: 20px; background: rgba(13,13,13,.01); opacity: 0; pointer-events: none; transition: opacity 320ms ease; }
+.pledge-card[data-selected='true'][data-loan='true']::after { opacity: 1; }
+.pledge-card__loan-icon,.pledge-card__select { position: absolute; top: 12px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 14px; background: #0d0d0d33; backdrop-filter: blur(15px); }
+.pledge-card__loan-icon { right: 12px; }
+.pledge-card__select { left: 12px; }
+.pledge-card__select:disabled { opacity: .3; cursor: default; }
+.pledge-card__loan-icon > img,.pledge-card__select > img { width: 16px; height: 16px; }
+.pledge-card__select b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(44,91,78,.1); backdrop-filter: blur(5px); }
+.pledge-card__select b img { width: 6px; height: 5px; }
+.pledge-card__due { display: flex; align-items: center; gap: 8px; height: 58px; padding: 12px; }
+.pledge-card__due > span { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 14px; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); }
+.pledge-card__due > span img { width: 16px; height: 16px; }
+.pledge-card__due > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pledge-card__due small,.pledge-card__due strong { line-height: 11px; }
+.pledge-card[data-loan='true'] .catalog-artwork > img { width: 58%; height: 58%; left: 21%; top: 21%; }
+.pledge-card__due strong { font-size: 10px; }
+.pledge-search { display: flex; gap: 12px; height: 46px; margin-bottom: 12px; }
+.pledge-search input { min-width: 0; flex: 1; padding: 0 16px 0 40px; color: white; border: 0; outline-color: #06d7a0; border-radius: 20px; background: #0d0d0d url('../ExchangePage/assets/lupa_poisk.svg') 16px center / 14px no-repeat; }
+.pledge-search input::placeholder { color: #fff3; }
+.pledge-search button { display: grid; place-items: center; flex: none; width: 46px; padding: 0; border-radius: 20px; background: #0d0d0d; }
+.pledge-search button img { width: 11px; height: 6px; transition: transform 320ms ease; }
+.pledge-search button[aria-expanded='true']:not(:disabled) img { transform: rotate(180deg); }
+.pledge-collapse { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 320ms ease, opacity 250ms ease; }
+.pledge-collapse[data-collapsed='true'] { grid-template-rows: 0fr; opacity: 0; }
+.pledge-collapse > div { min-height: 0; overflow: hidden; }
+.pledge-search button:disabled { cursor: default; }
+.pledge-supported { margin-top: 20px; }
+.pledge-supported h2 { text-align: center; font-size: 20px; line-height: 24px; margin: 0 0 10px; }
+.pledge-supported > button { display: flex; align-items: center; gap: 10px; width: 100%; height: 66px; margin-bottom: 12px; padding: 8px; border-radius: 20px; background: #0d0d0d; text-align: left; }
+.pledge-supported > button:last-child { margin-bottom: 0; }
+.pledge-supported__icon { display: grid; place-items: center; flex: none; width: 50px; height: 50px; border-radius: 17px; background: #131313; }
+.pledge-supported__icon img { width: 34px; height: 34px; object-fit: contain; }
+.pledge-supported__text { min-width: 0; }
+.pledge-supported strong { display: block; font-size: 14px; line-height: 18px; font-weight: 600; }
+.pledge-supported small { display: block; font-size: 12px; line-height: 18px; font-weight: 600; color: #fff3; margin-top: 2px; }
+.pledge-supported small > span { color: #06d7a0; }
+.deposit-page .pledge-extend-button { position: fixed; z-index: 12; bottom: 134px; left: 50%; transform: translateX(-50%); width: min(358px,calc(100% - 32px)); height: 56px; border-radius: 20px; color: #06d7a0; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); font-size: 16px; }

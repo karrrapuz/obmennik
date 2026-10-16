@@ -1,0 +1,3 @@
+.catalog-artwork { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.catalog-artwork__pattern { position: absolute; inset: 0; mask-size: 36px 36px; mask-repeat: repeat; opacity: .22; transform: rotate(-15deg) scale(1.3); }
+.catalog-artwork.catalog-artwork > img { position: absolute; width: 68%; height: 68%; left: 16%; top: 12%; object-fit: contain; }

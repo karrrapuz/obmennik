@@ -1,0 +1,266 @@
+/* Блок обмена: 357 x 66 px, left: 16 px, top: 178 px */
+.exchange-summary {
+  position: relative;
+  width: 357px;
+  height: 66px;
+  margin-left: 16px;
+  border-radius: 20px;
+}
+/* Фоновая форма Subtract из макета */
+.exchange-summary__subtract {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  width: 357px;
+  height: 66px;
+  pointer-events: none;
+}
+
+/* Отсвет на внутренних краях плашек, ограниченный формой Subtract */
+.exchange-summary__reflection {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 62px 78px at 179px 33px,
+    rgba(6, 215, 160, 0.32) 0%,
+    rgba(6, 215, 160, 0.18) 62%,
+    rgba(6, 215, 160, 0) 100%
+  );
+  clip-path: path('M138.215 0C141.851 0 143.821 4.70653 141.775 7.7127C136.868 14.9193 134 23.6242 134 33C134 42.3758 136.868 51.0807 141.775 58.2873C143.821 61.2935 141.851 66 138.215 66H22C9.84974 66 0 56.1503 0 44V22C0 9.84974 9.84974 0 22 0H138.215Z M335 0C347.15 0 357 9.84974 357 22V44C357 56.1503 347.15 66 335 66H219.785C216.149 66 214.179 61.2935 216.225 58.2873C221.132 51.0807 224 42.3758 224 33C224 23.6242 221.132 14.9193 216.225 7.7127C214.179 4.70652 216.149 0 219.785 0H335Z');
+  pointer-events: none;
+}
+
+/* Левая и правая группы текста */
+.exchange-summary__offer,
+.exchange-summary__total {
+  position: absolute;
+  z-index: 2;
+  top: 19px;
+  display: flex;
+  height: 28px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.exchange-summary__offer {
+  left: 16px;
+  width: 100px;
+  align-items: flex-start;
+}
+
+.exchange-summary__total {
+  left: 241px;
+  width: 100px;
+  height: 27px;
+  align-items: flex-end;
+}
+
+.exchange-summary__label {
+  display: flex;
+  height: 8px;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: 'Onest', Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.exchange-summary__offer .exchange-summary__label {
+  width: 100px;
+}
+
+.exchange-summary__total .exchange-summary__label {
+  width: 53px;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.exchange-summary__value {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  color: #ffffff;
+  font-family: 'Onest', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.exchange-summary__value--offer {
+  width: 93px;
+  height: 10px;
+}
+
+.exchange-summary__value--total {
+  width: 45px;
+  height: 10px;
+  justify-content: flex-start;
+  gap: 3px;
+}
+
+.exchange-summary__value img {
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+
+.exchange-summary__value > span {
+  display: flex;
+  height: 10px;
+  align-items: center;
+  flex: none;
+}
+
+.exchange-summary__offer-stage {
+  position: relative;
+  width: 93px;
+}
+
+.exchange-summary__offer-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 10px;
+  align-items: center;
+  gap: 3px;
+  will-change: opacity;
+}
+
+.exchange-summary__offer-state--amount {
+  width: 51px;
+}
+
+.exchange-summary__offer-state--amount > span {
+  width: 38px;
+  text-align: center;
+}
+
+.exchange-summary__offer-state--minimum {
+  width: 93px;
+}
+
+.exchange-summary__offer-text {
+  display: flex;
+  width: 70px;
+  height: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.exchange-summary__offer-text span + span {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.exchange-summary__value--total > span {
+  width: 32px;
+  justify-content: center;
+  text-align: center;
+}
+
+.exchange-summary__value .exchange-summary__muted-mark {
+  width: 7px;
+  height: 7px;
+  opacity: 0.2;
+}
+
+/* Круг активности: 78 x 78 px, left: 140 px, top: -6 px */
+.exchange-summary__active {
+  position: absolute;
+  z-index: 3;
+  top: -6px;
+  left: 140px;
+  display: flex;
+  width: 78px;
+  height: 78px;
+  align-items: center;
+  justify-content: center;
+  padding: 27px;
+  border: 0;
+  border-radius: 39px;
+  background: rgba(47, 47, 47, 0.2);
+  backdrop-filter: blur(15px);
+  cursor: pointer;
+}
+
+.exchange-summary__active:disabled {
+  cursor: default;
+}
+
+.exchange-summary__active img {
+  position: absolute;
+  z-index: 1;
+  top: 27px;
+  left: 27px;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  opacity: 1;
+}
+
+/* Заливка и её тень меняются синхронно с пересчётом цены */
+.exchange-summary__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(96.79% 96.79% at 77.52% 3.21%, #15eab2 0%, #07cd99 47.13%, #03674d 100%);
+  box-shadow: 0 0 15px rgba(6, 215, 160, 0.5);
+  pointer-events: none;
+}
+
+.exchange-summary[data-active='true'] .exchange-summary__active img {
+  filter: none;
+}
+
+.exchange-summary__count {
+  position: absolute;
+  z-index: 2;
+  top: 19px;
+  left: 39px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 21px;
+  background: rgba(13, 13, 13, 0.2);
+  backdrop-filter: blur(5px);
+  color: #fff;
+  font: 600 10px/18px 'Onest', Arial, sans-serif;
+}
+
+.exchange-summary[data-underfunded='true'] .exchange-summary__value--offer {
+  opacity: 0.2;
+}
+
+.exchange-summary[data-active='true'] .exchange-summary__value--total {
+  width: 51px;
+}
+
+.exchange-summary[data-active='true'] .exchange-summary__value--total > span {
+  width: 38px;
+}
+
+/* Разные кегли внутри строки, как на визуальном макете */
+.exchange-summary__offer-text span + span {
+  font-size: 10px;
+  transform: translateY(1.5px);
+}
+
+.exchange-summary__label,
+.exchange-summary__value {
+  flex: none;
+}
+
+.exchange-summary__total .exchange-summary__label {
+  height: 7px;
+}

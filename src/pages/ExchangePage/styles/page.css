@@ -1,0 +1,29 @@
+.exchange-page {
+  position: relative;
+  width: min(100%, 390px);
+  min-height: 844px;
+  margin: 0 auto;
+  overflow: hidden;
+  color: #fff;
+  background: #0d0d0d;
+  font-family: 'Onest', Arial, sans-serif;
+}
+
+.exchange-content {
+  position: relative;
+  padding-top: 178px;
+  width: 100%;
+}
+
+.exchange-shortage {
+  position: fixed;
+  z-index: 8;
+  bottom: 134px;
+  left: calc(50% - 100px);
+}
+
+@media (max-width: 390px) {
+  .exchange-page {
+    min-height: 100svh;
+  }
+}
