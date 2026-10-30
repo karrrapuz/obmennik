@@ -19,7 +19,7 @@ https://render.com/docs/free и https://neon.com/pricing.
 2. Создать Free-проект `giftmoney`, взять PostgreSQL connection string с SSL.
    Пароль базы хранить в секретах, не в Git и не в чате.
 3. Войти на https://dashboard.render.com через свой аккаунт.
-4. New -> Blueprint -> `karrrapuz/obmennik` -> ветка с реализацией.
+4. New -> Blueprint -> `karrrapuz/obmennik` -> ветка `codex/telegram-auth`.
 5. Перед запуском задать TELEGRAM_BOT_TOKEN из локального backend/.env и
    DATABASE_URL из Neon. Проверить план Free, не подключать платные ресурсы.
 6. Дождаться health endpoint `https://<render-host>/api/health` со status ok.
@@ -28,7 +28,9 @@ https://render.com/docs/free и https://neon.com/pricing.
 8. Открыть приложение именно из тестового бота: токен сервера должен принадлежать
    тому же боту. Проверить имя/фото, профиль, переключение вкладок, перезагрузку.
 
-Без входа владельца в Neon/Render размещение ещё не завершено.
+Для управления через агента также подключить Neon и Render к Codex:
+обычный вход в браузере не предоставляет API-доступ инструментам.
+Без подключения аккаунтов или настройки через их панели размещение не завершено.
 Не публикуйте авторизующий frontend до готовности API и VITE_API_URL:
 иначе Telegram-вход будет показывать ошибку.
 
