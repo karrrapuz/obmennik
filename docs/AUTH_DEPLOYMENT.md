@@ -23,8 +23,9 @@ https://render.com/docs/free и https://neon.com/pricing.
 5. Перед запуском задать TELEGRAM_BOT_TOKEN из локального backend/.env и
    DATABASE_URL из Neon. Проверить план Free, не подключать платные ресурсы.
 6. Дождаться health endpoint `https://<render-host>/api/health` со status ok.
-7. В Vercel Settings -> Environment Variables добавить VITE_API_URL со значением
-   `https://<render-host>` (без /api). Пересобрать frontend.
+7. Для текущего проекта `vercel.json` проксирует /api на
+   https://giftmoney-api.onrender.com. VITE_API_URL в Vercel оставлять незаданным.
+   Если нужен другой API, можно задать VITE_API_URL (без /api) и пересобрать frontend.
 8. Открыть приложение именно из тестового бота: токен сервера должен принадлежать
    тому же боту. Проверить имя/фото, профиль, переключение вкладок, перезагрузку.
 
@@ -33,6 +34,9 @@ https://render.com/docs/free и https://neon.com/pricing.
 Без подключения аккаунтов или настройки через их панели размещение не завершено.
 Не публикуйте авторизующий frontend до готовности API и VITE_API_URL:
 иначе Telegram-вход будет показывать ошибку.
+
+Тестовые ресурсы (30.10.2026): Neon проект obmennik / ветка staging-auth;
+Render giftmoney-api / Virginia / Free. Основная production-ветка базы не изменялась.
 
 ## Локальный запуск
 

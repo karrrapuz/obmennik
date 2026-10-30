@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://giftmoney-api.onrender.com/api/:path*"
+    }
+  ]
+}
