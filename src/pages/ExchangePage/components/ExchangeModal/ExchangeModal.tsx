@@ -24,10 +24,10 @@ type ExchangeModalProps = {
   offeredGifts: ExchangeGift[];
   offeredAmount: number;
   receivedAmount: number;
-  onRemove: (id: number) => void;
+  onRemove: (id: number, side: 'offer' | 'receive') => void;
   onClear: (side: 'offer' | 'receive') => void;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>;
 };
 
 const formatAmount = (amount: number) => amount.toFixed(3);
@@ -47,7 +47,7 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
   const [notice, setNotice] = useState(false);
   const [result, setResult] = useState<'success' | 'error' | null>(null);
   const [receivedCount, setReceivedCount] = useState(0);
-  const attempt = useRef(0);
+  const [pending, setPending] = useState(false);
   const submitted = useRef(false);
   const [activeSide, setActiveSide] = useState<'offer' | 'receive'>('receive');
   const modalRef = useRef<HTMLElement>(null);
@@ -119,7 +119,7 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
   const displayedGifts = activeSide === 'receive' ? gifts : offeredGifts;
   const shortage = Math.max(receivedAmount - offeredAmount, 0);
   const hasBlockedGift = gifts.some((gift) => gift.blockTradeGift);
-  const submit = () => {
+  const submit = async () => {
     if (submitted.current) return;
     if (hasBlockedGift) return;
     const offer = offeredGifts.reduce((sum, gift) => sum + Number(gift.price), 0);
@@ -127,10 +127,9 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
     if (!gifts.length || !offeredGifts.length || offer + 0.000001 < receive) { setNotice(true); return; }
     submitted.current = true;
     setReceivedCount(gifts.length);
-    // Alternate demo outcomes until exchange operations are backed by an API.
-    const success = attempt.current++ % 2 === 0;
-    setResult(success ? 'success' : 'error');
-    if (success) onSuccess();
+    setPending(true);
+    try { await onSuccess(); setResult('success'); } catch { setResult('error'); }
+    finally { setPending(false); submitted.current = false; }
   };
 
   return createPortal(
@@ -144,7 +143,7 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
           <h2>{result === 'success' ? 'Успешно!' : 'Ошибка'}</h2>
           <button className="exchange-modal__close" aria-label="Закрыть" onClick={onClose}><img src={closeIcon} alt="" /></button>
           <div className="exchange-result__icon"><img src={result === 'success' ? successIcon : errorIcon} alt="" /></div>
-          <p role="status">{result === 'success' ? receivedCount === 1 ? 'Подарок был добавлен в ваш инвентарь.' : 'Подарки были добавлены в ваш инвентарь.' : 'Выбранный вами подарок уже обменяли, пожалуйста выберите другой!'}</p>
+          <p role="status">{result === 'success' ? receivedCount === 1 ? 'Тестовый подарок добавлен в инвентарь.' : 'Тестовые подарки добавлены в инвентарь.' : 'Не удалось выполнить обмен. Повторите попытку.'}</p>
           <button className="exchange-result__return" onClick={onClose}>{result === 'success' ? 'Вернуться к обмену' : 'Выбрать другой'}</button>
         </div> : <>
         <header className="exchange-modal__header">
@@ -173,7 +172,7 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
                 <span className="exchange-modal__ton"><img src={tonIcon} alt="" /></span>
                 <span className="exchange-modal__price-value">{gift.price}</span>
               </span>
-              <button className="exchange-modal__remove" type="button" aria-label={`Удалить ${gift.name}`} onClick={() => onRemove(gift.id)}><img src={deleteGiftIcon} alt="" /></button>
+              <button className="exchange-modal__remove" type="button" disabled={pending} aria-label={`Удалить ${gift.name}`} onClick={() => onRemove(gift.id, activeSide)}><img src={deleteGiftIcon} alt="" /></button>
             </article>)}
           </div>
         )}
@@ -186,7 +185,7 @@ function ExchangeModal({ open, gifts, offeredGifts, offeredAmount, receivedAmoun
         />
         {hasBlockedGift && <p className="exchange-modal__blocked-notice" role="status">Выбранный вами подарок уже обменяли, пожалуйста выберите другой!</p>}
         {!hasBlockedGift && notice && <p className="exchange-modal__notice" role="status">{offeredGifts.length === 0 ? 'Для обмена добавьте подарок из инвентаря' : 'Стоимость предлагаемых подарков меньше получаемых'}</p>}
-        <button className="exchange-modal__submit" type="button" disabled={gifts.length === 0} aria-disabled={hasBlockedGift || gifts.length === 0} onClick={submit}>Обменять</button>
+        <button className="exchange-modal__submit" type="button" disabled={pending || gifts.length === 0} aria-disabled={hasBlockedGift || gifts.length === 0} onClick={submit}>{pending ? 'Ожидание...' : 'Обменять'}</button>
         </>}
       </section>
     </div>,

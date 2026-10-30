@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
 const data = JSON.parse(fs.readFileSync('src/pages/ExchangePage/data/catalog-sample.json', 'utf8'));
+assert.deepEqual(JSON.parse(fs.readFileSync('backend/data/catalog-sample.json', 'utf8')), data, 'Frontend and backend demo catalogs must match');
 assert.equal(data.length, 20);
 for (const gift of data) {
   for (const path of [gift.image, gift.symbol.image]) assert.ok(fs.readFileSync('public' + path).length > 100);

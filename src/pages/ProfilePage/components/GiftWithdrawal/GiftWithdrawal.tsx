@@ -8,11 +8,11 @@ import './GiftWithdrawal.css';
 import { useModalScrollLock } from '../../../../hooks/useModalScrollLock';
 
 export default function GiftWithdrawal({ gifts, onClose, onSuccess, onBusy, onResult }: {
-  gifts: ProfileGift[]; onClose: () => void; onSuccess: (ids: number[]) => void; onBusy: (busy: boolean) => void;
+  gifts: ProfileGift[]; onClose: () => void; onSuccess: (ids: number[]) => Promise<void>; onBusy: (busy: boolean) => void;
   onResult?: (success: boolean, gifts: ProfileGift[]) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const attempt = useRef(0);
+  const pending = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [status, setStatus] = useState('');
   useModalScrollLock(gifts.length > 0);
@@ -21,26 +21,25 @@ export default function GiftWithdrawal({ gifts, onClose, onSuccess, onBusy, onRe
     dialog.current?.showModal();
   }, [gifts.length]);
   useEffect(() => () => clearTimeout(timer.current), []);
-  const confirm = () => {
-    if (status === 'pending') return;
+  const confirm = async () => {
+    if (pending.current) return;
+    pending.current = true;
     const ids = gifts.map((gift) => gift.id);
     onClose();
     onBusy(true);
     setStatus('pending');
     clearTimeout(timer.current);
-    // Тестовый вывод: успешная и неуспешная попытки по очереди.
-    const success = attempt.current++ % 2 === 0;
-    timer.current = setTimeout(() => {
-      if (success) onSuccess(ids);
-      if (onResult) {
-        setStatus('');
-        onBusy(false);
-        onResult(success, gifts);
-        return;
-      }
-      setStatus(success ? 'success' : 'error');
-      timer.current = setTimeout(() => { setStatus(''); onBusy(false); }, 2500);
-    }, 1800);
+    let success = false;
+    try { await onSuccess(ids); success = true; } catch { success = false; }
+    pending.current = false;
+    if (onResult) {
+      setStatus('');
+      onBusy(false);
+      onResult(success, gifts);
+      return;
+    }
+    setStatus(success ? 'success' : 'error');
+    timer.current = setTimeout(() => { setStatus(''); onBusy(false); }, 2500);
   };
   return createPortal(<>
     <dialog ref={dialog} className="gift-withdraw-confirm" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} aria-label="Подтверждение вывода">

@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from .config import Settings
 from .models import LoginSession, User
 from .telegram_auth import InvalidInitData, validate_init_data
+from .inventory import register_inventory_routes
 
 
 class AuthInput(BaseModel):
@@ -41,7 +42,7 @@ def create_app(settings: Settings):
     app = FastAPI(title='GiftMoney API', lifespan=lifespan)
     app.state.engine = engine
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
-                       allow_methods=['GET', 'POST'], allow_headers=['Authorization', 'Content-Type'])
+                       allow_methods=['GET', 'POST'], allow_headers=['Authorization', 'Content-Type', 'Idempotency-Key'])
     bearer = HTTPBearer(auto_error=False)
 
     @app.exception_handler(RequestValidationError)
@@ -125,6 +126,7 @@ def create_app(settings: Settings):
         db.commit()
         return Response(status_code=204)
 
+    register_inventory_routes(app, database, current_session)
     return app
 
 

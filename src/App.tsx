@@ -4,6 +4,7 @@ import './styles/app.css';
 import { useEffect, useState } from 'react';
 import LoadingPage from './pages/LoadingPage/LoadingPage';
 import { useAuth } from './auth/AuthProvider';
+import { InventoryProvider } from './inventory/InventoryProvider';
 
 function App() {
   const { state, retry } = useAuth();
@@ -16,7 +17,7 @@ function App() {
   if (state.status === 'error') return <main className="auth-error"><p role="alert">Не удалось войти через Telegram.</p><button type="button" onClick={retry}>Повторить</button></main>;
   return (
     <AppShell>
-      <HomePage />
+      <InventoryProvider><HomePage /></InventoryProvider>
     </AppShell>
   );
 }

@@ -46,6 +46,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
     </section>
     <div className="pledge-tabs" role="tablist" aria-label="Подарки" data-active={tab}><span aria-hidden="true" /><button role="tab" aria-selected={tab === 'inventory'} onClick={() => setTab('inventory')}>Инвентарь</button><button role="tab" aria-selected={tab === 'pledges'} onClick={() => setTab('pledges')}>Залог{state.pledges.length > 0 && <small className="pledge-tab-count">{state.pledges.length}</small>}</button></div>
     <section className="pledge-catalog" role="tabpanel" aria-label={tab === 'inventory' ? 'Инвентарь' : 'Залоги'}>
+      <p className="demo-inventory-caption">Тестовые подарки · Демо-займы</p>
       {tab === 'pledges' && <div className="pledge-search"><input aria-label="Поиск залогов" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} /><button aria-label={collapsed ? 'Раскрыть подарки' : 'Свернуть подарки'} aria-expanded={!collapsed} disabled={!items.length} onClick={() => setCollapsed(!collapsed)}><img src={!items.length ? giftExpandIcon : giftExpandActiveIcon} alt="" /></button></div>}
       <div className="pledge-collapse" data-collapsed={tab === 'pledges' && collapsed} inert={tab === 'pledges' && collapsed}><div>
       {items.length ? <div className="pledge-grid">{items.filter((item) => tab === 'inventory' || `${item.name} ${item.model}`.toLowerCase().includes(search.toLowerCase())).map((item) => {

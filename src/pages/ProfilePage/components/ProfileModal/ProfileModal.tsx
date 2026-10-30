@@ -5,6 +5,7 @@ import type { ProfileGift } from '../../ProfilePage';
 import tonIcon from '../../../../assets/ton.svg';
 import { displayName, useUser } from '../../../../auth/AuthProvider';
 import UserAvatar from '../../../../components/layout/UserAvatar';
+import { useInventory } from '../../../../inventory/InventoryProvider';
 import selectActive from '../../assets/profile-use-gift-active.svg';
 import selectInactive from '../../assets/profile-use-gift-inactive.svg';
 import selectCheck from '../../../ExchangePage/assets/galochka.svg';
@@ -34,8 +35,6 @@ type ProfileModalProps = {
   balance: number;
   setBalance: Dispatch<SetStateAction<number>>;
   gifts: ProfileGift[];
-  setGifts: Dispatch<SetStateAction<ProfileGift[]>>;
-  demoGifts: ProfileGift[];
   referralReward: number;
   setReferralReward: Dispatch<SetStateAction<number>>;
   withdrawalBusy: boolean;
@@ -43,7 +42,8 @@ type ProfileModalProps = {
   giftResultText: string;
 };
 
-function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance, setBalance, gifts, setGifts, demoGifts, referralReward, setReferralReward, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
+function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance, setBalance, gifts, referralReward, setReferralReward, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
+  const { mutate } = useInventory();
   const user = useUser();
   const [lastKind, setLastKind] = useState(requestedKind);
   const kind = requestedKind ?? lastKind;
@@ -200,7 +200,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
 
       {kind === 'wallet-connect' && <div className="profile-modal__form"><label>Кошелёк<input value={walletInput} onChange={(event) => setWalletInput(event.target.value.trim())} placeholder="Адрес TON кошелька" autoComplete="off" /></label><button type="button" disabled={walletInput.length < 10} onClick={() => { setWallet(walletInput); setKind(walletReturn); }}>Подключить</button></div>}
 
-      {kind === 'gift-deposit' && <><div className="profile-modal__gift-deposit"><p>Отправьте подарок нам и он появится в вашем инвентаре!</p><button type="button" onClick={() => { setGifts((current) => [...current, ...demoGifts.filter((gift) => !current.some((item) => item.id === gift.id))]); complete('Подарки появились в вашем инвентаре', true); }}>GiftRelayer</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind(null)}>Закрыть</button></>}
+      {kind === 'gift-deposit' && <><div className="profile-modal__gift-deposit"><p>Тестовые подарки</p><button type="button" disabled={pending} onClick={async () => { if (pendingRef.current) return; pendingRef.current = true; setPending(true); try { await mutate('deposit'); complete('Тестовые подарки добавлены', true); } catch { complete('Не удалось добавить подарки', false); } finally { pendingRef.current = false; setPending(false); } }}>{pending ? 'Ожидание...' : 'Добавить'}</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind(null)}>Закрыть</button></>}
 
       {kind === 'gift-empty' && <><div className="profile-modal__empty-gifts"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button type="button" onClick={() => setKind('gift-deposit')}>GiftRelayer</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind('withdraw-choice')}>Вернуться назад</button></>}
 

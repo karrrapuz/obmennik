@@ -2,7 +2,8 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { useAnimatedBalance } from '../../hooks/useAnimatedBalance';
 import '../../styles/press-feedback.css';
 import SlideNotice from '../../components/feedback/SlideNotice/SlideNotice';
-import { gifts as sampleGifts, type Gift } from '../ExchangePage/data/gifts';
+import { type Gift } from '../ExchangePage/data/gifts';
+import { useInventory } from '../../inventory/InventoryProvider';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftWithdrawal from './components/GiftWithdrawal/GiftWithdrawal';
 import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/ProfileModal';
@@ -31,7 +32,6 @@ import './ProfilePage.css';
 
 export type ProfileGift = Omit<Gift, 'price'> & { price: number };
 
-const demoGifts: ProfileGift[] = sampleGifts.slice(0, 4).map((gift) => ({ ...gift, price: Number(gift.price) }));
 
 function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; setBalance: Dispatch<SetStateAction<number>>; topUpRequest: number }) {
   const user = useUser();
@@ -39,7 +39,8 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
   const displayedBalance = useAnimatedBalance(balance);
   const [wallet, setWallet] = useState('');
   const [walletOpen, setWalletOpen] = useState(false);
-  const [gifts, setGifts] = useState<ProfileGift[]>(() => demoGifts.slice(0, 2));
+  const { inventory, mutate } = useInventory();
+  const gifts: ProfileGift[] = inventory.map((gift) => ({ ...gift, price: Number(gift.price) }));
   const [selectedGiftIds, setSelectedGiftIds] = useState<number[]>([]);
   const [withdrawalGifts, setWithdrawalGifts] = useState<ProfileGift[]>([]);
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
@@ -92,6 +93,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
     </div>
 
     <main className="profile-content">
+      <p className="demo-inventory-caption">Тестовые подарки</p>
       <section className="profile-gifts" aria-label="Ваши подарки">
         <div className="profile-gifts__header">
           <div className="profile-gifts__title"><span><img src={giftSmallIcon} alt="" /></span>Ваши подарки</div>
@@ -127,10 +129,11 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
 
     <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>
     <GiftWithdrawal gifts={withdrawalGifts} onClose={() => setWithdrawalGifts([])} onBusy={setWithdrawalBusy} onResult={withdrawalFromModal ? (success, withdrawn) => { setGiftResultText(success ? `Вы успешно вывели ${withdrawn.map((gift) => gift.name).join(', ')} стоимостью ${withdrawn.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} TON` : 'Вывод подарков не удался...'); setModal(success ? 'gift-result-success' : 'gift-result-error'); } : undefined} onSuccess={(ids) => {
-      setGifts((current) => current.filter((gift) => !ids.includes(gift.id)));
+      return mutate('withdraw', { ids }).then(() => {
       setSelectedGiftIds((current) => current.filter((id) => !ids.includes(id)));
+      });
     }} />
-    <ProfileModal kind={modal} setKind={setModal} wallet={wallet} setWallet={setWallet} balance={balance} setBalance={setBalance} gifts={gifts} setGifts={setGifts} demoGifts={demoGifts} referralReward={referralReward} setReferralReward={setReferralReward} withdrawalBusy={withdrawalBusy} giftResultText={giftResultText} onWithdraw={(selected) => { setWithdrawalFromModal(true); setWithdrawalGifts(selected); }} />
+    <ProfileModal kind={modal} setKind={setModal} wallet={wallet} setWallet={setWallet} balance={balance} setBalance={setBalance} gifts={gifts} referralReward={referralReward} setReferralReward={setReferralReward} withdrawalBusy={withdrawalBusy} giftResultText={giftResultText} onWithdraw={(selected) => { setWithdrawalFromModal(true); setWithdrawalGifts(selected); }} />
   </div>;
 }
 

@@ -22,6 +22,7 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
   const [weeks, setWeeks] = useState<1 | 2 | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [notice, setNotice] = useState('');
+  const pending = useRef(false);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confirmButton = useRef<HTMLButtonElement>(null);
   const underfunded = pledge?.status === 'active' && pledgeStore.getSnapshot().balance < pledge.repayment;
@@ -46,9 +47,19 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
   useEffect(() => { if (confirm) confirmButton.current?.focus(); }, [confirm]);
   useEffect(() => () => clearTimeout(noticeTimer.current), []);
   const notify = (message: string) => { setNotice(message); clearTimeout(noticeTimer.current); noticeTimer.current = setTimeout(() => setNotice(''), 2500); };
-  const repay = () => {
-    if (!gift) return;
-    if (pledgeStore.repay(gift.id)) { onClose(); } else notify('Баланса недостаточно!');
+  const repay = async () => {
+    if (!gift || pending.current) return;
+    pending.current = true;
+    try { if (await pledgeStore.repay(gift.id)) onClose(); else notify('Баланса недостаточно!'); }
+    catch { notify('Не удалось вернуть подарок'); }
+    finally { pending.current = false; }
+  };
+  const create = async () => {
+    if (!gift || !weeks || pending.current) return;
+    pending.current = true;
+    try { if (await pledgeStore.create(gift.id, weeks)) { setConfirm(false); onCreated(); } else notify('Подарок недоступен'); }
+    catch { setConfirm(false); notify('Не удалось заложить подарок'); }
+    finally { pending.current = false; }
   };
   return createPortal(<dialog ref={dialog} className="pledge-dialog" data-visible={visible} aria-label="Залог подарка" onCancel={(event) => { event.preventDefault(); if (confirm) setConfirm(false); else onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <div className="pledge-dialog__scrim" onClick={onClose} aria-hidden="true" />
@@ -71,6 +82,6 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
       </div>
       <SlideNotice show={Boolean(displayedNotice)}><div className="pledge-notice" data-error={displayedNotice === 'Баланса недостаточно!'} role="status">{displayedNotice}</div></SlideNotice>
     </section>
-      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить 1.200 TON, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={() => { if (weeks) { pledgeStore.create(gift.id, weeks); setConfirm(false); onCreated(); } }}><img src={yes} alt="" /></button></div></section></div>}
+      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить 1.200 TON, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={create}><img src={yes} alt="" /></button></div></section></div>}
   </dialog>, document.body);
 }

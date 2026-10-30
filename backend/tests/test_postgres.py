@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.main import create_app
 from app.models import LoginSession, User
+from app.inventory_models import InventoryGift, InventoryInit, InventoryReceipt
+from concurrent.futures import ThreadPoolExecutor
 
 
 POSTGRES_URL = os.environ.get("GIFT_TEST_POSTGRES_URL")
@@ -75,6 +77,27 @@ def test_postgres_new_user_retry_me_and_logout(settings):
             assert me.status_code == 200
             assert me.json() == payload["user"]
             assert token not in me.text
+            initial = client.get('/api/inventory', headers=headers)
+            assert initial.status_code == 200
+            assert len(initial.json()['inventory']) == 5
+            deposit_headers = {**headers, 'Idempotency-Key': 'pg-deposit'}
+            deposited = client.post('/api/inventory/demo-deposit', json={}, headers=deposit_headers)
+            assert deposited.status_code == 200
+            assert len(deposited.json()['inventory']) == 6
+            assert client.post('/api/inventory/demo-deposit', json={}, headers=deposit_headers).json() == deposited.json()
+            gift_id = initial.json()['inventory'][0]['id']
+
+            def competing_action(action):
+                body = {'id': gift_id} if action == 'pledge' else {'ids': [gift_id]}
+                return client.post('/api/inventory/demo-' + action, json=body,
+                                   headers={**headers, 'Idempotency-Key': 'race-' + action}).status_code
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                outcomes = list(pool.map(competing_action, ['pledge', 'withdraw']))
+            assert sorted(outcomes) == [200, 409]
+            final = client.get('/api/inventory', headers=headers).json()
+            assert gift_id not in [g['id'] for g in final['inventory']]
+            assert len(final['pledged']) == (1 if outcomes[0] == 200 else 0)
             logout = client.post("/api/auth/logout", headers=headers)
             assert logout.status_code == 204
             assert logout.content == b""
@@ -82,6 +105,9 @@ def test_postgres_new_user_retry_me_and_logout(settings):
         finally:
             # Remove only this test's random identity, never shared database state.
             with Session(app.state.engine) as db:
+                db.execute(delete(InventoryReceipt).where(InventoryReceipt.user_id == user_id))
+                db.execute(delete(InventoryGift).where(InventoryGift.user_id == user_id))
+                db.execute(delete(InventoryInit).where(InventoryInit.user_id == user_id))
                 db.execute(delete(LoginSession).where(LoginSession.user_id == user_id))
                 db.execute(delete(User).where(User.id == user_id))
                 db.commit()
