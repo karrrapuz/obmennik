@@ -6,7 +6,8 @@ import { gifts as sampleGifts, type Gift } from '../ExchangePage/data/gifts';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftWithdrawal from './components/GiftWithdrawal/GiftWithdrawal';
 import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/ProfileModal';
-import avatarImage from '../../assets/avatar.png';
+import { displayName, useUser } from '../../auth/AuthProvider';
+import UserAvatar from '../../components/layout/UserAvatar';
 import tonIcon from '../../assets/ton.svg';
 import giftSelectedIcon from './assets/profile-use-gift-active.svg';
 import giftInactiveIcon from './assets/profile-use-gift-inactive.svg';
@@ -33,6 +34,8 @@ export type ProfileGift = Omit<Gift, 'price'> & { price: number };
 const demoGifts: ProfileGift[] = sampleGifts.slice(0, 4).map((gift) => ({ ...gift, price: Number(gift.price) }));
 
 function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; setBalance: Dispatch<SetStateAction<number>>; topUpRequest: number }) {
+  const user = useUser();
+  const name = displayName(user);
   const displayedBalance = useAnimatedBalance(balance);
   const [wallet, setWallet] = useState('');
   const [walletOpen, setWalletOpen] = useState(false);
@@ -48,7 +51,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
   const [walletCopied, setWalletCopied] = useState(false);
   const [referralReward, setReferralReward] = useState(5);
   useEffect(() => { if (topUpRequest > 0) setModal('deposit-choice'); }, [topUpRequest]);
-  const referralLink = `${window.location.origin}/?ref=Masloriii`;
+  const referralLink = `${window.location.origin}/?ref=${encodeURIComponent(user.referral_code)}`;
 
   const copyText = async (value: string, onCopied: (copied: boolean) => void) => {
     try {
@@ -63,7 +66,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
   return <div className="profile-page">
     <div className="profile-page__glow" aria-hidden="true" />
     <header className="profile-header">
-      <button className="profile-header__user" type="button" aria-label="Профиль Masloriii"><img src={avatarImage} alt="" /><span>Masloriii</span></button>
+      <button className="profile-header__user" type="button" aria-label={`Профиль ${name}`}><UserAvatar user={user} /><span title={name}>{name}</span></button>
       <div className="profile-header__wallet-wrap" data-open={Boolean(wallet && walletOpen)}>
         <button className="profile-header__wallet" type="button" aria-expanded={walletOpen} onClick={() => wallet ? setWalletOpen((value) => !value) : setModal('wallet-connect')}>
           <span className="profile-header__wallet-icon"><img src={walletIcon} alt="" /></span>

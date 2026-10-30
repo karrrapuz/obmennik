@@ -1,0 +1,10 @@
+.user-avatar { flex: none; width: 34px; height: 34px; border-radius: 16px; object-fit: cover; }
+.user-avatar--fallback { display: grid; place-items: center; background: #353535; color: #fff; font-size: 12px; }
+.exchange-user > span:not(.user-avatar),
+.profile-header__user > span:not(.user-avatar),
+.profile-modal__recipient > span:not(.user-avatar) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-modal__recipient .user-avatar { width: 26px; height: 26px; }
+.profile-modal__recipient { min-width: 0; max-width: 100%; }
+.profile-header__user { min-width: 0; max-width: calc(100% - 164px); }
+.auth-error { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+.auth-error button { padding: 12px 20px; border: 0; border-radius: 8px; background: #06d7a0; color: #0d0d0d; font: inherit; cursor: pointer; }

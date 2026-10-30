@@ -10,6 +10,15 @@ type TelegramWebApp = {
   setBottomBarColor: (color: string) => void;
 };
 
+export function getTelegramInitData(): string {
+  return (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp?.initData ?? '';
+}
+
+export function isTelegramContext(): boolean {
+  const app = (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
+  return Boolean(app && (app.initData || (app.platform && app.platform !== 'unknown')));
+}
+
 export function initializeTelegram() {
   const app = (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
   if (!app || (!app.initData && app.platform === 'unknown')) return;

@@ -15,6 +15,11 @@ dist-ssr
 .env.*
 !.env.example
 *.zip
+.venv/
+__pycache__/
+.pytest_cache/
+*.db
+*.sqlite3
 
 # Editor directories and files
 .vscode/*

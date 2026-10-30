@@ -1,5 +1,6 @@
 import { useAnimatedBalance } from '../../../hooks/useAnimatedBalance';
-import avatarImage from '../../../assets/avatar.png';
+import { displayName, useUser } from '../../../auth/AuthProvider';
+import UserAvatar from '../UserAvatar';
 import tonIcon from '../../../assets/ton.svg';
 import plusIcon from '../../../assets/plus.svg';
 import './PageHeader.css';
@@ -8,15 +9,15 @@ type PageHeaderProps = {
   balance: number;
   onNavigateProfile: () => void;
   onTopUp: () => void;
-  name?: string;
-  avatar?: string;
 };
 
-export default function PageHeader({ balance, onNavigateProfile, onTopUp, name = 'Masloriii', avatar = avatarImage }: PageHeaderProps) {
+export default function PageHeader({ balance, onNavigateProfile, onTopUp }: PageHeaderProps) {
+  const user = useUser();
+  const name = displayName(user);
   const displayedBalance = useAnimatedBalance(balance);
   return <header className="exchange-header">
     <button className="exchange-user" type="button" aria-label="Открыть профиль" onClick={onNavigateProfile}>
-      <img src={avatar} alt="" /><span>{name}</span>
+      <UserAvatar user={user} /><span title={name}>{name}</span>
     </button>
     <div className="exchange-balance-group" aria-label={`Баланс ${balance.toFixed(2)} TON`}>
       <div className="exchange-balance">

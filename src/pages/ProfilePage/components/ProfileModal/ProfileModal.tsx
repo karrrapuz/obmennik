@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import type { ProfileGift } from '../../ProfilePage';
 import tonIcon from '../../../../assets/ton.svg';
-import avatarIcon from '../../../../assets/avatar.png';
+import { displayName, useUser } from '../../../../auth/AuthProvider';
+import UserAvatar from '../../../../components/layout/UserAvatar';
 import selectActive from '../../assets/profile-use-gift-active.svg';
 import selectInactive from '../../assets/profile-use-gift-inactive.svg';
 import selectCheck from '../../../ExchangePage/assets/galochka.svg';
@@ -43,6 +44,7 @@ type ProfileModalProps = {
 };
 
 function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance, setBalance, gifts, setGifts, demoGifts, referralReward, setReferralReward, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
+  const user = useUser();
   const [lastKind, setLastKind] = useState(requestedKind);
   const kind = requestedKind ?? lastKind;
   const [mounted, setMounted] = useState(kind !== null);
@@ -225,7 +227,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
       </form>}
 
       {kind === 'gift-withdraw' && <>
-        <div className="profile-modal__recipient"><img src={avatarIcon} alt="" /><span>Masloriii</span></div>
+        <div className="profile-modal__recipient"><UserAvatar user={user} /><span title={displayName(user)}>{displayName(user)}</span></div>
         <div className="profile-modal__gift-grid">{gifts.map((gift) => <article className="profile-gifts__card" key={gift.id}>
           <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} /></div>
           <div className="profile-gifts__card-info"><strong>{gift.name}</strong><span>Модель&nbsp;&nbsp;{gift.model}</span></div>
