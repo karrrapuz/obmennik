@@ -1,0 +1,22 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+
+const source = fs.readFileSync('src/wallet/wallet.ts', 'utf8');
+const javascript = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+const { parseTon, formatNano, applyLocalWallet, MAX_BALANCE } = await import('data:text/javascript;base64,' + Buffer.from(javascript).toString('base64'));
+assert.equal(parseTon('0.000000001'), 1n);
+assert.equal(parseTon('1.000000001'), 1000000001n);
+assert.equal(parseTon('.1'), 100000000n);
+for (const invalid of ['-1', '1e9', 'NaN', 'Infinity', '0.0000000001']) assert.equal(parseTon(invalid), null);
+assert.equal(formatNano(1000000001n), '1.000000001');
+assert.equal(formatNano(-1n), '-0.000000001');
+const initial = { asset: 'DEMO_TON', balance_nano: '0', referral_nano: '5000000000', transactions: [] };
+const topped = applyLocalWallet(initial, 'topup', { amount_nano: '1', source: 'cryptobot' });
+const claimed = applyLocalWallet(topped, 'referral', {});
+assert.equal(claimed.balance_nano, '5000000001');
+assert.equal(claimed.referral_nano, '0');
+assert.throws(() => applyLocalWallet(claimed, 'referral', {}));
+assert.throws(() => applyLocalWallet(claimed, 'withdraw', { amount_nano: '5000000002', destination: 'demo' }));
+assert.throws(() => applyLocalWallet({ ...initial, balance_nano: MAX_BALANCE.toString() }, 'topup', { amount_nano: '1', source: 'wallet' }));
+console.log('Exact nanoTON conversion, demo wallet limits and one-time referral: OK');

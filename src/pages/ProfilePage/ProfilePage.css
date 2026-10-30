@@ -863,3 +863,12 @@
   background: #06d7a0;
   content: '';
 }
+.demo-wallet-error { color: #f0b4b4; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.demo-wallet-error button, .balance-withdraw__available button { border: 0; background: transparent; color: #06d7a0; font: inherit; text-decoration: underline; cursor: pointer; }
+.demo-wallet-history { margin-top: 20px; font-size: 12px; line-height: 18px; }
+.demo-wallet-history summary { cursor: pointer; color: #aaa; }
+.demo-wallet-history ul { margin: 8px 0 0; padding: 0; list-style: none; }
+.demo-wallet-history li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #303030; }
+.demo-wallet-history li > span { min-width: 0; }
+.demo-wallet-history small { display: block; color: #aaa; font-size: 10px; }
+.demo-wallet-history strong { max-width: 50%; text-align: right; overflow-wrap: anywhere; font-size: 12px; }

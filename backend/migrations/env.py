@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from app.config import Settings
 from app.models import Base
 from app import inventory_models  # Register inventory tables for schema comparisons.
+from app import wallet_models
 
 settings = Settings.from_env()
 if context.is_offline_mode():

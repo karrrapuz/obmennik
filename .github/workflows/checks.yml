@@ -12,6 +12,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: node scripts/check-gift-sample.mjs
+      - run: node scripts/check-wallet.mjs
   auth:
     runs-on: ubuntu-latest
     services:

@@ -476,3 +476,6 @@
 .balance-withdraw > button:disabled { background: rgba(47,47,47,0.2); color: rgba(255,255,255,0.2); backdrop-filter: blur(15px); cursor: default; }
 .balance-withdraw__dots { display: inline-block; animation: balance-dots 1.2s steps(4, end) infinite; }
 @keyframes balance-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33.333% 0 0); } }
+.profile-modal__header h2 { max-width: calc(100% - 100px); margin-left: auto; margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-modal__choices span, .profile-modal__choices small { overflow-wrap: anywhere; }
+.balance-withdraw small { overflow-wrap: anywhere; }

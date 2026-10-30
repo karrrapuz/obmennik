@@ -131,3 +131,12 @@
   width: 10px;
   height: 10px;
 }
+.exchange-balance__demo-label {
+  position: absolute;
+  top: -15px;
+  left: 12px;
+  font-size: 9px;
+  line-height: 12px;
+  color: #aaa;
+  white-space: nowrap;
+}

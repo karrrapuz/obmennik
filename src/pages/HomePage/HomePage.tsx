@@ -3,10 +3,13 @@ import ExchangePage from '../ExchangePage/ExchangePage';
 import ProfilePage from '../ProfilePage/ProfilePage';
 import DepositPage from '../DepositPage/DepositPage';
 import PageFooter, { type PageSection } from '../../components/layout/PageFooter/PageFooter';
+import { useWallet } from '../../wallet/WalletProvider';
+import { displayTon } from '../../wallet/wallet';
 
 function HomePage() {
   const [activePage, setActivePage] = useState<PageSection>('exchange');
-  const [balance, setBalance] = useState(0);
+  const { wallet } = useWallet();
+  const balance = displayTon(wallet.balance_nano);
   const [topUpRequest, setTopUpRequest] = useState(0);
   const openTopUp = () => setTopUpRequest((value) => value + 1);
   const navigate = (page: PageSection) => {
@@ -15,7 +18,7 @@ function HomePage() {
     window.scrollTo(0, 0);
   };
   return <>
-    <div hidden={activePage !== 'profile'}><ProfilePage balance={balance} setBalance={setBalance} topUpRequest={topUpRequest} /></div>
+    <div hidden={activePage !== 'profile'}><ProfilePage balance={balance} topUpRequest={topUpRequest} /></div>
     {activePage === 'deposit' && <DepositPage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} />}
     {activePage === 'exchange' && <ExchangePage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} />}
     <PageFooter active={activePage} onNavigate={navigate} />

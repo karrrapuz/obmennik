@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useWallet } from '../../../../wallet/WalletProvider';
+import { formatNano, MAX_ACTION, MAX_BALANCE, parseTon } from '../../../../wallet/wallet';
 import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import type { ProfileGift } from '../../ProfilePage';
@@ -25,24 +27,22 @@ export type ProfileModalKind =
   | 'gift-deposit' | 'gift-empty' | 'deposit-amount' | 'crypto-amount'
   | 'withdraw-amount' | 'gift-withdraw'
   | 'gift-result-success' | 'gift-result-error'
-  | 'referral-claim' | 'result-success' | 'result-error';
+  | 'result-success' | 'result-error';
 
 type ProfileModalProps = {
   kind: ProfileModalKind | null;
   setKind: (kind: ProfileModalKind | null) => void;
   wallet: string;
   setWallet: (wallet: string) => void;
-  balance: number;
-  setBalance: Dispatch<SetStateAction<number>>;
   gifts: ProfileGift[];
-  referralReward: number;
-  setReferralReward: Dispatch<SetStateAction<number>>;
   withdrawalBusy: boolean;
   onWithdraw: (gifts: ProfileGift[]) => void;
   giftResultText: string;
 };
 
-function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance, setBalance, gifts, referralReward, setReferralReward, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
+function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
+  const { wallet: walletSnapshot, operate, pending: walletPending, error: walletError, available: walletAvailable, reload } = useWallet();
+  const balanceNano = BigInt(walletSnapshot.balance_nano);
   const { mutate } = useInventory();
   const user = useUser();
   const [lastKind, setLastKind] = useState(requestedKind);
@@ -55,17 +55,14 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
   const [resultText, setResultText] = useState('');
   const [pending, setPending] = useState(false);
   const [resultReturn, setResultReturn] = useState<ProfileModalKind | null>(null);
-  const [demoWalletBalance, setDemoWalletBalance] = useState(849.28);
-  const depositAttempts = useRef({ 'deposit-amount': 0, 'crypto-amount': 0 });
-  const withdrawalTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const withdrawalAttempt = useRef(0);
   const pendingRef = useRef(false);
+  const currentKind = useRef(requestedKind);
+  currentKind.current = requestedKind;
+  const alive = useRef(false);
   useEffect(() => {
-    clearTimeout(withdrawalTimer.current);
-    pendingRef.current = false;
-    setPending(false);
-    return () => clearTimeout(withdrawalTimer.current);
-  }, [requestedKind]);
+    alive.current = true;
+    return () => { alive.current = false; };
+  }, []);
   const [walletReturn, setWalletReturn] = useState<ProfileModalKind>('deposit-choice');
   useModalScrollLock(mounted);
 
@@ -117,36 +114,23 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
     setKind(success ? 'result-success' : 'result-error');
   };
 
-  const submitAmount = () => {
-    const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0 || pendingRef.current) return;
-    if (kind === 'withdraw-amount') {
-      if (value > balance || !wallet) return;
-      pendingRef.current = true;
-      setPending(true);
-      const success = withdrawalAttempt.current++ % 2 === 0;
-      withdrawalTimer.current = setTimeout(() => {
-        pendingRef.current = false;
-        setPending(false);
-        if (success) setBalance((current) => Math.max(0, Math.round((current - value) * 1e9) / 1e9));
-        complete(success ? `Вы успешно вывели ${value.toFixed(3)} TON!` : 'Вывод не удался...', success, true);
-      }, 1800);
-    } else if (kind === 'deposit-amount' || kind === 'crypto-amount') {
-      if (kind === 'deposit-amount' && (!wallet || value > demoWalletBalance)) return;
-      const source = kind;
-      const success = depositAttempts.current[source]++ % 2 === 0;
-      pendingRef.current = true;
-      setPending(true);
-      // Demo payment outcome until a payment provider is connected.
-      withdrawalTimer.current = setTimeout(() => {
-        pendingRef.current = false;
-        setPending(false);
-        if (success) {
-          setBalance((current) => Math.round((current + value) * 1e9) / 1e9);
-          if (source === 'deposit-amount') setDemoWalletBalance((current) => Math.max(0, Math.round((current - value) * 1e9) / 1e9));
-        }
-        complete(success ? `Вы успешно пополнили ${value.toFixed(3)} TON!` : 'Пополнить не удалось...', success);
-      }, 1800);
+  const amountNano = parseTon(amount);
+  const validAmount = amountNano !== null && amountNano > 0n && amountNano <= MAX_ACTION;
+  const canWithdraw = validAmount && amountNano <= balanceNano && Boolean(wallet);
+  const canTopUp = validAmount && balanceNano + amountNano <= MAX_BALANCE && (kind === 'crypto-amount' || Boolean(wallet));
+  const submitAmount = async () => {
+    const withdrawal = kind === 'withdraw-amount';
+    if (pendingRef.current || walletPending || !walletAvailable || amountNano === null || !(withdrawal ? canWithdraw : canTopUp)) return;
+    const submittedKind = kind;
+    pendingRef.current = true; setPending(true);
+    try {
+      await operate(withdrawal ? 'withdraw' : 'topup', withdrawal ? { amount_nano: amountNano.toString(), destination: wallet } : { amount_nano: amountNano.toString(), source: kind === 'crypto-amount' ? 'cryptobot' : 'wallet' });
+      if (alive.current && currentKind.current === submittedKind) complete(`Демо-${withdrawal ? 'вывод' : 'пополнение'}: ${formatNano(amountNano)} TON`, true, withdrawal);
+    } catch {
+      if (alive.current && currentKind.current === submittedKind) complete('Не удалось подтвердить тестовую операцию. Повторите попытку.', false, withdrawal);
+    } finally {
+      pendingRef.current = false;
+      if (alive.current) setPending(false);
     }
   };
 
@@ -170,7 +154,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
       : kind === 'wallet-warning' && walletReturn === 'withdraw-amount' ? 'Баланс'
         : kind === 'wallet-warning' || kind === 'wallet-connect' ? 'Кошелёк'
           : kind === 'result-success' ? 'Успешно!' : kind === 'result-error' ? 'Ошибка' : 'Баланс';
-  const short = kind === 'wallet-warning' || kind === 'wallet-connect' || kind === 'referral-claim';
+  const short = kind === 'wallet-warning' || kind === 'wallet-connect';
   const selectedGifts = gifts.filter((gift) => selectedGiftIds.includes(gift.id));
 
   return createPortal(<div className="profile-modal-layer" data-visible={visible} onTransitionEnd={(event) => {
@@ -180,25 +164,25 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
     <section className="profile-modal" data-short={short} data-kind={kind} role="dialog" aria-modal="true" aria-label={title}>
       <div className="profile-modal__handle" aria-hidden="true" />
       <header className="profile-modal__header">
-        <h2>{title}</h2>
+        <h2>{title} · Демо</h2>
         <button className="profile-modal__close" type="button" aria-label="Закрыть окно" onClick={() => setKind(null)}><img src={closeIcon} alt="" /></button>
         {kind !== 'deposit-choice' && kind !== 'withdraw-choice' && !kind?.includes('result-') && <button className="profile-modal__back" type="button" aria-label="Назад" onClick={back}>‹</button>}
       </header>
 
       {kind === 'deposit-choice' && <div className="profile-modal__choices">
-        <button type="button" onClick={() => chooseWalletFlow('deposit-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Балансом</span><small>Вашего кошелька</small></button>
-        <button type="button" onClick={() => { setAmount(''); setKind('crypto-amount'); }}><i className="profile-modal__choice-icon profile-modal__choice-icon--crypto"><i><img src={cryptoIcon} alt="" /></i></i><span>CryptoBot</span><small>Создайте и оплатите чек</small></button>
+        <button type="button" onClick={() => chooseWalletFlow('deposit-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Демо-кошелёк</span><small>Тестовое пополнение</small></button>
+        <button type="button" onClick={() => { setAmount(''); setKind('crypto-amount'); }}><i className="profile-modal__choice-icon profile-modal__choice-icon--crypto"><i><img src={cryptoIcon} alt="" /></i></i><span>CryptoBot · Демо</span><small>Тестовое пополнение</small></button>
         <button type="button" onClick={() => setKind('gift-deposit')}><i className="profile-modal__choice-icon"><i><img src={withdrawGiftIcon} alt="" /></i></i><span>Подарками</span><small>С вашего профиля</small></button>
       </div>}
 
       {kind === 'withdraw-choice' && <div className="profile-modal__choices">
-        <button type="button" onClick={() => chooseWalletFlow('withdraw-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Баланс</span><small>На ваш кошелёк</small></button>
+        <button type="button" onClick={() => chooseWalletFlow('withdraw-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Демо-баланс</span><small>Тестовый вывод</small></button>
         <button type="button" onClick={() => { setSelectedGiftIds([]); setKind(gifts.length ? 'gift-withdraw' : 'gift-empty'); }}><i className="profile-modal__choice-icon"><i><img src={withdrawGiftIcon} alt="" /></i></i><span>Подарки</span><small>В ваш профиль</small></button>
       </div>}
 
-      {kind === 'wallet-warning' && <div className="profile-modal__wallet-warning"><p>Вы не подключили свой кошелёк :(</p><button type="button" onClick={() => { setWalletInput(''); setKind('wallet-connect'); }}>Подключить</button></div>}
+      {kind === 'wallet-warning' && <div className="profile-modal__wallet-warning"><p>Демо-кошелёк не выбран</p><button type="button" onClick={() => { setWalletInput(''); setKind('wallet-connect'); }}>Выбрать</button></div>}
 
-      {kind === 'wallet-connect' && <div className="profile-modal__form"><label>Кошелёк<input value={walletInput} onChange={(event) => setWalletInput(event.target.value.trim())} placeholder="Адрес TON кошелька" autoComplete="off" /></label><button type="button" disabled={walletInput.length < 10} onClick={() => { setWallet(walletInput); setKind(walletReturn); }}>Подключить</button></div>}
+      {kind === 'wallet-connect' && <div className="profile-modal__form"><label>Демо-адрес<input value={walletInput} onChange={(event) => setWalletInput(event.target.value.trim())} placeholder="Тестовый адрес кошелька" autoComplete="off" maxLength={256} /></label><button type="button" disabled={walletInput.length < 10} onClick={() => { setWallet(walletInput); setKind(walletReturn); }}>Сохранить демо-адрес</button></div>}
 
       {kind === 'gift-deposit' && <><div className="profile-modal__gift-deposit"><p>Тестовые подарки</p><button type="button" disabled={pending} onClick={async () => { if (pendingRef.current) return; pendingRef.current = true; setPending(true); try { await mutate('deposit'); complete('Тестовые подарки добавлены', true); } catch { complete('Не удалось добавить подарки', false); } finally { pendingRef.current = false; setPending(false); } }}>{pending ? 'Ожидание...' : 'Добавить'}</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind(null)}>Закрыть</button></>}
 
@@ -209,10 +193,10 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
         <label className="balance-withdraw__input">
           <span className="balance-withdraw__coin"><i><img src={tonIcon} alt="" /></i></span>
           <input aria-label="Сумма вывода TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
-          {Number(amount) > 0 && <small>{Number(amount) > balance ? 'Недостаточно TON' : `Останется: ${(balance - Number(amount)).toFixed(3)} TON`}</small>}
+          {amountNano !== null && amountNano > 0n && <small>{amountNano > balanceNano ? 'Недостаточно демо-TON' : amountNano > MAX_ACTION ? 'Максимум 10000 TON' : `Останется: ${formatNano(balanceNano - amountNano)} TON`}</small>}
         </label>
-        <p className="balance-withdraw__available">Доступно для вывода: {balance.toFixed(3)} TON</p>
-        <button type="submit" disabled={pending || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || Number(amount) > balance || !wallet}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Вывести'}</button>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Тестовый баланс: {formatNano(balanceNano)} TON</>}</p>
+        <button type="submit" disabled={pending || walletPending || !walletAvailable || !canWithdraw}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Демо-вывод'}</button>
       </form>}
 
       {(kind === 'deposit-amount' || kind === 'crypto-amount') && <form className="balance-withdraw" onSubmit={(event) => { event.preventDefault(); submitAmount(); }} aria-busy={pending}>
@@ -220,10 +204,10 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
         <label className="balance-withdraw__input">
           <span className="balance-withdraw__coin"><i><img src={tonIcon} alt="" /></i></span>
           <input aria-label="Сумма пополнения TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
-          {kind === 'deposit-amount' && Number(amount) > 0 && <small>{Number(amount) > demoWalletBalance ? 'Недостаточно TON' : `Останется: ${(demoWalletBalance - Number(amount)).toFixed(3)} TON`}</small>}
+          {amountNano !== null && amountNano > 0n && <small>{amountNano > MAX_ACTION ? 'Максимум 10000 TON' : balanceNano + amountNano > MAX_BALANCE ? 'Лимит баланса 100000 TON' : `Будет: ${formatNano(balanceNano + amountNano)} TON`}</small>}
         </label>
-        {kind === 'deposit-amount' && <p className="balance-withdraw__available">Доступно для пополнения: {demoWalletBalance.toFixed(3)} TON</p>}
-        <button type="submit" disabled={pending || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || (kind === 'deposit-amount' && (!wallet || Number(amount) > demoWalletBalance))}>{pending ? <>{kind === 'crypto-amount' ? 'Ожидание оплаты' : 'Ожидание'}<span className="balance-withdraw__dots">...</span></> : kind === 'crypto-amount' ? 'Создать чек' : 'Пополнить'}</button>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Тестовый баланс: {formatNano(balanceNano)} TON</>}</p>
+        <button type="submit" disabled={pending || walletPending || !walletAvailable || !canTopUp}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Демо-пополнение'}</button>
       </form>}
 
       {kind === 'gift-withdraw' && <>
@@ -241,7 +225,6 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, balance
 
       {(kind === 'gift-result-success' || kind === 'gift-result-error') && <div className="profile-modal__result"><span className="profile-modal__result-icon"><img src={kind === 'gift-result-success' ? successIcon : errorIcon} alt="" /></span><p>{giftResultText}</p><button type="button" onClick={() => setKind(gifts.length ? 'gift-withdraw' : 'gift-empty')}>{kind === 'gift-result-success' ? 'Вернуться назад' : 'Попробовать снова'}</button></div>}
 
-      {kind === 'referral-claim' && <div className="profile-modal__message"><h3>Заработано</h3><p>{referralReward.toFixed(3)} TON</p><button type="button" disabled={referralReward === 0} onClick={() => { setBalance((current) => current + referralReward); setReferralReward(0); complete(`Вы забрали ${referralReward.toFixed(3)} TON`, true); }}>Забрать</button></div>}
 
       {(kind === 'result-success' || kind === 'result-error') && <div className="profile-modal__result"><span className="profile-modal__result-icon"><img src={kind === 'result-success' ? successIcon : errorIcon} alt="" /></span><p>{resultText}</p><button type="button" onClick={() => { if (kind === 'result-success') setAmount(''); setKind(resultReturn); }}>{resultReturn ? kind === 'result-error' ? 'Попробовать снова' : 'Вернуться назад' : 'Готово'}</button></div>}
     </section>

@@ -17,6 +17,8 @@ from app.config import Settings
 from app.main import create_app
 from app.models import LoginSession, User
 from app.inventory_models import InventoryGift, InventoryInit, InventoryReceipt
+from app.wallet_models import WalletAccount, WalletPosting, WalletTransaction
+from sqlalchemy.exc import DBAPIError
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -98,6 +100,44 @@ def test_postgres_new_user_retry_me_and_logout(settings):
             final = client.get('/api/inventory', headers=headers).json()
             assert gift_id not in [g['id'] for g in final['inventory']]
             assert len(final['pledged']) == (1 if outcomes[0] == 200 else 0)
+            wallet = client.get('/api/wallet', headers=headers)
+            assert wallet.status_code == 200
+            assert wallet.json()['balance_nano'] == '0'
+            assert wallet.json()['referral_nano'] == '5000000000'
+            topup_headers = {**headers, 'Idempotency-Key': 'pg-wallet-topup'}
+            topup_body = {'amount_nano': '1000000000', 'source': 'wallet'}
+            assert client.post('/api/wallet/demo-topup', json=topup_body, headers=topup_headers).status_code == 200
+            assert client.post('/api/wallet/demo-topup', json=topup_body, headers=topup_headers).json()['balance_nano'] == '1000000000'
+
+            def withdraw_test(index):
+                return client.post('/api/wallet/demo-withdraw',
+                    json={'amount_nano': '750000000', 'destination': 'demo-destination'},
+                    headers={**headers, 'Idempotency-Key': f'pg-wallet-withdraw-{index}'}).status_code
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                assert sorted(pool.map(withdraw_test, [1, 2])) == [200, 409]
+            assert client.get('/api/wallet', headers=headers).json()['balance_nano'] == '250000000'
+
+            def claim_test(index):
+                return client.post('/api/wallet/demo-referral', json={},
+                    headers={**headers, 'Idempotency-Key': f'pg-referral-{index}'}).status_code
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                assert sorted(pool.map(claim_test, [1, 2])) == [200, 409]
+            final_wallet = client.get('/api/wallet', headers=headers).json()
+            assert final_wallet['balance_nano'] == '5250000000'
+            assert final_wallet['referral_nano'] == '0'
+            with Session(app.state.engine) as db:
+                db.get(WalletAccount, (user_id, 'wallet')).balance += 1
+                with pytest.raises(DBAPIError):
+                    db.commit()
+                db.rollback()
+                db.add(WalletTransaction(id=secrets.token_hex(16), user_id=user_id,
+                    key='unbalanced', payload_hash='test', kind='topup', amount_nano=1,
+                    created_at=int(time.time())))
+                with pytest.raises(DBAPIError):
+                    db.commit()
+                db.rollback()
             logout = client.post("/api/auth/logout", headers=headers)
             assert logout.status_code == 204
             assert logout.content == b""
@@ -105,6 +145,9 @@ def test_postgres_new_user_retry_me_and_logout(settings):
         finally:
             # Remove only this test's random identity, never shared database state.
             with Session(app.state.engine) as db:
+                db.execute(delete(WalletPosting).where(WalletPosting.user_id == user_id))
+                db.execute(delete(WalletTransaction).where(WalletTransaction.user_id == user_id))
+                db.execute(delete(WalletAccount).where(WalletAccount.user_id == user_id))
                 db.execute(delete(InventoryReceipt).where(InventoryReceipt.user_id == user_id))
                 db.execute(delete(InventoryGift).where(InventoryGift.user_id == user_id))
                 db.execute(delete(InventoryInit).where(InventoryInit.user_id == user_id))

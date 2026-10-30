@@ -1,4 +1,6 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useWallet } from '../../wallet/WalletProvider';
+import { displayTon, formatNano } from '../../wallet/wallet';
 import { useAnimatedBalance } from '../../hooks/useAnimatedBalance';
 import '../../styles/press-feedback.css';
 import SlideNotice from '../../components/feedback/SlideNotice/SlideNotice';
@@ -33,7 +35,18 @@ import './ProfilePage.css';
 export type ProfileGift = Omit<Gift, 'price'> & { price: number };
 
 
-function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; setBalance: Dispatch<SetStateAction<number>>; topUpRequest: number }) {
+function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest: number }) {
+  const { wallet: walletSnapshot, pending: walletPending, error: walletError, available: walletAvailable, operate, reload } = useWallet();
+  const referralReward = displayTon(walletSnapshot.referral_nano);
+  const claimBusy = useRef(false);
+  const [claimError, setClaimError] = useState('');
+  const claimReferral = async () => {
+    if (claimBusy.current || walletPending || !walletAvailable || BigInt(walletSnapshot.referral_nano) <= 0n) return;
+    claimBusy.current = true; setClaimError('');
+    try { await operate('referral'); }
+    catch { setClaimError('Не удалось забрать демо-награду. Повторите попытку.'); }
+    finally { claimBusy.current = false; }
+  };
   const user = useUser();
   const name = displayName(user);
   const displayedBalance = useAnimatedBalance(balance);
@@ -50,7 +63,6 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
   const [modal, setModal] = useState<ProfileModalKind | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
   const [walletCopied, setWalletCopied] = useState(false);
-  const [referralReward, setReferralReward] = useState(5);
   useEffect(() => { if (topUpRequest > 0) setModal('deposit-choice'); }, [topUpRequest]);
   const referralLink = `${window.location.origin}/?ref=${encodeURIComponent(user.referral_code)}`;
 
@@ -71,7 +83,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
       <div className="profile-header__wallet-wrap" data-open={Boolean(wallet && walletOpen)}>
         <button className="profile-header__wallet" type="button" aria-expanded={walletOpen} onClick={() => wallet ? setWalletOpen((value) => !value) : setModal('wallet-connect')}>
           <span className="profile-header__wallet-icon"><img src={walletIcon} alt="" /></span>
-          <span>{wallet ? `${wallet.slice(0, 6)}...` : 'Подключить'}</span>
+          <span>{wallet ? `Демо ${wallet.slice(0, 4)}...` : 'Демо-кошелёк'}</span>
           {wallet && <span className="profile-header__chevron" aria-hidden="true" />}
         </button>
         {wallet && walletOpen && <div className="profile-header__wallet-menu">
@@ -81,8 +93,8 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
       </div>
     </header>
 
-    <section className="profile-balance" aria-label="Ваш баланс">
-      <span>Ваш баланс</span>
+    <section className="profile-balance" aria-label="Тестовый баланс">
+      <span>Тестовый баланс</span>
       <strong><img src={tonIcon} alt="" />{displayedBalance.toFixed(2)}</strong>
     </section>
 
@@ -94,6 +106,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
 
     <main className="profile-content">
       <p className="demo-inventory-caption">Тестовые подарки</p>
+      {(walletError || claimError) && <p className="demo-wallet-error" role="alert">{claimError || walletError} <button type="button" disabled={walletPending} onClick={() => { setClaimError(''); void reload().catch(() => {}); }}>Обновить</button></p>}
       <section className="profile-gifts" aria-label="Ваши подарки">
         <div className="profile-gifts__header">
           <div className="profile-gifts__title"><span><img src={giftSmallIcon} alt="" /></span>Ваши подарки</div>
@@ -121,10 +134,11 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
         <p>Приглашайте друзей и получайте <em>20% комиссии</em> от их обменов!</p>
         <div className="profile-referral__stats">
           <div className="profile-referral__stat"><img src={inviteBackdrop} alt="" /><span>Приглашено</span><strong>0 чел.</strong><button type="button" onClick={() => copyText(referralLink, setReferralCopied)}>{referralCopied ? 'Скопировано' : 'Пригласить'}</button></div>
-          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Заработано</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} TON</strong><button type="button" disabled={referralReward === 0} onClick={() => { if (referralReward <= 0) return; setBalance((current) => current + referralReward); setReferralReward(0); }}>Забрать</button></div>
+          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Демо-награда</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} TON</strong><button type="button" disabled={BigInt(walletSnapshot.referral_nano) === 0n || walletPending || !walletAvailable} onClick={claimReferral}>{walletPending && claimBusy.current ? 'Ожидание...' : 'Забрать'}</button></div>
         </div>
       </section>
       <div className="profile-referral-link"><div><img src={referralIcon} alt="" /><span>Реферальная ссылка</span></div><button type="button" aria-label="Скопировать реферальную ссылку" onClick={() => copyText(referralLink, setReferralCopied)}><img src={referralCopied ? copiedIcon : copyIcon} alt="" /></button></div>
+      <details className="demo-wallet-history"><summary>История тестовых операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Демо-пополнение', withdraw: 'Демо-вывод', referral: 'Демо-награда' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} TON</strong></li>)}</ul></details>
     </main>
 
     <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>
@@ -133,7 +147,7 @@ function ProfilePage({ balance, setBalance, topUpRequest }: { balance: number; s
       setSelectedGiftIds((current) => current.filter((id) => !ids.includes(id)));
       });
     }} />
-    <ProfileModal kind={modal} setKind={setModal} wallet={wallet} setWallet={setWallet} balance={balance} setBalance={setBalance} gifts={gifts} referralReward={referralReward} setReferralReward={setReferralReward} withdrawalBusy={withdrawalBusy} giftResultText={giftResultText} onWithdraw={(selected) => { setWithdrawalFromModal(true); setWithdrawalGifts(selected); }} />
+    <ProfileModal kind={modal} setKind={setModal} wallet={wallet} setWallet={setWallet} gifts={gifts} withdrawalBusy={withdrawalBusy} giftResultText={giftResultText} onWithdraw={(selected) => { setWithdrawalFromModal(true); setWithdrawalGifts(selected); }} />
   </div>;
 }
 

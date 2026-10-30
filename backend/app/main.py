@@ -20,6 +20,7 @@ from .config import Settings
 from .models import LoginSession, User
 from .telegram_auth import InvalidInitData, validate_init_data
 from .inventory import register_inventory_routes
+from .wallet import register_wallet_routes
 
 
 class AuthInput(BaseModel):
@@ -127,6 +128,7 @@ def create_app(settings: Settings):
         return Response(status_code=204)
 
     register_inventory_routes(app, database, current_session)
+    register_wallet_routes(app, database, current_session)
     return app
 
 
