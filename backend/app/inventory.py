@@ -35,6 +35,29 @@ class GiftInput(EmptyInput):
     id: GiftId
 
 
+def ensure_inventory(db, user_id):
+    if db.get(InventoryInit, user_id) is None:
+        catalog = json.loads((Path(__file__).resolve().parents[1] / 'data/catalog-sample.json').read_text(encoding='utf-8'))
+        db.add(InventoryInit(user_id=user_id))
+        db.flush()
+        for index, template in enumerate(catalog[:5]):
+            db.add(InventoryGift(user_id=user_id, catalog_id=template['id'], pledged=False, pledge_supported=index < 3))
+        db.get(User, user_id).state_revision += 1
+        db.flush()
+
+
+def inventory_snapshot(db, user_id):
+    catalog = json.loads((Path(__file__).resolve().parents[1] / 'data/catalog-sample.json').read_text(encoding='utf-8'))
+    templates = {gift['id']: gift for gift in catalog}
+    result = {'revision': db.get(User, user_id).state_revision, 'inventory': [], 'pledged': [], 'catalog': [
+        {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id']} for gift in catalog]}
+    for row in db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id).order_by(InventoryGift.id)).all():
+        gift = {**templates[row.catalog_id], 'id': row.id, 'catalogId': row.catalog_id,
+                'blockTradeGift': False, 'pledgeSupported': row.pledge_supported}
+        result['pledged' if row.pledged else 'inventory'].append(gift)
+    return result
+
+
 def register_inventory_routes(app, database, current_session):
     path = Path(__file__).resolve().parents[1] / "data/catalog-sample.json"
     catalog = json.loads(path.read_text(encoding="utf-8"))
@@ -48,24 +71,10 @@ def register_inventory_routes(app, database, current_session):
         return user.id
 
     def seed(db, user_id):
-        if db.get(InventoryInit, user_id) is None:
-            db.add(InventoryInit(user_id=user_id))
-            db.flush()
-            for index, template in enumerate(catalog[:5]):
-                db.add(InventoryGift(user_id=user_id, catalog_id=template["id"],
-                                     pledged=False, pledge_supported=index < 3))
-            db.flush()
+        ensure_inventory(db, user_id)
 
     def snapshot(db, user_id):
-        result = {"inventory": [], "pledged": [], "catalog": [
-            {**gift, "blockTradeGift": gift["id"] == blocked_id} for gift in catalog]}
-        rows = db.scalars(select(InventoryGift).where(
-            InventoryGift.user_id == user_id).order_by(InventoryGift.id)).all()
-        for row in rows:
-            gift = {**templates[row.catalog_id], "id": row.id, "catalogId": row.catalog_id,
-                    "blockTradeGift": False, "pledgeSupported": row.pledge_supported}
-            result["pledged" if row.pledged else "inventory"].append(gift)
-        return result
+        return inventory_snapshot(db, user_id)
 
     def unique(ids):
         if len(ids) != len(set(ids)):
@@ -109,9 +118,14 @@ def register_inventory_routes(app, database, current_session):
                 db.delete(row)
         else:
             row = owned(db, user_id, [body.id], pledged=operation == "release")[0]
+            if operation == 'release':
+                from .loan_models import DemoLoan
+                if db.scalar(select(DemoLoan.id).where(DemoLoan.gift_id == row.id, DemoLoan.status == 'active')):
+                    raise HTTPException(409, 'Close the loan to release its gift')
             if operation == "pledge" and not row.pledge_supported:
                 raise HTTPException(409, "Pledge unsupported")
             row.pledged = operation == "pledge"
+        db.get(User, user_id).state_revision += 1
         db.flush()
         result = snapshot(db, user_id)
         db.add(InventoryReceipt(user_id=user_id, key=key, payload_hash=digest, result=result))

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { pledgeStore } from '../services/pledgeStore';
+import { pledgeStore, type Quote } from '../services/pledgeStore';
 import { useModalScrollLock } from '../../../hooks/useModalScrollLock';
 import gift from '../../ExchangePage/assets/obmen_gift_active.svg';
 import GiftArtwork from '../../../components/gifts/GiftArtwork/GiftArtwork';
@@ -26,7 +26,15 @@ export default function PledgePayment({ ids, onClose, onTopUp }: { ids: number[]
   const alive = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const items = state.pledges.filter((item) => selected.includes(item.gift.id));
-  const quote = pledgeStore.quote(selected);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteError, setQuoteError] = useState(false);
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setQuote(null); setQuoteError(false);
+    pledgeStore.requestQuote(selected).then((next) => { if (active) setQuote(next); }, () => { if (active) setQuoteError(true); });
+    return () => { active = false; };
+  }, [selected, quoteAttempt]);
   useModalScrollLock(true);
   useEffect(() => {
     alive.current = true;
@@ -38,7 +46,7 @@ export default function PledgePayment({ ids, onClose, onTopUp }: { ids: number[]
   }, []);
   const dismiss = () => { if (busy.current) return; clearTimeout(timer.current); setVisible(false); timer.current = setTimeout(onClose, 420); };
   const pay = async () => {
-    if (busy.current || !selected.length) return;
+    if (busy.current || !selected.length || !quote || quoteError) return;
     busy.current = true; setStage('pending');
     try { const ok = await pledgeStore.extend(selected); if (alive.current) setStage(ok ? 'success' : 'error'); }
     catch { if (alive.current) setStage('error'); }
@@ -61,13 +69,13 @@ export default function PledgePayment({ ids, onClose, onTopUp }: { ids: number[]
           <strong className="pledge-pay__name">{item.gift.name}</strong><div className="pledge-pay__model"><span>{item.gift.modelName ?? 'Модель'}</span><span>{item.gift.model}</span></div>
           <div className="pledge-pay__loan"><i><img src={time} alt="" /></i><div><span>Занято {item.principal.toFixed(3)} TON</span><span>до {new Date(item.dueAt).toLocaleDateString('ru-RU')}</span></div></div>
           <button className="pledge-pay__expand" aria-label={`Платеж по ${item.gift.name}`} aria-expanded={expandedGifts.includes(item.gift.id)} onClick={() => setExpandedGifts((current) => current.includes(item.gift.id) ? current.filter((id) => id !== item.gift.id) : [...current, item.gift.id])}><img src={arrow} alt="" /></button>
-          <div className="pledge-pay__gift-details"><p><span>Следующий платеж</span><span>{new Date(item.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span></p><p><span>Проценты по займу</span><strong>{(item.repayment - item.principal).toFixed(3)} TON</strong></p></div>
+          <div className="pledge-pay__gift-details"><p><span>Следующий платеж</span><span>{new Date(item.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span></p><p><span>Проценты по займу</span><strong>{(item.interest ?? (item.repayment - item.principal)).toFixed(3)} TON</strong></p></div>
         </article>)}
           {!items.length && <p>Подарки не выбраны</p>}
         </div><div className="pledge-pay__explanation"><strong>Вы совершаете регулярный платеж</strong><p>Ваши займы будут продлены, а следующий платеж будет запланирован в течение следующих 14 дней</p></div>
         </div>
-        <footer><div className="pledge-pay__total" data-expanded={expanded}><button aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}><span>Итого к оплате</span><strong>{quote.total.toFixed(3)} TON</strong><img src={arrow} alt="" /></button><div><p><span>Проценты по займу</span><span>{quote.interest.toFixed(3)} TON</span></p><p><span>Комиссия сети</span><span>{quote.fee.toFixed(2)} TON</span></p></div></div><button className="pledge-pay__action" disabled={!items.length} onClick={pay}>Оплатить</button></footer>
-      </> : <div className="pledge-pay__result"><div className="pledge-pay__result-icon"><img className={stage === 'pending' ? 'pledge-pay__spinner' : ''} src={stage === 'pending' ? spinner : stage === 'success' ? success : error} alt="" /></div><p role="status">{stage === 'pending' ? 'Пожалуйста подождите...' : stage === 'success' ? `Вы успешно продлили займ до ${dates.join(', ')}!` : 'Недостаточно средств'}</p>{stage !== 'pending' && <button className="pledge-pay__action" onClick={() => stage === 'error' ? setStage('review') : dismiss()}>{stage === 'success' ? 'Вернуться назад' : 'Попробовать снова'}</button>}</div>}
+        <footer>{!quote ? <div role={quoteError ? "alert" : "status"}>{quoteError ? <>Не удалось получить расчет. <button onClick={() => setQuoteAttempt((value) => value + 1)}>Повторить</button></> : <img className="pledge-pay__spinner" src={spinner} width={32} height={32} alt="Расчет платежа" />}</div> : <div className="pledge-pay__total" data-expanded={expanded}><button aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}><span>Итого к оплате</span><strong>{quote.total.toFixed(3)} TON</strong><img src={arrow} alt="" /></button><div><p><span>Проценты по займу</span><span>{quote.interest.toFixed(3)} TON</span></p><p><span>Комиссия сети</span><span>{quote.fee.toFixed(2)} TON</span></p></div></div>}<button className="pledge-pay__action" disabled={!items.length || !quote || quoteError} onClick={pay}>Оплатить</button></footer>
+      </> : <div className="pledge-pay__result"><div className="pledge-pay__result-icon"><img className={stage === 'pending' ? 'pledge-pay__spinner' : ''} src={stage === 'pending' ? spinner : stage === 'success' ? success : error} alt="" /></div><p role="status">{stage === 'pending' ? 'Пожалуйста подождите...' : stage === 'success' ? `Вы успешно продлили займ до ${dates.join(', ')}!` : 'Не удалось подтвердить платеж. Проверьте баланс и повторите попытку.'}</p>{stage !== 'pending' && <button className="pledge-pay__action" onClick={() => stage === 'error' ? (setQuoteAttempt((value) => value + 1), setStage('review')) : dismiss()}>{stage === 'success' ? 'Вернуться назад' : 'Попробовать снова'}</button>}</div>}
     </section>
   </dialog>, document.body);
 }

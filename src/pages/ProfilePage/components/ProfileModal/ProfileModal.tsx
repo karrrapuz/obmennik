@@ -195,7 +195,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
           <input aria-label="Сумма вывода TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
           {amountNano !== null && amountNano > 0n && <small>{amountNano > balanceNano ? 'Недостаточно демо-TON' : amountNano > MAX_ACTION ? 'Максимум 10000 TON' : `Останется: ${formatNano(balanceNano - amountNano)} TON`}</small>}
         </label>
-        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Тестовый баланс: {formatNano(balanceNano)} TON</>}</p>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} TON</>}</p>
         <button type="submit" disabled={pending || walletPending || !walletAvailable || !canWithdraw}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Демо-вывод'}</button>
       </form>}
 
@@ -206,7 +206,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
           <input aria-label="Сумма пополнения TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
           {amountNano !== null && amountNano > 0n && <small>{amountNano > MAX_ACTION ? 'Максимум 10000 TON' : balanceNano + amountNano > MAX_BALANCE ? 'Лимит баланса 100000 TON' : `Будет: ${formatNano(balanceNano + amountNano)} TON`}</small>}
         </label>
-        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Тестовый баланс: {formatNano(balanceNano)} TON</>}</p>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} TON</>}</p>
         <button type="submit" disabled={pending || walletPending || !walletAvailable || !canTopUp}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Демо-пополнение'}</button>
       </form>}
 

@@ -18,6 +18,8 @@ from app.main import create_app
 from app.models import LoginSession, User
 from app.inventory_models import InventoryGift, InventoryInit, InventoryReceipt
 from app.wallet_models import WalletAccount, WalletPosting, WalletTransaction
+from app.loan_models import DemoLoan, LoanReceipt
+from app.loans import process_due_loans
 from sqlalchemy.exc import DBAPIError
 from concurrent.futures import ThreadPoolExecutor
 
@@ -127,7 +129,42 @@ def test_postgres_new_user_retry_me_and_logout(settings):
             final_wallet = client.get('/api/wallet', headers=headers).json()
             assert final_wallet['balance_nano'] == '5250000000'
             assert final_wallet['referral_nano'] == '0'
+            all_loans = client.get('/api/loans', headers=headers).json()
+            eligible = [gift['id'] for gift in all_loans['inventory']['inventory'] if gift['pledgeSupported']]
+            first_gift = eligible[0]
+            create_body = {'gift_id': first_gift, 'weeks': 2}
+            create_headers = {**headers, 'Idempotency-Key': 'pg-loan-create'}
+            created = client.post('/api/loans/create', json=create_body, headers=create_headers)
+            assert created.status_code == 200
+            assert created.json()['wallet']['balance_nano'] == '6450000000'
+            repeated_loan = client.post('/api/loans/create', json=create_body, headers=create_headers)
+            assert repeated_loan.json()['wallet']['balance_nano'] == '6450000000'
+
+            def repay_test(index):
+                return client.post('/api/loans/repay', json={'gift_id': first_gift},
+                    headers={**headers, 'Idempotency-Key': f'pg-repay-{index}'}).status_code
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                assert sorted(pool.map(repay_test, [1, 2])) == [200, 409]
+            assert client.get('/api/wallet', headers=headers).json()['balance_nano'] == '5170000000'
+            second_gift = eligible[1]
+            assert client.post('/api/loans/create', json={'gift_id': second_gift, 'weeks': 1},
+                headers={**headers, 'Idempotency-Key': 'pg-auto-create'}).status_code == 200
+            assert client.post('/api/loans/autopay', json={'gift_id': second_gift, 'enabled': True},
+                headers={**headers, 'Idempotency-Key': 'pg-auto-enable'}).status_code == 200
             with Session(app.state.engine) as db:
+                automatic = db.scalar(select(DemoLoan).where(DemoLoan.user_id == user_id,
+                    DemoLoan.gift_id == second_gift, DemoLoan.status == 'active'))
+                automatic.due_at = int(time.time()) - 1
+                db.commit()
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                list(pool.map(lambda _: process_due_loans(app.state.engine), [1, 2]))
+            assert client.get('/api/wallet', headers=headers).json()['balance_nano'] == '5130000000'
+            settled = client.get('/api/loans', headers=headers).json()
+            assert next(loan for loan in settled['loans'] if loan['gift_id'] == second_gift)['status'] == 'repaid'
+            with Session(app.state.engine) as db:
+                db.execute(delete(LoanReceipt).where(LoanReceipt.user_id == user_id))
+                db.execute(delete(DemoLoan).where(DemoLoan.user_id == user_id))
                 db.get(WalletAccount, (user_id, 'wallet')).balance += 1
                 with pytest.raises(DBAPIError):
                     db.commit()
@@ -145,6 +182,8 @@ def test_postgres_new_user_retry_me_and_logout(settings):
         finally:
             # Remove only this test's random identity, never shared database state.
             with Session(app.state.engine) as db:
+                db.execute(delete(LoanReceipt).where(LoanReceipt.user_id == user_id))
+                db.execute(delete(DemoLoan).where(DemoLoan.user_id == user_id))
                 db.execute(delete(WalletPosting).where(WalletPosting.user_id == user_id))
                 db.execute(delete(WalletTransaction).where(WalletTransaction.user_id == user_id))
                 db.execute(delete(WalletAccount).where(WalletAccount.user_id == user_id))

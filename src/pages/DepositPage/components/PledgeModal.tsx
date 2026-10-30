@@ -11,10 +11,12 @@ import greenBackdrop from '../assets/zalog-modal-one-nedelya.svg';
 import blueBackdrop from '../assets/zalog-modal-two-nedelya.svg';
 import processing from '../assets/obrabotka-zaloga.svg';
 import { useModalScrollLock } from '../../../hooks/useModalScrollLock';
-import { pledgeStore, pledgeTerms, type Pledge } from '../services/pledgeStore';
+import { pledgeStore, type Pledge } from '../services/pledgeStore';
 import './PledgeModal.css';
+import { useLoanTerms } from '../../../loans/LoanProvider';
 
 export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: { gift: Gift | null; open: boolean; onClose: () => void; pledge?: Pledge; onCreated: () => void }) {
+  const pledgeTerms = useLoanTerms();
   const dialog = useRef<HTMLDialogElement>(null);
   const scroll = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -71,17 +73,18 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
             <dl className="pledge-attributes">{[['Модель', gift.modelName ?? 'Модель', ''], ['Символ', gift.symbol?.name ?? '—', gift.symbol?.rarity], ['Фон', gift.backdrop?.name ?? '—', gift.backdrop?.rarity]].map(([label, value, rarity]) => <div key={label}><dt>{label}</dt><dd><span>{value}{rarity && <small>{rarity}</small>}</span></dd></div>)}</dl>
             {!pledge && <div className="pledge-terms">{pledgeTerms.map((term) => <button key={term.weeks} aria-pressed={weeks === term.weeks} onClick={() => setWeeks(weeks === term.weeks ? null : term.weeks)} data-weeks={term.weeks}><img src={term.weeks === 1 ? greenBackdrop : blueBackdrop} alt="" /><span>{term.weeks === 1 ? '1 неделя' : '2 недели'}</span><strong>{term.principal.toFixed(3)} TON</strong><small>Возврат {term.repayment.toFixed(3)} TON</small><b>{weeks === term.weeks ? 'Выбран' : 'Выбрать'}</b></button>)}</div>}
             {pledge?.status === 'processing' && <div className="pledge-processing" role="status"><img src={processing} alt="" /><strong>Обработка<span>...</span></strong><p>Займ в настоящее время обрабатывается, и будет осуществлен в ближайшее время.</p></div>}
-            {pledge?.status === 'active' && <div className="pledge-details">
+            {pledge?.legacy && <small>Подарок зарезервирован. Возврат без списания.</small>}
+            {pledge?.status === 'active' && !pledge.legacy && <div className="pledge-details">
               <section className="pledge-details__summary"><h3>{pledge.weeks * 7} дней</h3><strong>{pledge.principal.toFixed(3)} TON</strong><p>Для погашения {pledge.repayment.toFixed(3)} TON</p></section>
-              <section><h3>Предстоящий платеж</h3><p>Не забывайте регулярно платить проценты по займу, чтобы продолжать использовать заемные средства. Вы можете сделать это в любое время до наступления срока погашения.</p><div className="pledge-payment"><div><strong>{new Date(pledge.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ({new Date(pledge.dueAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })})</strong><small>К оплате — {(pledge.repayment - pledge.principal).toFixed(3)} TON</small></div><button onClick={() => notify(pledgeStore.payInterest(gift.id) ? 'Успешно!' : 'Баланса недостаточно!')}>Оплатить</button></div></section>
-              <section><h3>Автоплатеж</h3><p>Мы автоматически спишем средства с вашего счета до истечения срока займа и уведомим вас, если средств недостаточно.</p><button className="pledge-autopay" data-active={pledge.autopay} onClick={() => pledgeStore.toggleAutopay(gift.id)}>{pledge.autopay ? 'Отключить' : 'Включить'}</button></section>
+              <section><h3>Предстоящий платеж</h3><p>Не забывайте регулярно платить проценты по займу, чтобы продолжать использовать заемные средства. Вы можете сделать это в любое время до наступления срока погашения.</p><div className="pledge-payment"><div><strong>{new Date(pledge.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ({new Date(pledge.dueAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })})</strong><small>К оплате — {(pledge.interest ?? (pledge.repayment - pledge.principal)).toFixed(3)} TON</small></div><button onClick={async () => { if (pending.current) return; pending.current = true; try { notify(await pledgeStore.payInterest(gift.id) ? 'Успешно!' : 'Баланса недостаточно!'); } catch { notify('Не удалось подтвердить платеж. Повторите попытку.'); } finally { pending.current = false; } }}>Оплатить</button></div></section>
+              <section><h3>Автоплатеж</h3><p>Демо-автоплатеж проверяется при наступлении срока, раз в минуту во время работы сервиса. Бесплатный демо-сервер может выполнить проверку после пробуждения или при следующем обновлении. Просроченные подарки не изымаются.</p><button className="pledge-autopay" data-active={pledge.autopay} onClick={async () => { if (pending.current) return; pending.current = true; try { await pledgeStore.toggleAutopay(gift.id); } catch { notify('Не удалось изменить автоплатеж'); } finally { pending.current = false; } }}>{pledge.autopay ? 'Отключить' : 'Включить'}</button></section>
             </div>}
           </>}
         </div>
-        {pledge?.status !== 'processing' && <footer><button disabled={underfunded || (!pledge && !weeks)} onClick={() => pledge ? repay() : setConfirm(true)}>{pledge ? `Закрыть займ за ${pledge.repayment.toFixed(3)} TON` : weeks ? 'Получить 1.200 TON' : 'Выберите срок'}</button></footer>}
+        {pledge?.status !== 'processing' && <footer><button disabled={underfunded || (!pledge && !weeks)} onClick={() => pledge ? repay() : setConfirm(true)}>{pledge ? pledge.legacy ? 'Вернуть подарок бесплатно' : `Закрыть займ за ${pledge.repayment.toFixed(3)} TON` : weeks ? `Получить ${pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} TON` : 'Выберите срок'}</button></footer>}
       </div>
       <SlideNotice show={Boolean(displayedNotice)}><div className="pledge-notice" data-error={displayedNotice === 'Баланса недостаточно!'} role="status">{displayedNotice}</div></SlideNotice>
     </section>
-      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить 1.200 TON, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={create}><img src={yes} alt="" /></button></div></section></div>}
+      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить {pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} TON, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={create}><img src={yes} alt="" /></button></div></section></div>}
   </dialog>, document.body);
 }

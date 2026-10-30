@@ -33,7 +33,8 @@ def client(settings):
 def checked(response):
     assert response.status_code == 200, response.text
     value = response.json()
-    assert set(value) == {"asset", "balance_nano", "referral_nano", "transactions"}
+    assert set(value) == {"asset", "balance_nano", "referral_nano", "transactions", "revision"}
+    assert type(value["revision"]) is int and value["revision"] >= 0
     assert value["asset"] == "DEMO_TON"
     for field in ("balance_nano", "referral_nano"):
         assert isinstance(value[field], str)
@@ -82,12 +83,14 @@ def test_exact_one_nano_topup_and_withdraw(client, source):
     before = wallet(client)
     funded = checked(topup(client, source=source))
     assert funded["balance_nano"] == "1"
+    assert funded["revision"] > before["revision"]
     added = [tx for tx in funded["transactions"] if tx["id"] not in {t["id"] for t in before["transactions"]}]
     assert len(added) == 1
     assert added[0]["kind"] == "topup"
     assert added[0]["amount_nano"] == "1"
     withdrawn = checked(post(client, "withdraw", {"amount_nano": "1", "destination": "demo"}, "withdraw"))
     assert withdrawn["balance_nano"] == "0"
+    assert withdrawn["revision"] > funded["revision"]
     negative = [tx for tx in withdrawn["transactions"] if tx["kind"] == "withdraw"]
     assert len(negative) == 1 and negative[0]["amount_nano"] == "-1"
     assert withdrawn["referral_nano"] == str(REFERRAL)
@@ -101,6 +104,7 @@ def test_idempotency_current_snapshot_payload_binding_and_restart(client, settin
     assert post(client, "referral", {}, "A").status_code == 409
     latest = checked(post(client, "withdraw", {"amount_nano": "3", "destination": "demo"}, "B"))
     assert latest["balance_nano"] == "7"
+    assert latest["revision"] > first["revision"]
     assert checked(topup(client, "10", "A")) == latest
     assert checked(post(client, "withdraw", {"amount_nano": "3", "destination": "demo"}, "B")) == latest
     assert post(client, "withdraw", {"amount_nano": "3", "destination": "other"}, "B").status_code == 409

@@ -1,4 +1,5 @@
 import hashlib
+import asyncio
 import hmac
 import logging
 import secrets
@@ -21,6 +22,7 @@ from .models import LoginSession, User
 from .telegram_auth import InvalidInitData, validate_init_data
 from .inventory import register_inventory_routes
 from .wallet import register_wallet_routes
+from .loans import register_loan_routes, process_due_loans
 
 
 class AuthInput(BaseModel):
@@ -37,8 +39,25 @@ def create_app(settings: Settings):
 
     @asynccontextmanager
     async def lifespan(app):
-        yield
-        engine.dispose()
+        stop = asyncio.Event()
+
+        async def autopay_loop():
+            while not stop.is_set():
+                try:
+                    await asyncio.wait_for(stop.wait(), timeout=60)
+                except TimeoutError:
+                    try:
+                        await asyncio.to_thread(process_due_loans, engine)
+                    except Exception:
+                        logging.getLogger('giftmoney').error('Autopay tick failed; next tick remains scheduled')
+
+        task = asyncio.create_task(autopay_loop())
+        try:
+            yield
+        finally:
+            stop.set()
+            await task
+            engine.dispose()
 
     app = FastAPI(title='GiftMoney API', lifespan=lifespan)
     app.state.engine = engine
@@ -129,6 +148,7 @@ def create_app(settings: Settings):
 
     register_inventory_routes(app, database, current_session)
     register_wallet_routes(app, database, current_session)
+    register_loan_routes(app, database, current_session)
     return app
 
 

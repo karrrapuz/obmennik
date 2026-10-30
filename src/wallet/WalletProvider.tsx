@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { useBootReport } from '../boot/BootProvider';
+import { createRevisionGate } from '../services/snapshotRevision';
 import { applyLocalWallet, localWalletKey, parseWallet, readLocalWallet, type WalletAction, type WalletSnapshot } from './wallet';
 
-type Value = { wallet: WalletSnapshot; pending: boolean; error: string | null; available: boolean; reload: () => Promise<void>; operate: (action: WalletAction, body?: Record<string, string>) => Promise<void> };
+type Value = { getRevision: () => number; applySnapshot: (next: WalletSnapshot) => void; wallet: WalletSnapshot; pending: boolean; error: string | null; available: boolean; reload: () => Promise<void>; operate: (action: WalletAction, body?: Record<string, string>) => Promise<void> };
 const Context = createContext<Value | null>(null);
 const apiUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 
@@ -23,6 +25,12 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
   const generation = useRef(0);
   const alive = useRef(false);
   const controllers = useRef(new Set<AbortController>());
+  const [revision] = useState(createRevisionGate);
+  const applySnapshot = useCallback((raw: WalletSnapshot) => {
+    const next = parseWallet(raw);
+    if (!alive.current || !revision.accept(next.revision)) return;
+    setWallet(next); setError(null);
+  }, [revision]);
   const enqueue = useCallback((operation: () => Promise<void>) => {
     const version = generation.current;
     const next = queue.current.then(() => { if (!alive.current || version !== generation.current) throw new Error('Wallet session changed'); return operation(); });
@@ -50,12 +58,12 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
         if (!response.ok) throw new Error('Не удалось обновить тестовый баланс.');
         next = parseWallet(response.body);
       }
-      if (alive.current && version === generation.current) { setWallet(next); setError(null); }
+      if (alive.current && version === generation.current) applySnapshot(next);
     } catch (cause) {
       if (alive.current && version === generation.current) setError(cause instanceof Error ? cause.message : 'Не удалось обновить тестовый баланс.');
       throw cause;
     }
-  }), [demo, enqueue, request]);
+  }), [applySnapshot, demo, enqueue, request]);
   const operate = useCallback((action: WalletAction, body: Record<string, string> = {}) => {
     const payload = JSON.stringify(body, Object.keys(body).sort());
     const signature = `${action}:${payload}`;
@@ -81,7 +89,7 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
           uncertain.current.delete(signature);
         }
         if (!alive.current || version !== generation.current) throw new Error('Wallet session changed');
-        setWallet(next); setError(null);
+        applySnapshot(next);
       } catch (cause) {
         if (alive.current && version === generation.current) {
           setError('Не удалось подтвердить тестовую операцию.');
@@ -90,7 +98,7 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
         throw cause;
       } finally { if (alive.current && version === generation.current) setPending(false); }
     });
-  }, [demo, enqueue, expired, reload, request]);
+  }, [applySnapshot, demo, enqueue, expired, reload, request]);
   useEffect(() => {
     alive.current = true;
     const refresh = () => { void reload().catch(() => {}); };
@@ -98,9 +106,10 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
     refresh(); window.addEventListener('focus', refresh); window.addEventListener('storage', storage);
     return () => { alive.current = false; generation.current++; controllers.current.forEach((controller) => controller.abort()); controllers.current.clear(); window.removeEventListener('focus', refresh); window.removeEventListener('storage', storage); };
   }, [demo, reload]);
-  const value = useMemo(() => wallet ? { wallet, pending, error, available: !expired && !error, reload, operate } : null, [wallet, pending, error, expired, reload, operate]);
-  if (!value) return <main className="auth-error"><p role={error ? 'alert' : 'status'}>{error || 'Загрузка тестового баланса...'}</p>{error && <button onClick={() => expired ? retry() : void reload().catch(() => {})}>{expired ? 'Войти снова' : 'Повторить'}</button>}</main>;
-  return <Context.Provider value={value}>{expired ? <main className="auth-error"><p role="alert">Сессия истекла.</p><button onClick={retry}>Войти снова</button></main> : children}</Context.Provider>;
+  const bootRetry = useCallback(() => { if (expired) retry(); else void reload().catch(() => {}); }, [expired, retry, reload]);
+  useBootReport('wallet', !wallet, Boolean((!wallet && error) || expired), bootRetry);
+  const value = useMemo(() => ({ getRevision: revision.current, applySnapshot, wallet: wallet ?? { revision: 0, asset: 'DEMO_TON' as const, balance_nano: '0', referral_nano: '0', transactions: [] }, pending, error, available: Boolean(wallet) && !expired && !error, reload, operate }), [revision, applySnapshot, wallet, pending, error, expired, reload, operate]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
 export function useWallet() { const value = useContext(Context); if (!value) throw new Error('WalletProvider is required'); return value; }

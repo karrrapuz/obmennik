@@ -2,19 +2,22 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useAuth } from '../auth/AuthProvider';
 import { gifts, inventoryGifts, type Gift } from '../pages/ExchangePage/data/gifts';
 import { pledgeStore } from '../pages/DepositPage/services/pledgeStore';
+import { useBootReport } from '../boot/BootProvider';
+import { createRevisionGate, parseRevision } from '../services/snapshotRevision';
 
-type Snapshot = { inventory: Gift[]; pledged: Gift[]; catalog: Gift[] };
+export type Snapshot = { revision: number; inventory: Gift[]; pledged: Gift[]; catalog: Gift[] };
 type Action = 'deposit' | 'withdraw' | 'exchange' | 'pledge' | 'release';
-type Value = Snapshot & { loading: boolean; error: boolean; reload: () => Promise<void>; mutate: (action: Action, body?: Record<string, unknown>) => Promise<void> };
+type Value = Snapshot & { getRevision: () => number; applySnapshot: (next: Snapshot) => void; loading: boolean; error: boolean; reload: () => Promise<void>; mutate: (action: Action, body?: Record<string, unknown>) => Promise<void> };
 const Context = createContext<Value | null>(null);
-const empty: Snapshot = { inventory: [], pledged: [], catalog: [] };
+const empty: Snapshot = { revision: 0, inventory: [], pledged: [], catalog: [] };
 const localKey = 'demo-inventory-v1';
 const apiUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 
-function parseSnapshot(value: unknown): Snapshot {
+export function parseSnapshot(value: unknown): Snapshot {
   const snapshot = value as Snapshot;
+  parseRevision(snapshot?.revision);
   if (!snapshot || !['inventory', 'pledged', 'catalog'].every((key) =>
-    Array.isArray(snapshot[key as keyof Snapshot]) && snapshot[key as keyof Snapshot].every((gift) =>
+    Array.isArray(snapshot[key as 'inventory' | 'pledged' | 'catalog']) && snapshot[key as 'inventory' | 'pledged' | 'catalog'].every((gift) =>
       typeof gift.id === 'number' && typeof gift.name === 'string' && typeof gift.model === 'string' && Number.isFinite(Number(gift.price))))) throw new Error('Invalid inventory snapshot');
   const owned = new Set<number>();
   for (const gift of [...snapshot.inventory, ...snapshot.pledged]) {
@@ -25,9 +28,11 @@ function parseSnapshot(value: unknown): Snapshot {
 }
 function readLocal(): Snapshot {
   const saved = localStorage.getItem(localKey);
-  return saved ? parseSnapshot(JSON.parse(saved)) : { inventory: inventoryGifts.slice(0, 5), pledged: [], catalog: gifts };
+  if (saved) { const value = JSON.parse(saved); return parseSnapshot({ ...value, revision: value.revision === undefined ? 0 : value.revision }); }
+  return { revision: 0, inventory: inventoryGifts.slice(0, 5), pledged: [], catalog: gifts };
 }
 function localMutation(snapshot: Snapshot, action: Action, body: Record<string, unknown>): Snapshot {
+  snapshot = { ...snapshot, revision: snapshot.revision + 1 };
   let nextId = Math.max(Date.now() * 1000, ...snapshot.inventory.map((gift) => gift.id), ...snapshot.pledged.map((gift) => gift.id)) + 1;
   const offered = new Set(body.offered_ids as number[]); const received = new Set(body.received_ids as number[]); const withdrawn = new Set(body.ids as number[]);
   const find = (list: Gift[], id: unknown) => { const gift = list.find((item) => item.id === id); if (!gift) throw new Error('Gift unavailable'); return gift; };
@@ -55,15 +60,17 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState(empty); const [loading, setLoading] = useState(true); const [error, setError] = useState(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve()); const alive = useRef(false);
   const uncertainActions = useRef(new Map<string, string>());
+  const [revision] = useState(createRevisionGate);
   const enqueue = useCallback((operation: () => Promise<void>) => { const next = queue.current.then(operation); queue.current = next.catch(() => {}); return next; }, []);
-  const commit = useCallback((next: Snapshot) => { if (!alive.current) return; pledgeStore.syncInventory(next.inventory, next.pledged); setSnapshot(next); setError(false); }, []);
+  const commit = useCallback((raw: Snapshot) => { const next = parseSnapshot(raw); if (!alive.current || !revision.accept(next.revision)) return; if (demo) pledgeStore.syncInventory(next.inventory, next.pledged); setSnapshot(next); setError(false); }, [demo, revision]);
   const reload = useCallback(() => enqueue(async () => {
     try {
       if (demo) commit(readLocal());
       else {
         const response = await fetch(`${apiUrl}/api/inventory`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20000) });
         if (!response.ok) throw new Error('Inventory unavailable');
-        commit(parseSnapshot(await response.json()));
+        const next = parseSnapshot(await response.json());
+        commit(next);
       }
     } catch (cause) { if (alive.current) setError(true); throw cause; }
     finally { if (alive.current) setLoading(false); }
@@ -97,10 +104,12 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     alive.current = true;
     const refresh = () => { void reload().catch(() => {}); }; refresh();
     window.addEventListener('focus', refresh); window.addEventListener('storage', refresh);
-    const disconnect = pledgeStore.connectInventory((id) => mutate('pledge', { id }), (id) => mutate('release', { id }));
+    const disconnect = demo ? pledgeStore.connectInventory((id) => mutate('pledge', { id }), (id) => mutate('release', { id })) : () => {};
     return () => { alive.current = false; window.removeEventListener('focus', refresh); window.removeEventListener('storage', refresh); disconnect(); };
-  }, [mutate, reload]);
-  const value = useMemo(() => ({ ...snapshot, loading, error, reload, mutate }), [snapshot, loading, error, reload, mutate]);
-  return <Context.Provider value={value}>{loading ? <p role="status">Загрузка подарков...</p> : error && snapshot === empty ? <div role="alert">Не удалось загрузить подарки. <button onClick={() => void reload().catch(() => {})}>Повторить</button></div> : children}</Context.Provider>;
+  }, [demo, mutate, reload]);
+  const applySnapshot = commit;
+  useBootReport('inventory', loading, error && snapshot === empty, reload);
+  const value = useMemo(() => ({ ...snapshot, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, revision, applySnapshot, loading, error, reload, mutate]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useInventory() { const value = useContext(Context); if (!value) throw new Error('InventoryProvider is required'); return value; }

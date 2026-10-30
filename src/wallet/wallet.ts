@@ -1,8 +1,10 @@
+import { parseRevision } from '../services/snapshotRevision';
+
 export const NANO = 1000000000n;
 export const MAX_ACTION = 10000n * NANO;
 export const MAX_BALANCE = 100000n * NANO;
-export type WalletTransaction = { id: string; kind: 'seed' | 'topup' | 'withdraw' | 'referral'; amount_nano: string; created_at: number };
-export type WalletSnapshot = { asset: 'DEMO_TON'; balance_nano: string; referral_nano: string; transactions: WalletTransaction[] };
+export type WalletTransaction = { id: string; kind: 'seed' | 'topup' | 'withdraw' | 'referral' | 'loan_credit' | 'loan_repay' | 'loan_interest' | 'loan_extend'; amount_nano: string; created_at: number };
+export type WalletSnapshot = { revision: number; asset: 'DEMO_TON'; balance_nano: string; referral_nano: string; transactions: WalletTransaction[] };
 export type WalletAction = 'topup' | 'withdraw' | 'referral';
 
 export function parseTon(value: string): bigint | null {
@@ -23,11 +25,12 @@ export function displayTon(value: string): number { return Number(BigInt(value))
 export function parseWallet(value: unknown): WalletSnapshot {
   if (!value || typeof value !== 'object') throw new Error('Invalid wallet');
   const wallet = value as WalletSnapshot;
+  parseRevision(wallet.revision);
   const unsigned = (amount: unknown): amount is string => typeof amount === 'string' && /^(0|[1-9]\d{0,17})$/.test(amount);
   if (wallet.asset !== 'DEMO_TON' || !unsigned(wallet.balance_nano) || !unsigned(wallet.referral_nano)
     || BigInt(wallet.balance_nano) > MAX_BALANCE || !Array.isArray(wallet.transactions)
     || !wallet.transactions.every((item) => item && typeof item.id === 'string'
-      && ['seed', 'topup', 'withdraw', 'referral'].includes(item.kind)
+      && ['seed', 'topup', 'withdraw', 'referral', 'loan_credit', 'loan_repay', 'loan_interest', 'loan_extend'].includes(item.kind)
       && typeof item.amount_nano === 'string' && /^-?(0|[1-9]\d{0,17})$/.test(item.amount_nano)
       && typeof item.created_at === 'number' && Number.isFinite(item.created_at))) throw new Error('Invalid wallet snapshot');
   return wallet;
@@ -36,8 +39,8 @@ export function parseWallet(value: unknown): WalletSnapshot {
 export const localWalletKey = 'demo-wallet-v1';
 export function readLocalWallet(): WalletSnapshot {
   const saved = localStorage.getItem(localWalletKey);
-  if (saved) return parseWallet(JSON.parse(saved));
-  const initial: WalletSnapshot = { asset: 'DEMO_TON', balance_nano: '0', referral_nano: (5n * NANO).toString(), transactions: [{ id: crypto.randomUUID(), kind: 'seed', amount_nano: '0', created_at: Date.now() / 1000 }] };
+  if (saved) { const value = JSON.parse(saved); return parseWallet({ ...value, revision: value.revision === undefined ? 0 : value.revision }); }
+  const initial: WalletSnapshot = { revision: 0, asset: 'DEMO_TON', balance_nano: '0', referral_nano: (5n * NANO).toString(), transactions: [{ id: crypto.randomUUID(), kind: 'seed', amount_nano: '0', created_at: Date.now() / 1000 }] };
   localStorage.setItem(localWalletKey, JSON.stringify(initial));
   return initial;
 }
@@ -51,6 +54,6 @@ export function applyLocalWallet(wallet: WalletSnapshot, action: WalletAction, b
   const delta = action === 'withdraw' ? -amount : amount;
   const next = balance + delta;
   if (next > MAX_BALANCE) throw new Error('Wallet limit exceeded');
-  return { ...wallet, balance_nano: next.toString(), referral_nano: action === 'referral' ? '0' : wallet.referral_nano,
+  return { ...wallet, revision: wallet.revision + 1, balance_nano: next.toString(), referral_nano: action === 'referral' ? '0' : wallet.referral_nano,
     transactions: [{ id: crypto.randomUUID(), kind: action, amount_nano: delta.toString(), created_at: Date.now() / 1000 }, ...wallet.transactions] };
 }

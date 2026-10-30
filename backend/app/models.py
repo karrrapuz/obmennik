@@ -14,6 +14,7 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(64))
     photo_url: Mapped[str | None] = mapped_column(String(2048))
     referral_code: Mapped[str] = mapped_column(String(64), unique=True)
+    state_revision: Mapped[int] = mapped_column(BigInteger, default=0, server_default='0')
 
 
 class LoginSession(Base):

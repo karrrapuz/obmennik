@@ -97,6 +97,8 @@ def test_pledge_release_and_reserved_restrictions(client):
     response = post(client, "pledge", {"id": supported}, key="pledge")
     assert response.status_code == 200
     pledged = response.json()
+    assert type(pledged["revision"]) is int
+    assert pledged["revision"] > before["revision"] >= 0
     assert [g["id"] for g in pledged["pledged"]] == [supported]
     for action, body in [
         ("withdraw", {"ids": [unsupported, supported]}),
@@ -107,8 +109,15 @@ def test_pledge_release_and_reserved_restrictions(client):
         assert snapshot(client) == pledged
     released = post(client, "release", {"id": supported}, key="release")
     assert released.status_code == 200
-    assert released.json() == before
+    restored = released.json()
+    assert {k: v for k, v in restored.items() if k != "revision"} == {
+        k: v for k, v in before.items() if k != "revision"}
+    assert type(restored["revision"]) is int
+    assert restored["revision"] > pledged["revision"]
+    assert snapshot(client) == restored
+    assert post(client, "release", {"id": supported}, key="release").json() == restored
     assert post(client, "release", {"id": supported}, key="again").status_code == 409
+    assert snapshot(client) == restored
 
 
 def test_exchange_server_templates_atomic_and_idempotent(client):
