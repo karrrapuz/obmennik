@@ -198,6 +198,11 @@
   margin-left: 0;
 }
 
+.filter-modal__available-count {
+  color: #777;
+  font-size: 10px;
+}
+
 .filter-modal__count {
   display: flex;
   align-items: center;
@@ -303,6 +308,11 @@
 .filter-modal__options {
   display: grid;
   gap: 10px;
+  max-height: min(340px, max(120px, calc(100dvh - 360px)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
 }
 
 .filter-modal__option {

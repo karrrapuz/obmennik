@@ -129,13 +129,15 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
             const options = (filterOptions[row.id] ?? []).filter((option) =>
               `${option.name} ${option.description ?? ''}`.toLocaleLowerCase().includes((queries[row.id] ?? '').toLocaleLowerCase()),
             );
+            const shown = row.id === 'collection' || row.id === 'backdrops' ? options.length : limits[row.id] ?? 60;
             return (
               <div className="filter-modal__section" data-expanded={isExpanded} key={row.id}>
-                <button className="filter-modal__row" type="button" aria-expanded={isExpanded} onClick={() => setExpanded(isExpanded ? null : row.id)}>
+                <button className="filter-modal__row" type="button" aria-label={row.label} aria-expanded={isExpanded} onClick={() => setExpanded(isExpanded ? null : row.id)}>
                   <span className="filter-modal__icon" aria-hidden="true">
                     <span className={row.id === 'price' ? 'filter-modal__ton' : 'filter-modal__symbol'}><img src={row.icon} alt="" /></span>
                   </span>
                   <span className="filter-modal__label">{row.label}</span>
+                  {row.id !== 'price' && <span className="filter-modal__available-count" aria-hidden="true">{filterOptions[row.id]?.length ?? 0}</span>}
                   {count > 0 && <span className="filter-modal__count"><img src={checkIcon} alt="" />{count}</span>}
                   <img className="filter-modal__chevron" src={chevronIcon} alt="" aria-hidden="true" />
                 </button>
@@ -149,8 +151,11 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                     ) : (
                       <>
                         <label className="filter-modal__search"><img src={searchIcon} alt="" aria-hidden="true" /><input aria-label={`${row.label}: поиск`} type="search" placeholder="Поиск" value={queries[row.id] ?? ''} onChange={(event) => { setQueries((current) => ({ ...current, [row.id]: event.target.value })); setLimits(current => ({ ...current, [row.id]: 60 })); }} /></label>
-                        <div className="filter-modal__options">
-                          {options.slice(0, limits[row.id] ?? 60).map((option) => {
+                        <div className="filter-modal__options" onScroll={event => {
+                          const list = event.currentTarget;
+                          if (shown < options.length && list.scrollHeight - list.scrollTop - list.clientHeight < 100) setLimits(current => ({ ...current, [row.id]: Math.min(shown + 60, options.length) }));
+                        }}>
+                          {options.slice(0, shown).map((option) => {
                             const value = option.value ?? option.name;
                             const checked = selected[row.id]?.includes(value) ?? false;
                             return <button className="filter-modal__option" data-described={Boolean(option.description)} type="button" aria-pressed={checked} key={value} onClick={() => toggleOption(row.id, value)}>
@@ -160,7 +165,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                               {option.price && <span className="filter-modal__option-price">{option.price}<img src={tonModalIcon} alt="TON" /></span>}
                             </button>;
                           })}
-                          {options.length > (limits[row.id] ?? 60) && <button type="button" className="catalog-load-more" onClick={() => setLimits(current => ({ ...current, [row.id]: (current[row.id] ?? 60) + 60 }))}>Показать ещё ({options.length - (limits[row.id] ?? 60)})</button>}
+                          {options.length > shown && <button type="button" className="catalog-load-more" onClick={() => setLimits(current => ({ ...current, [row.id]: shown + 60 }))}>Показать ещё ({options.length - shown})</button>}
                           {!options.length && <p role="status">Ничего не найдено</p>}
                         </div>
                       </>
