@@ -8,8 +8,6 @@ export const sortOptions = [
   { id: 'newest', label: 'Сначала новые' },
   { id: 'price-asc', label: 'Цена: По возрастанию' },
   { id: 'price-desc', label: 'Цена: По убыванию' },
-  { id: 'id-asc', label: 'ID подарка: По возрастанию' },
-  { id: 'id-desc', label: 'ID подарка: По убыванию' },
   { id: 'rarity-asc', label: 'Редкость модели: По возрастанию' },
   { id: 'rarity-desc', label: 'Редкость модели: По убыванию' },
 ] as const;

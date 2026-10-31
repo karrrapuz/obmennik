@@ -16,7 +16,12 @@
 
 html {
   scrollbar-gutter: stable;
+  scrollbar-width: none;
   overscroll-behavior-y: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 @media (hover: none) and (pointer: coarse) {

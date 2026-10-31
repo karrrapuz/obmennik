@@ -118,7 +118,7 @@ export function telegramFilterOptions(catalog: Gift[], manifest: TelegramManifes
   options.collection = getFilterOptions(catalog).collection.map(option => {
     const gift = byKey.get(option.value ?? option.name);
     if (!gift || !isUnpricedGift(gift)) return option;
-    return { ...option, price: undefined, description: `${gift.stars ?? manifest?.collections.find(item => item.telegramId === gift.collectionId)?.stars ?? '—'} Stars · ID ${gift.collectionId ?? gift.id}` };
+    return { ...option, price: undefined, description: undefined };
   });
   const available = new Set(scoped.map(gift => gift.collectionId));
   const maps = Object.fromEntries(Object.entries(options).map(([key, values]) => [key, new Map(values.map(option => [option.value ?? option.name, option]))]));

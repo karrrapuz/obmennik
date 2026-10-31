@@ -18,6 +18,7 @@ from app.inventory_models import InventoryGift, InventoryInit
 from app.main import create_app
 from app.models import User
 from app.pricing import SamplePriceProvider
+from app.gift_presentation import decorative_presentation
 from test_auth import BOT_TOKEN, USER, bearer, login
 
 
@@ -81,6 +82,7 @@ def test_all_previews_append_without_changing_twenty_samples(settings, manifest)
             'price': '0.000', 'image': collection['image'], 'collectionId': collection['telegramId'],
             'telegramCatalog': True, 'tradeSupported': False,
             'pledgeSupported': False, 'priceSource': 'unpriced',
+            'presentation': decorative_presentation(collection['telegramId']),
         }
     provider = create_gift_provider('demo')
     assert provider.initial_gifts() == tuple((gift['id'], index < 3) for index, gift in enumerate(samples[:5]))

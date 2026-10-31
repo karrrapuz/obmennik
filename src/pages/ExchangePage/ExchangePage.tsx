@@ -86,8 +86,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
     .sort((first, second) => {
       for (const option of sortOptions) {
         let difference = 0;
-        if (option === 'newest' || option === 'id-desc') difference = second.id - first.id;
-        if (option === 'id-asc') difference = first.id - second.id;
+        if (option === 'newest') difference = second.id - first.id;
         if (option === 'price-asc') difference = compareBrowsingPrices(first, second, 'asc', priceNow);
         if (option === 'price-desc') difference = compareBrowsingPrices(first, second, 'desc', priceNow);
         if (difference !== 0) return difference;

@@ -1,10 +1,12 @@
 import sample from './catalog-sample.json';
 import type { MarketPrice } from '../../../services/telegramPrices';
+import type { GiftPresentation } from '../../../services/giftPresentation';
 export type Gift = {
   id: number; name: string; model: string; price: string;
   collectionId?: string; modelName?: string; image?: string; blockTradeGift?: boolean; pledgeSupported?: boolean;
   telegramCatalog?: boolean; tradeSupported?: boolean; priceSource?: string; stars?: string; previewOnly?: boolean;
   marketPrice?: MarketPrice;
+  presentation?: GiftPresentation;
   modelFilterId?: string;
   symbol?: { id?: string; name: string; image: string; rarity: string };
   backdrop?: { id?: number; name: string; rarity: string; centerColor: string; edgeColor: string; patternColor: string; textColor: string };

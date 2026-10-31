@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 
 from .market_prices import load_market_prices
 from .catalog_labels import load_labels, resolve_title
+from .gift_presentation import decorative_presentation
 
 
 DATA_PATH = Path(__file__).resolve().parents[1] / 'data'
@@ -58,6 +59,9 @@ def load_catalog(sample_path=None, telegram_path=None):
         cards.append({'id': catalog_id, 'name': title, 'model': '\u2014', 'price': '0.000',
                       'image': image, 'collectionId': telegram_id, 'telegramCatalog': True,
                       'tradeSupported': False, 'pledgeSupported': False, 'priceSource': 'unpriced'})
+        presentation = decorative_presentation(telegram_id)
+        if presentation is not None:
+            cards[-1]['presentation'] = presentation
     if (any(type(id) is not int or id not in imported_ids for id in seasonal)
             or len(seasonal) != len(set(seasonal))):
         raise ValueError('Invalid Halloween catalog IDs')

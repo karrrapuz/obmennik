@@ -183,7 +183,7 @@
   font-weight: 600;
 }
 
-.gift-details__price > span {
+.gift-details__price > span:not(.gift-price-reference) {
   display: grid;
   width: 20px;
   height: 20px;
@@ -427,20 +427,15 @@
   }
 }
 .gift-details__price[data-unpriced='true'] { font-size: 12px; width: auto; padding: 8px 12px; }
-.telegram-gift-status { margin: 14px 16px; color: #aaa; font-size: 12px; line-height: 18px; }
 .gift-details__offer button:disabled { opacity: .45; cursor: default; }
 .telegram-attributes { margin: 0 16px 20px; }
 .telegram-attributes__heading { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 0; border: 0; border-bottom: 1px solid #292929; background: transparent; color: #eee; font: inherit; text-align: left; }
 .telegram-attributes__heading span { color: #888; }
-.telegram-attributes__options { max-height: 300px; overflow-y: auto; }
+.telegram-attributes__options { max-height: 300px; overflow-y: auto; scrollbar-width: none; }
+.telegram-attributes__options::-webkit-scrollbar { display: none; }
 .telegram-attributes__options input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #191919; color: white; font: inherit; }
 .telegram-attributes__options > button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px; border: 0; border-bottom: 1px solid #252525; background: transparent; color: #ddd; text-align: left; }
 .telegram-attributes__options > button[aria-pressed='true'] { background: #17352c; }
 .telegram-attributes__options img, .telegram-attributes__swatch { width: 36px; height: 36px; flex: none; object-fit: contain; border-radius: 6px; }
 .telegram-attributes__options button > span { overflow-wrap: anywhere; min-width: 0; }
 .telegram-attributes__options small { display: block; color: #999; margin-top: 3px; }
-.gift-market-reference { margin: 16px; padding: 12px 0; border-top: 1px solid #303030; border-bottom: 1px solid #303030; }
-.gift-market-reference h3 { margin: 0 0 8px; font-size: 14px; line-height: 18px; }
-.gift-market-reference strong { display: block; color: #eee; }
-.gift-market-reference p { margin: 8px 0 0; color: #aaa; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
-.gift-market-reference .gift-price-reference { font-size: 15px; line-height: 20px; }

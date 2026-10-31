@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import priceIcon from './assets/sell.svg';
 import collectionIcon from './assets/collection.svg';
@@ -47,6 +47,8 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
   const [fromPrice, setFromPrice] = useState('');
   const [toPrice, setToPrice] = useState('');
   const [limits, setLimits] = useState<Record<string, number>>({});
+  const panel = useRef<HTMLElement>(null);
+  const content = useRef<HTMLDivElement>(null);
   const filterOptions = useMemo(() => telegramFilterOptions(catalog, manifest, selected.collection ?? []), [catalog, manifest, selected.collection]);
   const selectedCount = Object.values(selected).reduce((total, values) => total + values.length, 0)
     + Number(Boolean(fromPrice || toPrice));
@@ -105,6 +107,41 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
     };
   }, [mounted, onClose]);
 
+  useEffect(() => {
+    if (!mounted) return;
+    const viewport = window.visualViewport;
+    const updateViewport = () => {
+      const height = viewport?.height ?? window.innerHeight;
+      const inset = Math.max(0, window.innerHeight - height - (viewport?.offsetTop ?? 0));
+      panel.current?.style.setProperty('--filter-viewport-height', `${height}px`);
+      panel.current?.style.setProperty('--filter-keyboard-inset', `${inset}px`);
+    };
+    updateViewport();
+    viewport?.addEventListener('resize', updateViewport);
+    viewport?.addEventListener('scroll', updateViewport);
+    window.addEventListener('resize', updateViewport);
+    return () => {
+      viewport?.removeEventListener('resize', updateViewport);
+      viewport?.removeEventListener('scroll', updateViewport);
+      window.removeEventListener('resize', updateViewport);
+    };
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!visible || !expanded) return;
+    const revealSection = () => {
+      const area = content.current;
+      const section = area?.querySelector<HTMLElement>('[data-expanded="true"]');
+      if (!area || !section) return;
+      const top = section.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
+      area.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    };
+    const frame = requestAnimationFrame(revealSection);
+    // The final height becomes available after the accordion transition.
+    const timer = window.setTimeout(revealSection, 450);
+    return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
+  }, [expanded, visible]);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -116,13 +153,13 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
       }}
     >
       <button className="filter-modal-scrim" type="button" aria-label="Закрыть фильтры" onClick={onClose} />
-      <section className="filter-modal" role="dialog" aria-modal="true" aria-label="Фильтры">
+      <section ref={panel} className="filter-modal" role="dialog" aria-modal="true" aria-label="Фильтры">
         <div className="filter-modal__handle" aria-hidden="true" />
         <header className="filter-modal__header">
           <h2>Фильтры</h2>
           <button className="filter-modal__close" type="button" aria-label="Закрыть фильтры" onClick={onClose}><img src={closeIcon} alt="" /></button>
         </header>
-        <div className="filter-modal__content">
+        <div ref={content} className="filter-modal__content">
           {filterRows.map((row) => {
             const isExpanded = expanded === row.id;
             const count = row.id === 'price' ? Number(Boolean(fromPrice || toPrice)) : (selected[row.id]?.length ?? 0);
@@ -136,8 +173,9 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                   <span className="filter-modal__icon" aria-hidden="true">
                     <span className={row.id === 'price' ? 'filter-modal__ton' : 'filter-modal__symbol'}><img src={row.icon} alt="" /></span>
                   </span>
-                  <span className="filter-modal__label">{row.label}</span>
-                  {row.id !== 'price' && <span className="filter-modal__available-count" aria-hidden="true">{filterOptions[row.id]?.length ?? 0}</span>}
+                  <span className="filter-modal__heading"><span className="filter-modal__label">{row.label}</span>
+                    {row.id !== 'price' && <span className="filter-modal__available-count" aria-hidden="true">{filterOptions[row.id]?.length ?? 0}</span>}
+                  </span>
                   {count > 0 && <span className="filter-modal__count"><img src={checkIcon} alt="" />{count}</span>}
                   <img className="filter-modal__chevron" src={chevronIcon} alt="" aria-hidden="true" />
                 </button>

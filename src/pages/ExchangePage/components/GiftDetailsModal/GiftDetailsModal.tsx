@@ -95,7 +95,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
 
   const share = async () => {
     if (!gift) return;
-    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)} (рынок коллекции; не оценка конкретного варианта)${collection ? ` · ${collection.stars} Stars (цена выпуска, не TON)` : ''}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
+    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
     try {
       if (navigator.share) await navigator.share({ title: gift.name, text });
       else {
@@ -125,7 +125,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
             <GiftArtwork gift={gift} />
-            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? 'Только просмотр' : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
+            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? <GiftPrice gift={gift} referenceOnly /> : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>
           <dl className="gift-details__traits">
@@ -133,17 +133,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
             <div><dt>Символ</dt><dd>{gift.symbol?.name ?? '—'} <small>{gift.symbol?.rarity}</small></dd></div>
             <div><dt>Фон</dt><dd>{gift.backdrop?.name ?? '—'} <small>{gift.backdrop?.rarity}</small></dd></div>
           </dl>
-          {unpriced && <p className="telegram-gift-status">Только просмотр · Обмен и залог недоступны.</p>}
-          {(unpriced || gift.marketPrice) && <section className="gift-market-reference" aria-label="Рынок коллекции">
-            <h3>Рынок коллекции</h3>
-            <strong><GiftPrice gift={gift} referenceOnly /></strong>
-            {gift.marketPrice && <>
-              <p>Источник: Telegram · перепродажа. Минимум среди {gift.marketPrice.sampleCount} проверенных TON-объявлений.{gift.marketPrice.hasMore ? ' Проверена не вся выдача.' : ''} Не гарантированный минимум всего рынка и не оценка выбранной модели, символа или фона.</p>
-              <p>Проверено: <time dateTime={new Date(gift.marketPrice.checkedAt * 1000).toISOString()}>{new Date(gift.marketPrice.checkedAt * 1000).toLocaleString('ru-RU')}</time><br />{priceNow >= gift.marketPrice.validUntil ? 'Срок действия истёк: ' : 'Актуально до: '}<time dateTime={new Date(gift.marketPrice.validUntil * 1000).toISOString()}>{new Date(gift.marketPrice.validUntil * 1000).toLocaleString('ru-RU')}</time></p>
-            </>}
-          </section>}
           {unpriced && collection && <>
-            <dl className="gift-details__traits"><div><dt>Цена выпуска</dt><dd>{collection.stars} Stars</dd></div><div><dt>Улучшение</dt><dd>{collection.upgradeAvailable ? 'Доступно' : 'Недоступно'}</dd></div>{collection.firstSaleAt !== null && <div><dt>Первая продажа</dt><dd>{new Date(collection.firstSaleAt * 1000).toLocaleDateString('ru-RU')}</dd></div>}</dl>
             {source === 'exchange' && <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />}
           </>}
           <div className="gift-details__actions">

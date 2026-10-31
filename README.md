@@ -6,6 +6,7 @@
 | `src/components/layout/PageFooter/` | Нижняя навигация и её стили |
 | `src/components/layout/AppShell/` | Внешний контейнер приложения |
 | `src/components/gifts/GiftArtwork/` | Модель, фон и символ подарка |
+| `src/services/giftPresentation.ts`, `backend/app/gift_presentation.py` | Декоративные фоны без изменения настоящих атрибутов и стоимости подарков |
 | `src/components/feedback/SlideNotice/` | Анимация уведомлений |
 | `src/hooks/` | Анимация баланса, блокировка прокрутки за модалкой |
 | `src/styles/` | Глобальные стили, оболочка, общий эффект нажатия |

@@ -5,10 +5,49 @@ import re
 from typing import Annotated, Literal
 
 from fastapi import HTTPException, Query, Response
+from pydantic import AfterValidator, Field
 
 Kind = Literal['models', 'symbols', 'backdrops']
 KINDS = ('models', 'symbols', 'backdrops')
 PARTS = {'models': 'model', 'symbols': 'symbol', 'backdrops': 'backdrop'}
+INT32_MIN = -(2 ** 31)
+INT32_MAX = 2 ** 31 - 1
+INT64_MAX = 2 ** 63 - 1
+
+
+def is_telegram_id(value):
+    return (isinstance(value, str) and re.fullmatch(r'[1-9][0-9]{0,18}', value) is not None
+            and int(value) <= INT64_MAX)
+
+
+def collection_query_id(value):
+    if not is_telegram_id(value):
+        raise ValueError('Invalid collection ID')
+    return value
+
+
+def attribute_query_id(value):
+    parts = value.split(':')
+    if (len(parts) == 4 and parts[:2] == ['tg', 'model']
+            and all(is_telegram_id(part) for part in parts[2:])):
+        return value
+    if len(parts) == 3 and parts[:2] == ['tg', 'symbol'] and is_telegram_id(parts[2]):
+        return value
+    if (len(parts) == 3 and parts[:2] == ['tg', 'backdrop']
+            and re.fullmatch(r'0|-?[1-9][0-9]{0,9}', parts[2])
+            and INT32_MIN <= int(parts[2]) <= INT32_MAX):
+        return value
+    raise ValueError('Invalid attribute ID')
+
+
+CollectionId = Annotated[str, Field(min_length=1, max_length=19, pattern=r'^[1-9][0-9]{0,18}$'),
+                         AfterValidator(collection_query_id)]
+ModelId = Annotated[str, Field(max_length=48, pattern=r'^tg:model:[1-9][0-9]{0,18}:[1-9][0-9]{0,18}$'),
+                    AfterValidator(attribute_query_id)]
+SymbolId = Annotated[str, Field(max_length=29, pattern=r'^tg:symbol:[1-9][0-9]{0,18}$'),
+                     AfterValidator(attribute_query_id)]
+BackdropId = Annotated[str, Field(max_length=23, pattern=r'^tg:backdrop:(0|-?[1-9][0-9]{0,9})$'),
+                       AfterValidator(attribute_query_id)]
 
 
 def option_value(kind, collection_id, attribute_id):
@@ -19,8 +58,8 @@ def option_value(kind, collection_id, attribute_id):
 def public_attribute(kind, collection_id, attribute):
     identity, name = attribute.get('id'), attribute.get('name')
     if (not isinstance(name, str) or not name.strip() or len(name) > 200
-            or (kind == 'backdrops' and type(identity) is not int)
-            or (kind != 'backdrops' and (not isinstance(identity, str) or not re.fullmatch(r'[1-9][0-9]{0,19}', identity)))):
+            or (kind == 'backdrops' and (type(identity) is not int or not INT32_MIN <= identity <= INT32_MAX))
+            or (kind != 'backdrops' and not is_telegram_id(identity))):
         raise ValueError('Invalid catalog attribute')
     value = {'id': identity, 'value': option_value(kind, collection_id, identity), 'name': name}
     if kind == 'backdrops':
@@ -48,10 +87,19 @@ class CatalogIndex:
         self.rarities = {kind: {} for kind in KINDS}
         self.by_collection = {}
         self.omitted_attributes = 0
+        catalog_ids = set()
         for collection in collections:
-            identity = collection['telegramId']
+            if not isinstance(collection, dict):
+                raise ValueError('Invalid catalog collection')
+            identity, catalog_id = collection.get('telegramId'), collection.get('catalogId')
+            if (not is_telegram_id(identity) or type(catalog_id) is not int
+                    or not 100000 <= catalog_id <= INT32_MAX):
+                raise ValueError('Invalid catalog identity')
             if identity in self.collections:
                 raise ValueError('Duplicate catalog identity')
+            if catalog_id in catalog_ids:
+                raise ValueError('Duplicate catalog ID')
+            catalog_ids.add(catalog_id)
             descriptor = {key: collection.get(key) for key in ('telegramId', 'catalogId', 'title', 'image', 'sourceTitle', 'titleKind')}
             descriptor['attributeCounts'] = {}
             self.collections[identity] = descriptor
@@ -143,7 +191,7 @@ def register_catalog_routes(app, provider):
 
     @app.get('/api/catalog/attributes')
     def attributes(response: Response, kind: Kind,
-                   collection_ids: Annotated[list[str] | None, Query(max_length=151)] = None,
+                   collection_ids: Annotated[list[CollectionId] | None, Query(max_length=151)] = None,
                    q: Annotated[str, Query(max_length=128)] = '',
                    offset: Annotated[int, Query(ge=0, le=100000)] = 0,
                    limit: Annotated[int, Query(ge=1, le=100)] = 60):
@@ -153,10 +201,10 @@ def register_catalog_routes(app, provider):
 
     @app.get('/api/catalog/collections')
     def collections(response: Response,
-                    collection_ids: Annotated[list[str] | None, Query(max_length=151)] = None,
-                    model_ids: Annotated[list[str] | None, Query(max_length=100)] = None,
-                    symbol_ids: Annotated[list[str] | None, Query(max_length=100)] = None,
-                    backdrop_ids: Annotated[list[str] | None, Query(max_length=100)] = None,
+                    collection_ids: Annotated[list[CollectionId] | None, Query(max_length=151)] = None,
+                    model_ids: Annotated[list[ModelId] | None, Query(max_length=100)] = None,
+                    symbol_ids: Annotated[list[SymbolId] | None, Query(max_length=100)] = None,
+                    backdrop_ids: Annotated[list[BackdropId] | None, Query(max_length=100)] = None,
                     q: Annotated[str, Query(max_length=128)] = '',
                     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
                     limit: Annotated[int, Query(ge=1, le=100)] = 60):
