@@ -320,6 +320,45 @@
   flex: none;
 }
 
+.filter-modal__search input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.filter-modal__search input::-webkit-search-cancel-button,
+.filter-modal__search input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  display: none;
+}
+
+.filter-modal__search-clear {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.filter-modal__search-clear img {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  max-width: none;
+  pointer-events: none;
+}
+
+.filter-modal__search-clear:focus-visible {
+  outline: 1px solid #ff383c;
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
 .filter-modal__options {
   display: grid;
   gap: 10px;

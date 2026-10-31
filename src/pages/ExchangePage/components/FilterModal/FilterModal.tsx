@@ -11,6 +11,7 @@ import checkIcon from './assets/galochka.svg';
 import plusIcon from './assets/plus.svg';
 import tonModalIcon from './assets/ton_modal.svg';
 import searchIcon from './assets/poisk_modal.svg';
+import clearSearchIcon from '../../../ProfilePage/assets/oshibka_krestik.svg';
 import './FilterModal.css';
 import type { Gift } from '../../data/gifts';
 import { telegramFilterOptions, type TelegramManifest } from '../../../../services/telegramCatalog';
@@ -205,7 +206,14 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                       </div>
                     ) : (
                       <>
-                        <label className="filter-modal__search"><img src={searchIcon} alt="" aria-hidden="true" /><input aria-label={`${row.label}: поиск`} type="search" placeholder="Поиск" value={queries[row.id] ?? ''} onChange={(event) => { setQueries((current) => ({ ...current, [row.id]: event.target.value })); setLimits(current => ({ ...current, [row.id]: 60 })); }} /></label>
+                        <div className="filter-modal__search"><img src={searchIcon} alt="" aria-hidden="true" /><input aria-label={`${row.label}: поиск`} type="search" placeholder="Поиск" value={queries[row.id] ?? ''} onChange={(event) => { setQueries((current) => ({ ...current, [row.id]: event.target.value })); setLimits(current => ({ ...current, [row.id]: 60 })); }} />
+                          {Boolean(queries[row.id]) && <button className="filter-modal__search-clear" type="button" aria-label={`${row.label}: очистить поиск`} title="Очистить поиск" onMouseDown={event => event.preventDefault()} onClick={event => {
+                            event.preventDefault();
+                            setQueries(current => ({ ...current, [row.id]: '' }));
+                            setLimits(current => ({ ...current, [row.id]: 60 }));
+                            event.currentTarget.parentElement?.querySelector('input')?.focus();
+                          }}><img src={clearSearchIcon} alt="" /></button>}
+                        </div>
                         <div className="filter-modal__options" onScroll={event => {
                           const list = event.currentTarget;
                           if (shown < options.length && list.scrollHeight - list.scrollTop - list.clientHeight < 100) setLimits(current => ({ ...current, [row.id]: Math.min(shown + 60, options.length) }));
