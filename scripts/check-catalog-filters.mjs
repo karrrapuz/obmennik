@@ -62,6 +62,7 @@ for (const label of labels.labels) {
   const c = manifest.collections.find(c => c.telegramId === label.telegramId);
   assert.ok(c && !c.sourceTitle);
   assert.equal(label.kind, 'descriptive');
+  assert.match(label.displayTitle, /^[\x20-\x7e]+$/, 'Descriptive gift names must be English');
   const named = { ...manifest, collections: [{ ...c, title: label.displayTitle }] };
   const owned = { ...collectionGift(c), id: 987654321 };
   assert.equal(nameTelegramGifts([owned], named)[0].name, label.displayTitle);
