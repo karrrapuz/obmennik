@@ -34,6 +34,13 @@
 | `backend/migrations/` | Версии схемы базы данных |
 | `backend/tests/` | Проверки авторизации, владения и операций тестового инвентаря |
 | `backend/data/` | Серверные шаблоны тестовых подарков |
+| `backend/scripts/telegram_catalog.py`, `backend/scripts/telegram_login.ps1` | Локальный вход Telethon и проверка каталога без торговых операций |
+| `backend/requirements-telegram.txt`, `backend/telegram.credentials.example` | Необязательные зависимости и шаблон локальных ключей Telegram |
+| `docs/TELEGRAM_CATALOG.md` | Подготовка, команды и защита пользовательской сессии |
+| `backend/scripts/telegram_import.py` | Возобновляемый импорт публичных типов, моделей, символов, фонов и изображений Telegram |
+| `backend/app/catalog.py`, `backend/app/grant_models.py` | Проверка каталога и однократные сезонные примеры без финансовой стоимости |
+| `src/services/telegramCatalog.ts` | Загрузка каталога Telegram и варианты фильтров |
+| `public/gifts/telegram/`, `backend/data/catalog-telegram.json` | Публичные изображения, атрибуты и серверные карточки Telegram |
 | `src/inventory/` | Общий инвентарь и синхронизация разделов с API |
 | `src/wallet/` | Сохраняемый тестовый баланс, точные суммы и история |
 | `docs/DEMO_WALLET.md` | API тестового баланса и правила денежного учёта |

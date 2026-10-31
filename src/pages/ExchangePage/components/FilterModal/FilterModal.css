@@ -428,3 +428,11 @@
   background: #06d7a0;
   color: #fff;
 }
+.filter-modal__option-description { display: block; font-size: 10px; line-height: 14px; color: #929292; overflow-wrap: anywhere; }
+.filter-modal__option[data-described='true'] .filter-modal__option-title {
+  display: grid;
+  flex: 1;
+  max-width: calc(100% - 92px);
+  gap: 2px;
+  white-space: normal;
+}

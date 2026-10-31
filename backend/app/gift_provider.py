@@ -1,9 +1,9 @@
 """Local gift-provider contract. No Telegram custody or external delivery."""
-import json
-from pathlib import Path
 from typing import Protocol
 
 from fastapi import HTTPException
+
+from .catalog import load_catalog
 
 
 class GiftProvider(Protocol):
@@ -12,6 +12,7 @@ class GiftProvider(Protocol):
 
     def require_available(self) -> None: ...
     def initial_gifts(self) -> tuple[tuple[int, bool], ...]: ...
+    def seasonal_gifts(self) -> tuple[int, ...]: ...
     def deposit_catalog_id(self) -> int: ...
     def status(self) -> dict: ...
 
@@ -21,8 +22,9 @@ class StubGiftProvider:
         if mode not in {'demo', 'disabled'}:
             raise ValueError('GIFT_PROVIDER_MODE must be demo or disabled; live delivery is not implemented')
         self.mode = mode
-        path = Path(__file__).resolve().parents[1] / 'data/catalog-sample.json'
-        self.catalog = tuple(json.loads(path.read_text(encoding='utf-8')))
+        loaded = load_catalog()
+        self.catalog = loaded.cards
+        self.halloween_catalog_ids = loaded.halloween_catalog_ids
 
     def require_available(self) -> None:
         if self.mode != 'demo':
@@ -36,6 +38,9 @@ class StubGiftProvider:
     def deposit_catalog_id(self) -> int:
         self.require_available()
         return self.catalog[1]['id']
+
+    def seasonal_gifts(self) -> tuple[int, ...]:
+        return self.halloween_catalog_ids if self.mode == 'demo' else ()
 
     def status(self) -> dict:
         return {'mode': self.mode, 'available': self.mode == 'demo',

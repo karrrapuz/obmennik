@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../auth/AuthProvider';
-import { gifts, inventoryGifts, type Gift } from '../pages/ExchangePage/data/gifts';
+import { gifts, inventoryGifts, isUnpricedGift, type Gift } from '../pages/ExchangePage/data/gifts';
+import { collectionGift, mergeTelegramCatalog, useTelegramCatalog, type TelegramManifest } from '../services/telegramCatalog';
 import { pledgeStore } from '../pages/DepositPage/services/pledgeStore';
 import { useBootReport } from '../boot/BootProvider';
 import { createRevisionGate, parseRevision } from '../services/snapshotRevision';
 
-export type Snapshot = { revision: number; inventory: Gift[]; pledged: Gift[]; catalog: Gift[] };
+export type Snapshot = { revision: number; inventory: Gift[]; pledged: Gift[]; catalog: Gift[]; seasonalGrant?: string; seasonalGrantCatalogIds?: number[] };
 type Action = 'deposit' | 'withdraw' | 'exchange' | 'pledge' | 'release';
-type Value = Snapshot & { getRevision: () => number; applySnapshot: (next: Snapshot) => void; loading: boolean; error: boolean; reload: () => Promise<void>; mutate: (action: Action, body?: Record<string, unknown>) => Promise<void> };
+type Value = Snapshot & { telegramCatalog: TelegramManifest | null; catalogError: boolean; getRevision: () => number; applySnapshot: (next: Snapshot) => void; loading: boolean; error: boolean; reload: () => Promise<void>; mutate: (action: Action, body?: Record<string, unknown>) => Promise<void> };
 const Context = createContext<Value | null>(null);
 const empty: Snapshot = { revision: 0, inventory: [], pledged: [], catalog: [] };
 const localKey = 'demo-inventory-v1';
@@ -31,6 +32,13 @@ function readLocal(): Snapshot {
   if (saved) { const value = JSON.parse(saved); return parseSnapshot({ ...value, revision: value.revision === undefined ? 0 : value.revision }); }
   return { revision: 0, inventory: inventoryGifts.slice(0, 5), pledged: [], catalog: gifts };
 }
+export function grantSeasonalInventory(current: Snapshot, manifest: TelegramManifest, now = Date.now()): Snapshot {
+  const granted = new Set(current.seasonalGrant === 'telegram-halloween-v1' ? current.seasonalGrantCatalogIds ?? [] : []);
+  const seasonal = new Set(manifest.halloweenCatalogIds);
+  let nextId = Math.max(now * 1000, ...current.inventory.map(gift => gift.id), ...current.pledged.map(gift => gift.id)) + 1;
+  const additions = manifest.collections.filter(item => seasonal.has(item.catalogId) && !granted.has(item.catalogId)).map(item => { granted.add(item.catalogId); return { ...collectionGift(item), id: nextId++ }; });
+  return additions.length ? { ...current, inventory: [...current.inventory, ...additions], revision: current.revision + 1, seasonalGrant: 'telegram-halloween-v1', seasonalGrantCatalogIds: [...granted] } : current;
+}
 function localMutation(snapshot: Snapshot, action: Action, body: Record<string, unknown>): Snapshot {
   snapshot = { ...snapshot, revision: snapshot.revision + 1 };
   let nextId = Math.max(Date.now() * 1000, ...snapshot.inventory.map((gift) => gift.id), ...snapshot.pledged.map((gift) => gift.id)) + 1;
@@ -45,11 +53,11 @@ function localMutation(snapshot: Snapshot, action: Action, body: Record<string, 
   }
   if (action === 'exchange') {
     const offer = [...offered].map((id) => find(snapshot.inventory, id)); const receive = [...received].map((id) => find(snapshot.catalog, id));
-    if (!offer.length || !receive.length || receive.some((gift) => gift.blockTradeGift) || offer.reduce((sum, gift) => sum + Number(gift.price), 0) + 0.000001 < receive.reduce((sum, gift) => sum + Number(gift.price), 0)) throw new Error('Invalid exchange');
+    if (!offer.length || !receive.length || [...offer, ...receive].some(isUnpricedGift) || receive.some((gift) => gift.blockTradeGift) || offer.reduce((sum, gift) => sum + Number(gift.price), 0) + 0.000001 < receive.reduce((sum, gift) => sum + Number(gift.price), 0)) throw new Error('Invalid exchange');
     return { ...snapshot, inventory: [...snapshot.inventory.filter((gift) => !offered.has(gift.id)), ...receive.map((gift) => ({ ...gift, id: nextId++, pledgeSupported: true, blockTradeGift: false }))] };
   }
   const reserving = action === 'pledge'; const gift = find(reserving ? snapshot.inventory : snapshot.pledged, body.id);
-  if (reserving && gift.pledgeSupported === false) throw new Error('Gift unsupported');
+  if (reserving && (gift.pledgeSupported === false || isUnpricedGift(gift))) throw new Error('Gift unsupported');
   return { ...snapshot, inventory: reserving ? snapshot.inventory.filter((item) => item.id !== gift.id) : [...snapshot.inventory, gift], pledged: reserving ? [...snapshot.pledged, gift] : snapshot.pledged.filter((item) => item.id !== gift.id) };
 }
 
@@ -57,6 +65,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const { state } = useAuth();
   const token = state.status === 'ready' ? state.accessToken : null;
   const demo = state.status === 'ready' && state.mode === 'demo';
+  const { manifest: telegramCatalog, error: catalogError } = useTelegramCatalog();
   const [snapshot, setSnapshot] = useState(empty); const [loading, setLoading] = useState(true); const [error, setError] = useState(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve()); const alive = useRef(false);
   const uncertainActions = useRef(new Map<string, string>());
@@ -108,8 +117,18 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return () => { alive.current = false; window.removeEventListener('focus', refresh); window.removeEventListener('storage', refresh); disconnect(); };
   }, [demo, mutate, reload]);
   const applySnapshot = commit;
+  useEffect(() => {
+    if (!demo || !telegramCatalog || !telegramCatalog.halloweenCatalogIds.length) return;
+    void enqueue(async () => {
+      const current = readLocal();
+      const next = grantSeasonalInventory(current, telegramCatalog);
+      if (next === current) return;
+      localStorage.setItem(localKey, JSON.stringify(next)); commit(next);
+    }).catch(() => {});
+  }, [demo, telegramCatalog, enqueue, commit]);
+  const catalog = useMemo(() => mergeTelegramCatalog(snapshot.catalog, telegramCatalog), [snapshot.catalog, telegramCatalog]);
   useBootReport('inventory', loading, error && snapshot === empty, reload);
-  const value = useMemo(() => ({ ...snapshot, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, revision, applySnapshot, loading, error, reload, mutate]);
+  const value = useMemo(() => ({ ...snapshot, catalog, telegramCatalog, catalogError, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, catalog, telegramCatalog, catalogError, revision, applySnapshot, loading, error, reload, mutate]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useInventory() { const value = useContext(Context); if (!value) throw new Error('InventoryProvider is required'); return value; }

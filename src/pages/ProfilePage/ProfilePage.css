@@ -872,3 +872,4 @@
 .demo-wallet-history li > span { min-width: 0; }
 .demo-wallet-history small { display: block; color: #aaa; font-size: 10px; }
 .demo-wallet-history strong { max-width: 50%; text-align: right; overflow-wrap: anywhere; font-size: 12px; }
+.profile-gifts__card-price[data-unpriced='true'] { font-size: 10px; white-space: normal; }

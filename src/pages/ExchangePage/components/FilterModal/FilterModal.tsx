@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import priceIcon from './assets/sell.svg';
 import collectionIcon from './assets/collection.svg';
@@ -12,13 +12,16 @@ import plusIcon from './assets/plus.svg';
 import tonModalIcon from './assets/ton_modal.svg';
 import searchIcon from './assets/poisk_modal.svg';
 import './FilterModal.css';
-import { gifts, getFilterOptions } from '../../data/gifts';
+import type { Gift } from '../../data/gifts';
+import { telegramFilterOptions, type TelegramManifest } from '../../../../services/telegramCatalog';
 
 type FilterModalProps = {
   open: boolean;
   onClose: () => void;
   onApply: (filters: AppliedFilters) => void;
   resetVersion: number;
+  catalog: Gift[];
+  manifest: TelegramManifest | null;
 };
 
 export type AppliedFilters = {
@@ -35,9 +38,7 @@ const filterRows = [
   { id: 'symbols', label: 'Символы', icon: symbolsIcon },
 ] as const;
 
-const filterOptions = getFilterOptions(gifts);
-
-function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps) {
+function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }: FilterModalProps) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -45,6 +46,8 @@ function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps)
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [fromPrice, setFromPrice] = useState('');
   const [toPrice, setToPrice] = useState('');
+  const [limits, setLimits] = useState<Record<string, number>>({});
+  const filterOptions = useMemo(() => telegramFilterOptions(catalog, manifest, selected.collection ?? []), [catalog, manifest, selected.collection]);
   const selectedCount = Object.values(selected).reduce((total, values) => total + values.length, 0)
     + Number(Boolean(fromPrice || toPrice));
 
@@ -53,6 +56,7 @@ function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps)
     setQueries({});
     setFromPrice('');
     setToPrice('');
+    setLimits({});
   };
 
   useEffect(() => {
@@ -67,7 +71,8 @@ function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps)
   const toggleOption = (id: string, name: string) => {
     setSelected((current) => {
       const values = current[id] ?? [];
-      return { ...current, [id]: values.includes(name) ? values.filter((value) => value !== name) : [...values, name] };
+      const next = { ...current, [id]: values.includes(name) ? values.filter((value) => value !== name) : [...values, name] };
+      return id === 'collection' ? { ...next, models: [], symbols: [], backdrops: [] } : next;
     });
   };
 
@@ -132,7 +137,7 @@ function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps)
                   <img className="filter-modal__chevron" src={chevronIcon} alt="" aria-hidden="true" />
                 </button>
                 <div className="filter-modal__details" inert={!isExpanded}>
-                  <div className="filter-modal__details-inner">
+                  <div className="filter-modal__details-inner">{isExpanded && <>
                     {row.id === 'price' ? (
                       <div className="filter-modal__price-range">
                         <label>От<input type="number" min="0" inputMode="decimal" placeholder="0.00" value={fromPrice} onChange={(event) => setFromPrice(event.target.value)} /></label>
@@ -140,21 +145,24 @@ function FilterModal({ open, onClose, onApply, resetVersion }: FilterModalProps)
                       </div>
                     ) : (
                       <>
-                        <label className="filter-modal__search"><img src={searchIcon} alt="" aria-hidden="true" /><input type="search" placeholder="Поиск" value={queries[row.id] ?? ''} onChange={(event) => setQueries((current) => ({ ...current, [row.id]: event.target.value }))} /></label>
+                        <label className="filter-modal__search"><img src={searchIcon} alt="" aria-hidden="true" /><input aria-label={`${row.label}: поиск`} type="search" placeholder="Поиск" value={queries[row.id] ?? ''} onChange={(event) => { setQueries((current) => ({ ...current, [row.id]: event.target.value })); setLimits(current => ({ ...current, [row.id]: 60 })); }} /></label>
                         <div className="filter-modal__options">
-                          {options.map((option) => {
-                            const checked = selected[row.id]?.includes(option.name) ?? false;
-                            return <button className="filter-modal__option" type="button" aria-pressed={checked} key={option.name} onClick={() => toggleOption(row.id, option.name)}>
+                          {options.slice(0, limits[row.id] ?? 60).map((option) => {
+                            const value = option.value ?? option.name;
+                            const checked = selected[row.id]?.includes(value) ?? false;
+                            return <button className="filter-modal__option" data-described={Boolean(option.description)} type="button" aria-pressed={checked} key={value} onClick={() => toggleOption(row.id, value)}>
                               <span className="filter-modal__option-check" aria-hidden="true"><span><img src={checked ? checkIcon : plusIcon} alt="" /></span></span>
-                              <span className="filter-modal__option-image" aria-hidden="true" style={option.color ? { background: option.color } : undefined}>{option.image && <img src={option.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</span>
-                              <span className="filter-modal__option-title"><span className="filter-modal__option-name">{option.name}</span>{option.rarity && <em>{option.rarity}</em>}</span>
+                              <span className="filter-modal__option-image" aria-hidden="true" style={option.color ? { background: option.color } : undefined}>{option.image && <img src={option.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</span>
+                              <span className="filter-modal__option-title"><span className="filter-modal__option-name">{option.name}</span>{option.description && <small className="filter-modal__option-description">{option.description}</small>}{option.rarity && <em>{option.rarity}</em>}</span>
                               {option.price && <span className="filter-modal__option-price">{option.price}<img src={tonModalIcon} alt="TON" /></span>}
                             </button>;
                           })}
+                          {options.length > (limits[row.id] ?? 60) && <button type="button" className="catalog-load-more" onClick={() => setLimits(current => ({ ...current, [row.id]: (current[row.id] ?? 60) + 60 }))}>Показать ещё ({options.length - (limits[row.id] ?? 60)})</button>}
+                          {!options.length && <p role="status">Ничего не найдено</p>}
                         </div>
                       </>
                     )}
-                  </div>
+                  </>}</div>
                 </div>
               </div>
             );

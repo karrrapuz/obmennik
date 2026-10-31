@@ -100,3 +100,4 @@
 .pledge-supported small { display: block; font-size: 12px; line-height: 18px; font-weight: 600; color: #fff3; margin-top: 2px; }
 .pledge-supported small > span { color: #06d7a0; }
 .deposit-page .pledge-extend-button { position: fixed; z-index: 12; bottom: 134px; left: 50%; transform: translateX(-50%); width: min(358px,calc(100% - 32px)); height: 56px; border-radius: 20px; color: #06d7a0; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); font-size: 16px; }
+.pledge-card__price[data-unpriced='true'] { font-size: 11px; width: auto; }

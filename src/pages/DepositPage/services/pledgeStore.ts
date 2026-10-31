@@ -1,4 +1,4 @@
-import { type Gift } from '../../ExchangePage/data/gifts';
+import { isUnpricedGift, type Gift } from '../../ExchangePage/data/gifts';
 
 export type Pledge = {
   legacy?: boolean;
@@ -67,7 +67,7 @@ export const pledgeStore = {
   async create(giftId: number, weeks: 1 | 2) {
     if (serverMode) { if (!bridge) throw new Error('Loans unavailable'); return bridge.mutate('create', { gift_id: giftId, weeks }); }
     const gift = state.inventory.find((item) => item.id === giftId);
-    if (mutationBusy || !reserve || !gift || gift.pledgeSupported === false || state.pledges.some((item) => item.gift.id === giftId)) return false;
+    if (mutationBusy || !reserve || !gift || gift.pledgeSupported === false || isUnpricedGift(gift) || state.pledges.some((item) => item.gift.id === giftId)) return false;
     const term = pledgeTerms.find((item) => item.weeks === weeks)!;
     const pledge: Pledge = { gift, ...term, dueAt: Date.now() + weeks * 7 * 86400000, status: 'processing', autopay: false };
     mutationBusy = true;

@@ -364,3 +364,6 @@
   height: 10px;
   flex: none;
 }
+.gift-card__price[data-unpriced='true'] { left: 8px; right: 8px; width: auto; justify-content: center; font-size: 11px; color: #a8a8a8; }
+.gift-card__select:disabled { opacity: .4; cursor: default; }
+.catalog-load-more { display: block; width: 100%; padding: 14px 10px; margin: 12px 0; border: 1px solid #303030; border-radius: 8px; background: #191919; color: #ddd; cursor: pointer; font: inherit; font-size: 13px; }

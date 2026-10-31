@@ -13,6 +13,7 @@ from .inventory_models import InventoryGift, InventoryInit, InventoryReceipt
 from .models import User
 from .gift_provider import GiftProvider, create_gift_provider
 from .ledger import lock_actor
+from .grant_models import DemoSeasonalGrant
 
 DEFAULT_GIFT_PROVIDER = create_gift_provider('demo')
 
@@ -34,6 +35,9 @@ class GiftInput(EmptyInput):
 
 
 def ensure_inventory(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
+    if provider.mode != 'demo':
+        return
+    changed = False
     if db.get(InventoryInit, user_id) is None:
         initial = provider.initial_gifts()
         if not initial:
@@ -42,6 +46,16 @@ def ensure_inventory(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER
         db.flush()
         for catalog_id, supported in initial:
             db.add(InventoryGift(user_id=user_id, catalog_id=catalog_id, pledged=False, pledge_supported=supported))
+        changed = True
+    granted = set(db.scalars(select(DemoSeasonalGrant.catalog_id).where(
+        DemoSeasonalGrant.user_id == user_id)).all())
+    for catalog_id in provider.seasonal_gifts():
+        if catalog_id not in granted:
+            db.add(DemoSeasonalGrant(user_id=user_id, catalog_id=catalog_id))
+            db.add(InventoryGift(user_id=user_id, catalog_id=catalog_id,
+                                 pledged=False, pledge_supported=False))
+            changed = True
+    if changed:
         db.get(User, user_id).state_revision += 1
         db.flush()
 
@@ -50,15 +64,18 @@ def inventory_snapshot(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVID
     catalog = provider.catalog
     templates = {gift['id']: gift for gift in catalog}
     result = {'revision': db.get(User, user_id).state_revision, 'inventory': [], 'pledged': [], 'catalog': [
-        {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id']} for gift in catalog]}
+        {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id'] or gift.get('tradeSupported') is False}
+        for gift in catalog]}
     for row in db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id).order_by(InventoryGift.id)).all():
         gift = {**templates[row.catalog_id], 'id': row.id, 'catalogId': row.catalog_id,
-                'blockTradeGift': False, 'pledgeSupported': row.pledge_supported}
+                'blockTradeGift': templates[row.catalog_id].get('tradeSupported') is False,
+                'pledgeSupported': row.pledge_supported and templates[row.catalog_id].get('pledgeSupported', True)}
         result['pledged' if row.pledged else 'inventory'].append(gift)
     return result
 
 
 def register_inventory_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
+    templates = {gift['id']: gift for gift in provider.catalog}
     def actor(db, session):
         return lock_actor(db, session)
 
@@ -107,7 +124,8 @@ def register_inventory_routes(app, database, current_session, provider: GiftProv
                 from .loan_models import DemoLoan
                 if db.scalar(select(DemoLoan.id).where(DemoLoan.gift_id == row.id, DemoLoan.status == 'active')):
                     raise HTTPException(409, 'Close the loan to release its gift')
-            if operation == "pledge" and not row.pledge_supported:
+            if operation == "pledge" and (not row.pledge_supported or
+                    templates[row.catalog_id].get('pledgeSupported') is False):
                 raise HTTPException(409, "Pledge unsupported")
             row.pledged = operation == "pledge"
         db.get(User, user_id).state_revision += 1

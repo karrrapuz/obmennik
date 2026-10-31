@@ -56,12 +56,14 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
             InventoryGift.id.in_(ids), InventoryGift.pledged.is_(False))).all()
         if len(rows) != len(ids):
             raise HTTPException(409, 'Offered gifts unavailable')
+        if any(templates[row.catalog_id].get('tradeSupported') is False for row in rows):
+            raise HTTPException(409, 'Offered gifts are unpriced previews')
         return {row.id: row for row in rows}
 
     def received_available(ids):
         if len(ids) != len(set(ids)):
             raise HTTPException(422, 'Duplicate gift IDs')
-        if any(id not in templates or id == blocked_id for id in ids):
+        if any(id not in templates or id == blocked_id or templates[id].get('tradeSupported') is False for id in ids):
             raise HTTPException(409, 'Catalog gifts unavailable')
 
     def public_quote(quote):

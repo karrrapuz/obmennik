@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { Gift } from '../../data/gifts';
+import { isUnpricedGift, type Gift } from '../../data/gifts';
+import { previewTelegramGift, type TelegramCollection } from '../../../../services/telegramCatalog';
+import TelegramAttributes from './TelegramAttributes';
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import tonIcon from '../../../../assets/ton.svg';
@@ -11,6 +13,7 @@ import './GiftDetailsModal.css';
 
 type Props = {
   gift: Gift | null;
+  collection?: TelegramCollection;
   source: 'inventory' | 'exchange';
   open: boolean;
   selected: boolean;
@@ -18,7 +21,10 @@ type Props = {
   onSelect: () => void;
 };
 
-export default function GiftDetailsModal({ gift, source, open, selected, onClose, onSelect }: Props) {
+export default function GiftDetailsModal({ gift: originalGift, collection, source, open, selected, onClose, onSelect }: Props) {
+  const [attributes, setAttributes] = useState<Record<string, string[]>>({});
+  const gift = originalGift ? previewTelegramGift(originalGift, collection, attributes) ?? originalGift : null;
+  const unpriced = Boolean(gift && isUnpricedGift(gift));
   const dialog = useRef<HTMLDialogElement>(null);
   const scrollArea = useRef<HTMLDivElement>(null);
   const scrollBody = useRef<HTMLDivElement>(null);
@@ -43,6 +49,7 @@ export default function GiftDetailsModal({ gift, source, open, selected, onClose
       if (!element.open) element.showModal();
       element.scrollTop = 0;
       setNotice('');
+      setAttributes({});
       setPreview(false);
       setScrolledToEnd(false);
       firstFrame = requestAnimationFrame(() => {
@@ -83,7 +90,7 @@ export default function GiftDetailsModal({ gift, source, open, selected, onClose
 
   const share = async () => {
     if (!gift) return;
-    const text = `${gift.name} ${gift.model} — ${gift.price} TON`;
+    const text = unpriced ? `${gift.name} — без TON-оценки${collection ? ` · ${collection.stars} Stars (цена выпуска, не TON)` : ''}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
     try {
       if (navigator.share) await navigator.share({ title: gift.name, text });
       else {
@@ -113,7 +120,7 @@ export default function GiftDetailsModal({ gift, source, open, selected, onClose
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
             <GiftArtwork gift={gift} />
-            <span className="gift-details__price"><span><img src={tonIcon} alt="TON" /></span>{gift.price}</span>
+            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? 'Без TON-оценки' : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>
           <dl className="gift-details__traits">
@@ -121,31 +128,36 @@ export default function GiftDetailsModal({ gift, source, open, selected, onClose
             <div><dt>Символ</dt><dd>{gift.symbol?.name ?? '—'} <small>{gift.symbol?.rarity}</small></dd></div>
             <div><dt>Фон</dt><dd>{gift.backdrop?.name ?? '—'} <small>{gift.backdrop?.rarity}</small></dd></div>
           </dl>
+          {unpriced && <p className="telegram-gift-status">Только просмотр · Обмен и залог недоступны без TON-оценки.</p>}
+          {unpriced && collection && <>
+            <dl className="gift-details__traits"><div><dt>Цена выпуска</dt><dd>{collection.stars} Stars</dd></div><div><dt>Улучшение</dt><dd>{collection.upgradeAvailable ? 'Доступно' : 'Недоступно'}</dd></div>{collection.firstSaleAt !== null && <div><dt>Первая продажа</dt><dd>{new Date(collection.firstSaleAt * 1000).toLocaleDateString('ru-RU')}</dd></div>}</dl>
+            <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />
+          </>}
           <div className="gift-details__actions">
             <button type="button" onClick={() => setPreview(true)}><img src={viewIcon} alt="" /><span>Посмотреть</span></button>
             <button type="button" onClick={share}><img src={shareIcon} alt="" /><span>Поделиться</span></button>
           </div>
           <section className="gift-details__offer">
             <h3>{source === 'inventory' ? 'Не нравится?' : 'Нравится?'}</h3>
-            <p>{source === 'inventory' ? 'Обменяй подарок на любой понравившийся!' : 'Обменяй на свой подарок и хвастайся!'}</p>
-            <button type="button" onClick={onSelect}>{selected ? 'Убрать' : 'В Обмен'}</button>
+            <p>{unpriced ? 'TON-оценка отсутствует' : source === 'inventory' ? 'Обменяй подарок на любой понравившийся!' : 'Обменяй на свой подарок и хвастайся!'}</p>
+            <button type="button" disabled={unpriced} onClick={onSelect}>{unpriced ? 'Обмен недоступен' : selected ? 'Убрать' : 'В Обмен'}</button>
           </section>
           {source === 'inventory' && <section className="gift-details__offer">
             <h3>Нужны тоны?</h3>
             <p>Возьми их у нас под залог своего подарка!</p>
-            <button type="button" onClick={() => setNotice('Залог пока недоступен')}>В Залог</button>
+            <button type="button" disabled={unpriced || gift.pledgeSupported === false} onClick={() => setNotice('Залог пока недоступен')}>{unpriced ? 'Залог недоступен' : 'В Залог'}</button>
           </section>}
           {notice && <p className="gift-details__notice" role="status">{notice}</p>}
           </div>
         </div>}
         <footer className="gift-details__footer" data-at-end={scrolledToEnd}>
-          <button className="gift-details__done" type="button" onClick={source === 'exchange' ? onSelect : onClose}>
-            {source === 'exchange' ? (selected ? 'Убрать из обмена' : 'В обмен!') : 'Закрыть'}
+          <button className="gift-details__done" type="button" onClick={source === 'exchange' && !unpriced ? onSelect : onClose}>
+            {source === 'exchange' && !unpriced ? (selected ? 'Убрать из обмена' : 'В обмен!') : 'Закрыть'}
           </button>
         </footer>
         {preview && <div className="gift-details__preview">
           <button className="gift-details__close" type="button" aria-label="Закрыть просмотр" onClick={() => setPreview(false)}><img src={closeIcon} alt="" /></button>
-          <img src={gift?.image ?? giftIcon} alt={gift?.name} />
+          <img src={gift?.image || giftIcon} alt={gift?.name} />
           <strong>{gift?.name} {gift?.model}</strong>
         </div>}
       </section>

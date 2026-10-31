@@ -122,6 +122,7 @@ def process_due_loans(engine):
 
 
 def register_loan_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
+    templates = {gift['id']: gift for gift in provider.catalog}
     def snapshot(db, user_id):
         loans = db.scalars(select(DemoLoan).where(DemoLoan.user_id == user_id).order_by(DemoLoan.created_at, DemoLoan.id)).all()
         return {'revision': db.get(User, user_id).state_revision, 'loans': [{'id': loan.id, 'gift_id': loan.gift_id, 'weeks': loan.weeks,
@@ -169,7 +170,8 @@ def register_loan_routes(app, database, current_session, provider: GiftProvider 
         if operation == 'create':
             provider.require_available()
             gift = db.get(InventoryGift, body.gift_id)
-            if not gift or gift.user_id != user_id or gift.pledged or not gift.pledge_supported:
+            if (not gift or gift.user_id != user_id or gift.pledged or not gift.pledge_supported
+                    or templates[gift.catalog_id].get('pledgeSupported') is False):
                 raise HTTPException(409, 'Gift unavailable for loan')
             now = int(time.time())
             loan = DemoLoan(id=uuid4().hex, user_id=user_id, gift_id=gift.id, weeks=body.weeks,

@@ -39,7 +39,8 @@ class SamplePriceProvider:
     valid_until = None
 
     def __init__(self, catalog):
-        self._prices = {gift['id']: ton_to_nano(gift['price']) for gift in catalog}
+        self._prices = {gift['id']: ton_to_nano(gift['price']) for gift in catalog
+                        if gift.get('tradeSupported') is not False and gift.get('priceSource') != 'unpriced'}
         encoded = json.dumps(self._prices, sort_keys=True, separators=(',', ':')).encode()
         self.version = hashlib.sha256(encoded).hexdigest()
 

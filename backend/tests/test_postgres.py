@@ -17,6 +17,7 @@ from app.config import Settings
 from app.main import create_app
 from app.models import LoginSession, User
 from app.inventory_models import InventoryGift, InventoryInit, InventoryReceipt
+from app.grant_models import DemoSeasonalGrant
 from app.wallet_models import WalletAccount, WalletPosting, WalletTransaction
 from app.loan_models import DemoLoan, LoanReceipt
 from app.loans import process_due_loans
@@ -38,6 +39,98 @@ def settings():
         database_url=POSTGRES_URL,
         allowed_origins=("http://localhost:5173",),
     )
+
+
+def test_postgres_concurrent_seasonal_grants_once(settings, tmp_path, monkeypatch):
+    from app import catalog
+
+    seasonal_ids = [100000, 100001, 100002]
+    manifest_path = tmp_path / 'seasonal-catalog.json'
+    manifest_path.write_text(json.dumps({
+        'schema': 1,
+        'collections': [
+            {'telegramId': str(9000000000000000000 + index),
+             'catalogId': catalog_id, 'title': f'PG seasonal preview {index}',
+             'image': f'/gifts/telegram/test-{index}.webp'}
+            for index, catalog_id in enumerate(seasonal_ids)
+        ],
+        'halloweenCatalogIds': seasonal_ids,
+    }), encoding='utf-8')
+    monkeypatch.setattr(catalog, 'TELEGRAM_CATALOG_PATH', manifest_path)
+    user_id = secrets.randbelow(2**52 - 1) + 1
+    fields = {
+        'query_id': secrets.token_hex(16),
+        'auth_date': str(int(time.time())),
+        'user': json.dumps({'id': user_id, 'first_name': 'PG Seasonal Test'}),
+    }
+    check_string = '\n'.join(f'{key}={value}' for key, value in sorted(fields.items()))
+    secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
+    fields['hash'] = hmac.new(secret, check_string.encode(), hashlib.sha256).hexdigest()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        # Check before entering cleanup so an identity collision cannot delete another user.
+        with Session(app.state.engine) as db:
+            assert db.get(User, user_id) is None
+        try:
+            response = client.post('/api/auth/telegram', json={'init_data': urlencode(fields)})
+            assert response.status_code == 200, response.text
+            headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
+            with Session(app.state.engine) as db:
+                assert db.get(InventoryInit, user_id) is None
+                assert db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id)).all() == []
+                assert db.scalars(select(DemoSeasonalGrant).where(DemoSeasonalGrant.user_id == user_id)).all() == []
+            barrier = Barrier(2)
+
+            def read_inventory(_):
+                barrier.wait(timeout=10)
+                return client.get('/api/inventory', headers=headers)
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                responses = list(pool.map(read_inventory, [0, 1]))
+            assert [result.status_code for result in responses] == [200, 200]
+            first = responses[0].json()
+            assert responses[1].json() == first
+            assert first['pledged'] == []
+            assert len(first['inventory']) == 8
+            assert len({gift['id'] for gift in first['inventory']}) == 8
+            granted = [gift for gift in first['inventory'] if gift['catalogId'] in seasonal_ids]
+            assert sorted(gift['catalogId'] for gift in granted) == seasonal_ids
+            assert all(gift['blockTradeGift'] and not gift['pledgeSupported'] for gift in granted)
+            repeated = client.get('/api/inventory', headers=headers)
+            assert repeated.status_code == 200
+            assert repeated.json() == first
+
+            with Session(app.state.engine) as db:
+                assert db.get(InventoryInit, user_id) is not None
+                markers = db.scalars(select(DemoSeasonalGrant).where(
+                    DemoSeasonalGrant.user_id == user_id)).all()
+                assert sorted(marker.catalog_id for marker in markers) == seasonal_ids
+                gifts = db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id)).all()
+                assert len(gifts) == 8
+                assert sorted(gift.catalog_id for gift in gifts) == [1, 2, 3, 4, 5, *seasonal_ids]
+                assert db.scalars(select(WalletAccount).where(WalletAccount.user_id == user_id)).all() == []
+
+            removed = client.post('/api/inventory/demo-withdraw',
+                json={'ids': [gift['id'] for gift in granted]},
+                headers={**headers, 'Idempotency-Key': 'pg-seasonal-withdraw'})
+            assert removed.status_code == 200, removed.text
+            assert len(removed.json()['inventory']) == 5
+            barrier = Barrier(2)
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                after_withdrawal = list(pool.map(read_inventory, [0, 1]))
+            assert [result.status_code for result in after_withdrawal] == [200, 200]
+            assert all(result.json() == removed.json() for result in after_withdrawal)
+            with Session(app.state.engine) as db:
+                assert sorted(db.scalars(select(DemoSeasonalGrant.catalog_id).where(
+                    DemoSeasonalGrant.user_id == user_id)).all()) == seasonal_ids
+        finally:
+            # This test creates only auth, inventory, grant markers, and a withdrawal receipt.
+            with Session(app.state.engine) as db:
+                for model in (InventoryReceipt, InventoryGift, DemoSeasonalGrant, InventoryInit, LoginSession):
+                    db.execute(delete(model).where(model.user_id == user_id))
+                db.execute(delete(User).where(User.id == user_id))
+                db.commit()
 
 
 def test_postgres_new_user_retry_me_and_logout(settings):
@@ -260,6 +353,7 @@ def test_postgres_new_user_retry_me_and_logout(settings):
                 db.execute(delete(InventoryReceipt).where(InventoryReceipt.user_id == user_id))
                 db.execute(delete(InventoryGift).where(InventoryGift.user_id == user_id))
                 db.execute(delete(InventoryInit).where(InventoryInit.user_id == user_id))
+                db.execute(delete(DemoSeasonalGrant).where(DemoSeasonalGrant.user_id == user_id))
                 db.execute(delete(LoginSession).where(LoginSession.user_id == user_id))
                 db.execute(delete(User).where(User.id == user_id))
                 db.commit()

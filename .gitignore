@@ -20,6 +20,10 @@ __pycache__/
 .pytest_cache/
 *.db
 *.sqlite3
+*.session*
+backend/.local/
+backend/data/catalog-telegram.json.tmp
+public/gifts/telegram/**/*.tmp
 
 # Editor directories and files
 .vscode/*

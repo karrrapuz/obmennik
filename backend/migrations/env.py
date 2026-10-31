@@ -7,6 +7,7 @@ from app import inventory_models  # Register inventory tables for schema compari
 from app import wallet_models
 from app import loan_models
 from app import trade_models
+from app import grant_models
 
 settings = Settings.from_env()
 if context.is_offline_mode():
