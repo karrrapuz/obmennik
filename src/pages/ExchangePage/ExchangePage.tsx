@@ -9,6 +9,8 @@ import { type Gift, matchesGiftAttributes } from './data/gifts';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
+import { readTradeAttempt, useTradeQuote } from './hooks/useTradeQuote';
+import { useAuth } from '../../auth/AuthProvider';
 import './styles/page.css';
 import './styles/exchange-summary.css';
 import './styles/catalog.css';
@@ -30,14 +32,17 @@ import subtractObmenIcon from './assets/Subtract_obmen.svg';
 
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
   const { catalog: gifts, inventory: inventoryGifts, loading, error, reload, exchange } = useGiftLists();
+  const { state: auth } = useAuth();
+  const [restored] = useState(() => auth.status === 'ready' && auth.mode !== 'demo' ? readTradeAttempt(auth.user.id) : null);
   const [activeSection, setActiveSection] = useState<'inventory' | 'exchange'>('exchange');
-  const [receivedIds, setReceivedIds] = useState<number[]>([]);
-  const [offeredIds, setOfferedIds] = useState<number[]>([]);
+  const [receivedIds, setReceivedIds] = useState<number[]>(restored?.received ?? []);
+  const [offeredIds, setOfferedIds] = useState<number[]>(restored?.offered ?? []);
+  const trade = useTradeQuote(offeredIds, receivedIds);
   const selectedGiftIds = activeSection === 'inventory' ? offeredIds : receivedIds;
   const [giftDetails, setGiftDetails] = useState<{ gift: Gift; source: 'inventory' | 'exchange' } | null>(null);
   const [giftDetailsOpen, setGiftDetailsOpen] = useState(false);
-  const toggleGift = (id: number, source = activeSection) => (source === 'inventory' ? setOfferedIds : setReceivedIds)((current) => new ExchangeDraft(current).toggle(id).ids);
-  const [exchangeOpen, setExchangeOpen] = useState(false);
+  const toggleGift = (id: number, source = activeSection) => { if (!trade.locked) (source === 'inventory' ? setOfferedIds : setReceivedIds)((current) => new ExchangeDraft(current).toggle(id).ids); };
+  const [exchangeOpen, setExchangeOpen] = useState(Boolean(restored));
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterCount, setFilterCount] = useState(0);
@@ -46,9 +51,10 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
   const [sortOpen, setSortOpen] = useState(false);
   const [sortOptions, setSortOptions] = useState<SortOption[]>([]);
   useEffect(() => {
+    if (trade.locked) return;
     setOfferedIds((current) => current.filter((id) => inventoryGifts.some((gift) => gift.id === id)));
     setReceivedIds((current) => current.filter((id) => gifts.some((gift) => gift.id === id)));
-  }, [inventoryGifts, gifts]);
+  }, [inventoryGifts, gifts, trade.locked]);
 
   const clearFilters = () => {
     setAppliedFilters(null);
@@ -85,8 +91,8 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
 
   const selectedGifts = new ExchangeDraft(receivedIds).selectFrom(gifts);
   const offeredGifts = new ExchangeDraft(offeredIds).selectFrom(inventoryGifts);
-  const offeredAmount = offeredGifts.reduce((total, gift) => total + Number(gift.price), 0);
-  const receivedAmount = selectedGifts.reduce((total, gift) => total + Number(gift.price), 0);
+  const offeredAmount = trade.server ? Number(trade.quote?.offered_nano ?? 0) / 1e9 : offeredGifts.reduce((total, gift) => total + Number(gift.price), 0);
+  const receivedAmount = trade.server ? Number(trade.quote?.received_nano ?? 0) / 1e9 : selectedGifts.reduce((total, gift) => total + Number(gift.price), 0);
   const [exchangeAnimation, setExchangeAnimation] = useState({ amount: 0, offered: 0, activation: 0, offerActivation: 0 });
   const animationValue = useRef(exchangeAnimation);
   const displayedReceivedAmount = exchangeAnimation.amount;
@@ -127,7 +133,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       <PageHeader balance={balance} onNavigateProfile={onNavigateProfile} onTopUp={onTopUp} />
 
       <main className="exchange-content">
-        <section className="exchange-summary" data-active={exchangeIsAnimating} data-underfunded={offeredAmount < receivedAmount} aria-label="Сумма обмена">
+        <section className="exchange-summary" data-active={exchangeIsAnimating} data-underfunded={offeredAmount + (trade.server ? balance : 0) < receivedAmount} aria-label="Сумма обмена">
           <img className="exchange-summary__subtract" src={subtractObmenIcon} alt="" aria-hidden="true" />
           <span className="exchange-summary__reflection" style={{ opacity: exchangeAnimation.activation }} aria-hidden="true" />
           <div className="exchange-summary__offer">
@@ -140,7 +146,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
                 </span>
                 <span className="exchange-summary__offer-state exchange-summary__offer-state--minimum" style={{ opacity: 1 - exchangeAnimation.offerActivation }}>
                   <img src={tonIcon} alt="" />
-                  <span className="exchange-summary__offer-text"><span>0.00</span><span>мин. 10</span></span>
+                  <span className="exchange-summary__offer-text"><span>{trade.server ? '—' : '0.00'}</span>{!trade.server && <span>мин. 10</span>}</span>
                   <img className="exchange-summary__muted-mark" src={tonIcon} alt="" />
                 </span>
               </span>
@@ -167,7 +173,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
           </button>
         </section>
         <section className="exchange-catalog" id="catalog" aria-label="Каталог подарков">
-          <p className="demo-inventory-caption">Тестовые подарки</p>
+          <p className="demo-inventory-caption">Тестовые подарки · Тестовые цены, не рыночные</p>
           <div className="exchange-toolbar">
             <label className="exchange-search"><img src={searchIcon} alt="" /><input aria-label="Поиск подарков" placeholder="Поиск" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} /></label>
             <button className="exchange-icon-button" type="button" aria-label="Фильтры" onClick={() => setFiltersOpen(true)}><img src={filterCount > 0 ? filterActiveIcon : filterIcon} alt="" />{filterCount > 0 && <span className="exchange-icon-button__count">{filterCount}</span>}</button>
@@ -219,9 +225,9 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
 
       <ShortageNotice
         className="exchange-shortage"
-        label="Добавьте ещё:"
-        amount={displayedShortage}
-        visible={displayedShortage > 0.0005}
+        label={trade.server ? 'Доплата из кошелька:' : 'Добавьте ещё:'}
+        amount={trade.server ? Number(trade.quote?.required_balance_nano ?? 0) / 1e9 : displayedShortage}
+        visible={trade.server ? Boolean(trade.quote && BigInt(trade.quote.required_balance_nano) > 0n) : displayedShortage > 0.0005}
       />
 
       <div className="exchange-section-switcher" data-active={activeSection} role="tablist" aria-label="Раздел каталога">
@@ -231,7 +237,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       </div>
       <FilterModal open={filtersOpen} onClose={() => setFiltersOpen(false)} onApply={applyFilters} resetVersion={filterResetVersion} />
       <SortModal open={sortOpen} value={sortOptions} onApply={setSortOptions} onClose={() => setSortOpen(false)} />
-      <ExchangeModal open={exchangeOpen} gifts={selectedGifts} offeredGifts={offeredGifts} offeredAmount={exchangeAnimation.offered} receivedAmount={displayedReceivedAmount} onRemove={(id, side) => (side === 'offer' ? setOfferedIds : setReceivedIds)((current) => current.filter((giftId) => giftId !== id))} onClear={(side) => (side === 'offer' ? setOfferedIds : setReceivedIds)([])} onSuccess={async () => { await exchange(offeredGifts.map((gift) => gift.id), selectedGifts.map((gift) => gift.id)); setOfferedIds([]); setReceivedIds([]); }} onClose={() => setExchangeOpen(false)} />
+      <ExchangeModal trade={trade} open={exchangeOpen} gifts={selectedGifts} offeredGifts={offeredGifts} offeredAmount={trade.server ? Number(trade.quote?.offered_nano ?? 0) / 1e9 : exchangeAnimation.offered} receivedAmount={trade.server ? Number(trade.quote?.received_nano ?? 0) / 1e9 : displayedReceivedAmount} onRemove={(id, side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)((current) => current.filter((giftId) => giftId !== id)); }} onClear={(side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)([]); }} onSuccess={async () => { if (trade.server) await trade.execute(); else await exchange(offeredGifts.map((gift) => gift.id), selectedGifts.map((gift) => gift.id)); setOfferedIds([]); setReceivedIds([]); }} onClose={() => { if (!trade.locked) setExchangeOpen(false); }} />
       <GiftDetailsModal gift={giftDetails?.gift ?? null} source={giftDetails?.source ?? 'exchange'} open={giftDetailsOpen} selected={giftDetails ? (giftDetails.source === 'inventory' ? offeredIds : receivedIds).includes(giftDetails.gift.id) : false} onClose={() => setGiftDetailsOpen(false)} onSelect={() => {
         if (!giftDetails) return;
         toggleGift(giftDetails.gift.id, giftDetails.source);

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from .inventory_models import InventoryGift, InventoryInit, InventoryReceipt
 from .models import User
 from .gift_provider import GiftProvider, create_gift_provider
+from .ledger import lock_actor
 
 DEFAULT_GIFT_PROVIDER = create_gift_provider('demo')
 
@@ -26,11 +27,6 @@ class EmptyInput(BaseModel):
 
 class WithdrawInput(EmptyInput):
     ids: GiftIds
-
-
-class ExchangeInput(EmptyInput):
-    offered_ids: GiftIds
-    received_ids: GiftIds
 
 
 class GiftInput(EmptyInput):
@@ -63,15 +59,8 @@ def inventory_snapshot(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVID
 
 
 def register_inventory_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
-    catalog = provider.catalog
-    templates = {gift["id"]: gift for gift in catalog}
-    blocked_id = catalog[0]["id"]
-
     def actor(db, session):
-        user = db.scalar(select(User).where(User.id == session.user_id).with_for_update())
-        if user is None:
-            raise HTTPException(401, "Authentication required")
-        return user.id
+        return lock_actor(db, session)
 
     def seed(db, user_id):
         ensure_inventory(db, user_id, provider)
@@ -108,16 +97,8 @@ def register_inventory_routes(app, database, current_session, provider: GiftProv
         if operation == "deposit":
             db.add(InventoryGift(user_id=user_id, catalog_id=provider.deposit_catalog_id(),
                                  pledged=False, pledge_supported=True))
-        elif operation in {"withdraw", "exchange"}:
-            ids = body.ids if operation == "withdraw" else body.offered_ids
-            rows = owned(db, user_id, ids)
-            if operation == "exchange":
-                unique(body.received_ids)
-                if any(id not in templates or id == blocked_id for id in body.received_ids):
-                    raise HTTPException(409, "Catalog gifts unavailable")
-                for id in body.received_ids:
-                    db.add(InventoryGift(user_id=user_id, catalog_id=id,
-                                         pledged=False, pledge_supported=True))
+        elif operation == "withdraw":
+            rows = owned(db, user_id, body.ids)
             for row in rows:
                 db.delete(row)
         else:
@@ -156,8 +137,8 @@ def register_inventory_routes(app, database, current_session, provider: GiftProv
         return mutate("withdraw", body, key, db, session)
 
     @app.post("/api/inventory/demo-exchange")
-    def exchange(body: ExchangeInput, key: Key, db: Session = Depends(database), session=Depends(current_session)):
-        return mutate("exchange", body, key, db, session)
+    def exchange(session=Depends(current_session)):
+        raise HTTPException(410, 'Create and execute a server trade quote')
 
     @app.post("/api/inventory/demo-pledge")
     def pledge(body: GiftInput, key: Key, db: Session = Depends(database), session=Depends(current_session)):

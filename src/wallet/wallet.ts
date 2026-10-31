@@ -3,7 +3,7 @@ import { parseRevision } from '../services/snapshotRevision';
 export const NANO = 1000000000n;
 export const MAX_ACTION = 10000n * NANO;
 export const MAX_BALANCE = 100000n * NANO;
-export type WalletTransaction = { id: string; kind: 'seed' | 'topup' | 'withdraw' | 'referral' | 'loan_credit' | 'loan_repay' | 'loan_interest' | 'loan_extend'; amount_nano: string; created_at: number };
+export type WalletTransaction = { id: string; kind: 'seed' | 'topup' | 'withdraw' | 'referral' | 'loan_credit' | 'loan_repay' | 'loan_interest' | 'loan_extend' | 'trade_credit' | 'trade_debit'; amount_nano: string; created_at: number };
 export type WalletSnapshot = { revision: number; asset: 'DEMO_TON'; balance_nano: string; referral_nano: string; transactions: WalletTransaction[] };
 export type WalletAction = 'topup' | 'withdraw' | 'referral';
 
@@ -30,7 +30,7 @@ export function parseWallet(value: unknown): WalletSnapshot {
   if (wallet.asset !== 'DEMO_TON' || !unsigned(wallet.balance_nano) || !unsigned(wallet.referral_nano)
     || BigInt(wallet.balance_nano) > MAX_BALANCE || !Array.isArray(wallet.transactions)
     || !wallet.transactions.every((item) => item && typeof item.id === 'string'
-      && ['seed', 'topup', 'withdraw', 'referral', 'loan_credit', 'loan_repay', 'loan_interest', 'loan_extend'].includes(item.kind)
+      && ['seed', 'topup', 'withdraw', 'referral', 'loan_credit', 'loan_repay', 'loan_interest', 'loan_extend', 'trade_credit', 'trade_debit'].includes(item.kind)
       && typeof item.amount_nano === 'string' && /^-?(0|[1-9]\d{0,17})$/.test(item.amount_nano)
       && typeof item.created_at === 'number' && Number.isFinite(item.created_at))) throw new Error('Invalid wallet snapshot');
   return wallet;

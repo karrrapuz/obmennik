@@ -2,7 +2,7 @@
 import time
 from uuid import uuid4
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from .models import User
 from .wallet_models import WalletAccount, WalletPosting, WalletTransaction
 
@@ -10,8 +10,16 @@ CAP = 100_000_000_000_000
 SINGLE_LIMIT = 10_000_000_000_000
 REFERRAL_SEED = 5_000_000_000
 
+def lock_user(db, user_id):
+    # SQLite has no row locks: acquire its write lock before reading mutable state.
+    if db.get_bind().dialect.name == 'sqlite':
+        db.execute(update(User).where(User.id == user_id).values(state_revision=User.state_revision),
+                   execution_options={'synchronize_session': False})
+    return db.scalar(select(User).where(User.id == user_id).with_for_update())
+
+
 def lock_actor(db, session):
-    user = db.scalar(select(User).where(User.id == session.user_id).with_for_update())
+    user = lock_user(db, session.user_id)
     if user is None:
         raise HTTPException(401, 'Authentication required')
     return user.id

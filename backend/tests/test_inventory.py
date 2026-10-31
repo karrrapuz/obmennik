@@ -80,7 +80,7 @@ def test_actor_ownership_and_per_user_keys(client):
         ("exchange", {"offered_ids": [foreign], "received_ids": [second["catalog"][1]["id"]]}),
         ("pledge", {"id": foreign}), ("release", {"id": foreign}),
     ]:
-        assert post(client, action, body).status_code == 409
+        assert post(client, action, body).status_code == (410 if action == "exchange" else 409)
         assert snapshot(client) == second
     assert post(client, "deposit", {}).status_code == 200
     client.headers["Authorization"] = first_headers
@@ -105,7 +105,7 @@ def test_pledge_release_and_reserved_restrictions(client):
         ("exchange", {"offered_ids": [supported], "received_ids": [before["catalog"][1]["id"]]}),
         ("pledge", {"id": supported}),
     ]:
-        assert post(client, action, body, key="reserved-" + action).status_code == 409
+        assert post(client, action, body, key="reserved-" + action).status_code == (410 if action == "exchange" else 409)
         assert snapshot(client) == pledged
     released = post(client, "release", {"id": supported}, key="release")
     assert released.status_code == 200
@@ -120,28 +120,20 @@ def test_pledge_release_and_reserved_restrictions(client):
     assert snapshot(client) == restored
 
 
-def test_exchange_server_templates_atomic_and_idempotent(client):
+def test_exchange_removed_without_mutating_inventory(client):
     before = snapshot(client)
     offered = before["inventory"][0]["id"]
     blocked, allowed = [g["id"] for g in before["catalog"][:2]]
     assert before["catalog"][0]["blockTradeGift"] is True
     for received in ([allowed, blocked], [allowed, 999999999], [allowed, allowed]):
         response = post(client, "exchange", {"offered_ids": [offered], "received_ids": received})
-        assert response.status_code in {409, 422}
+        assert response.status_code == 410
         assert snapshot(client) == before
     body = {"offered_ids": [offered], "received_ids": [allowed]}
     response = post(client, "exchange", body)
-    assert response.status_code == 200, response.text
-    after = response.json()
-    assert len(after["inventory"]) == 5
-    assert offered not in [g["id"] for g in after["inventory"]]
-    new = after["inventory"][-1]
-    assert new["catalogId"] == allowed
-    assert new["name"] == before["catalog"][1]["name"]
-    assert new["id"] not in [g["id"] for g in before["inventory"]]
-    assert post(client, "exchange", body).json() == after
-    assert post(client, "exchange", {**body, "received_ids": [before["catalog"][2]["id"]]}).status_code == 409
-    assert snapshot(client) == after
+    assert response.status_code == 410, response.text
+    assert post(client, "exchange", body).status_code == 410
+    assert snapshot(client) == before
 
 
 def test_replay_does_not_resurrect_gift_removed_by_later_mutation(client):
@@ -157,14 +149,19 @@ def test_replay_does_not_resurrect_gift_removed_by_later_mutation(client):
     assert gift_id not in [g["id"] for g in replay.json()["inventory"]]
 
 
+@pytest.mark.parametrize('body', [{}, {'offered_ids': [], 'received_ids': []},
+                                  {'offered_ids': [True], 'received_ids': ['2']}])
+def test_removed_exchange_universally_gone_without_key(client, body):
+    before = snapshot(client)
+    assert client.post('/api/inventory/demo-exchange', json=body).status_code == 410
+    assert snapshot(client) == before
+
+
 @pytest.mark.parametrize("action,body", [
     ("deposit", {"id": 1}), ("withdraw", {"ids": []}),
     ("withdraw", {"ids": [1, 1]}), ("withdraw", {"ids": [1, 999999999]}),
     ("withdraw", {"ids": [True]}), ("withdraw", {"ids": ["1"]}),
     ("withdraw", {"ids": [-1]}), ("withdraw", {"ids": [0]}),
-    ("exchange", {"offered_ids": [], "received_ids": [2]}),
-    ("exchange", {"offered_ids": [1], "received_ids": []}),
-    ("exchange", {"offered_ids": [1, 1], "received_ids": [2]}),
     ("pledge", {"id": 1, "price": "0"}), ("release", {"id": None}),
 ])
 def test_invalid_mutations_are_atomic(client, action, body):
@@ -178,7 +175,6 @@ def test_invalid_mutations_are_atomic(client, action, body):
 
 @pytest.mark.parametrize("action,body", [
     ("deposit", {}), ("withdraw", {"ids": [1]}),
-    ("exchange", {"offered_ids": [1], "received_ids": [2]}),
     ("pledge", {"id": 1}), ("release", {"id": 1}),
 ])
 def test_mutations_require_idempotency_key(client, action, body):

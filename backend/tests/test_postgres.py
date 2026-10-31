@@ -22,6 +22,7 @@ from app.loan_models import DemoLoan, LoanReceipt
 from app.loans import process_due_loans
 from sqlalchemy.exc import DBAPIError
 from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 
 POSTGRES_URL = os.environ.get("GIFT_TEST_POSTGRES_URL")
@@ -162,6 +163,71 @@ def test_postgres_new_user_retry_me_and_logout(settings):
             assert client.get('/api/wallet', headers=headers).json()['balance_nano'] == '5130000000'
             settled = client.get('/api/loans', headers=headers).json()
             assert next(loan for loan in settled['loans'] if loan['gift_id'] == second_gift)['status'] == 'repaid'
+
+            assert client.post('/api/wallet/demo-topup',
+                json={'amount_nano': '1000000000000', 'source': 'wallet'},
+                headers={**headers, 'Idempotency-Key': 'pg-trade-fund'}).status_code == 200
+            trade_inventory = client.get('/api/inventory', headers=headers).json()
+            trade_gift = trade_inventory['inventory'][0]['id']
+            received_id = trade_inventory['catalog'][1]['id']
+            quoted = client.post('/api/trades/quote', json={
+                'offered_ids': [trade_gift], 'received_ids': [received_id]}, headers=headers)
+            assert quoted.status_code == 200, quoted.text
+            quote_id = quoted.json()['id']
+            before_trade_wallet = client.get('/api/wallet', headers=headers).json()
+            barrier = Barrier(2)
+
+            def execute_trade(index):
+                barrier.wait(timeout=10)
+                return client.post('/api/trades/execute', json={'quote_id': quote_id},
+                    headers={**headers, 'Idempotency-Key': f'pg-trade-{index}'})
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                executions = list(pool.map(execute_trade, [1, 2]))
+            assert [response.status_code for response in executions] == [200, 200]
+            assert executions[0].json() == executions[1].json()
+            trade_state = executions[0].json()
+            assert int(trade_state['wallet']['balance_nano']) == (
+                int(before_trade_wallet['balance_nano']) + int(quoted.json()['wallet_delta_nano']))
+            assert len([tx for tx in trade_state['wallet']['transactions']
+                        if tx['kind'].startswith('trade_')]) == 1
+            assert trade_gift not in [g['id'] for g in trade_state['inventory']['inventory']]
+            assert len(trade_state['inventory']['inventory']) == len(trade_inventory['inventory'])
+
+            for competing in ('withdraw', 'pledge'):
+                current = client.get('/api/inventory', headers=headers).json()
+                race_gift = next(g['id'] for g in current['inventory'] if g['pledgeSupported'])
+                quoted = client.post('/api/trades/quote', json={
+                    'offered_ids': [race_gift], 'received_ids': [received_id]}, headers=headers)
+                assert quoted.status_code == 200, quoted.text
+                race_quote = quoted.json()
+                before_wallet = client.get('/api/wallet', headers=headers).json()
+                barrier = Barrier(2)
+
+                def race(action):
+                    barrier.wait(timeout=10)
+                    if action == 'execute':
+                        return client.post('/api/trades/execute', json={'quote_id': race_quote['id']},
+                            headers={**headers, 'Idempotency-Key': 'pg-race-trade-' + competing})
+                    body = {'id': race_gift} if action == 'pledge' else {'ids': [race_gift]}
+                    return client.post('/api/inventory/demo-' + action, json=body,
+                        headers={**headers, 'Idempotency-Key': 'pg-trade-race-' + action})
+
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    responses = list(pool.map(race, ['execute', competing]))
+                assert sorted(r.status_code for r in responses) == [200, 409]
+                after_inventory = client.get('/api/inventory', headers=headers).json()
+                after_wallet = client.get('/api/wallet', headers=headers).json()
+                won = responses[0].status_code == 200
+                assert int(after_wallet['balance_nano']) == int(before_wallet['balance_nano']) + (
+                    int(race_quote['wallet_delta_nano']) if won else 0)
+                assert race_gift not in [g['id'] for g in after_inventory['inventory']]
+                assert (race_gift in [g['id'] for g in after_inventory['pledged']]) == (
+                    competing == 'pledge' and not won)
+                assert len(after_inventory['inventory']) == len(current['inventory']) - (0 if won else 1)
+                stored_quote = client.get('/api/trades/quotes/' + race_quote['id'], headers=headers)
+                assert stored_quote.status_code == 200
+                assert stored_quote.json()['status'] == ('executed' if won else 'open')
             with Session(app.state.engine) as db:
                 db.execute(delete(LoanReceipt).where(LoanReceipt.user_id == user_id))
                 db.execute(delete(DemoLoan).where(DemoLoan.user_id == user_id))
@@ -181,7 +247,11 @@ def test_postgres_new_user_retry_me_and_logout(settings):
             assert client.get("/api/me", headers=headers).status_code == 401
         finally:
             # Remove only this test's random identity, never shared database state.
+            from app.trade_models import TradeQuote, TradeReceipt
+
             with Session(app.state.engine) as db:
+                db.execute(delete(TradeReceipt).where(TradeReceipt.user_id == user_id))
+                db.execute(delete(TradeQuote).where(TradeQuote.user_id == user_id))
                 db.execute(delete(LoanReceipt).where(LoanReceipt.user_id == user_id))
                 db.execute(delete(DemoLoan).where(DemoLoan.user_id == user_id))
                 db.execute(delete(WalletPosting).where(WalletPosting.user_id == user_id))

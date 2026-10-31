@@ -109,7 +109,7 @@ def test_disabled_inventory_does_not_seed_or_change_funds(settings):
             ("pledge", {"id": 1}), ("release", {"id": 1}),
         ]):
             response = mutate(client, "/api/inventory/demo-" + action, body, f"disabled-{index}")
-            assert response.status_code == 503, response.text
+            assert response.status_code == (410 if action == "exchange" else 503), response.text
             assert ok(client.get("/api/inventory")) == inventory
             assert ok(client.get("/api/wallet")) == wallet
         response = mutate(client, "/api/loans/create", {"gift_id": 1, "weeks": 1}, "disabled-loan")

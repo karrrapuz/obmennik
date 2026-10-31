@@ -24,6 +24,8 @@ from .inventory import register_inventory_routes
 from .wallet import register_wallet_routes
 from .loans import register_loan_routes, process_due_loans
 from .gift_provider import create_gift_provider
+from .pricing import SamplePriceProvider
+from .trades import register_trade_routes
 
 
 class AuthInput(BaseModel):
@@ -32,6 +34,7 @@ class AuthInput(BaseModel):
 
 def create_app(settings: Settings):
     gift_provider = create_gift_provider(settings.gift_provider_mode)
+    price_provider = SamplePriceProvider(gift_provider.catalog)
     engine = create_engine(settings.database_url, pool_pre_ping=True,
                            connect_args={'check_same_thread': False} if settings.database_url.startswith('sqlite') else {})
     if settings.database_url.startswith('sqlite'):
@@ -63,6 +66,7 @@ def create_app(settings: Settings):
 
     app = FastAPI(title='GiftMoney API', lifespan=lifespan)
     app.state.engine = engine
+    app.state.price_provider = price_provider
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
                        allow_methods=['GET', 'POST'], allow_headers=['Authorization', 'Content-Type', 'Idempotency-Key'])
     bearer = HTTPBearer(auto_error=False)
@@ -155,6 +159,8 @@ def create_app(settings: Settings):
     register_inventory_routes(app, database, current_session, gift_provider)
     register_wallet_routes(app, database, current_session)
     register_loan_routes(app, database, current_session, gift_provider)
+    register_trade_routes(app, database, current_session, gift_provider,
+                          price_provider, settings.trade_markup_bps, settings.trade_quote_ttl)
     return app
 
 

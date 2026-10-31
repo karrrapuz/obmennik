@@ -45,6 +45,8 @@ class WithdrawInput(AmountInput):
 
 def register_wallet_routes(app, database, current_session):
     def mutate(kind, body, key, db, session):
+        if key.startswith(('trade:', 'loan:', 'auto:', '__')):
+            raise HTTPException(422, 'Reserved operation key prefix')
         user_id = actor(db, session)
         seed(db, user_id)
         digest = hashlib.sha256(json.dumps({'kind': kind, 'body': body.model_dump()},

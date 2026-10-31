@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from .inventory import ensure_inventory, inventory_snapshot, DEFAULT_GIFT_PROVIDER
 from .gift_provider import GiftProvider
 from .inventory_models import InventoryGift
-from .ledger import ensure_wallet, lock_actor, post_transfer, wallet_snapshot
+from .ledger import ensure_wallet, lock_actor, lock_user, post_transfer, wallet_snapshot
 from .loan_models import DemoLoan, LoanReceipt
 from .models import User
 from .wallet_models import WalletAccount
@@ -112,7 +112,8 @@ def process_due_loans(engine):
     for user_id in users:
         try:
             with Session(engine) as db:
-                db.scalar(select(User).where(User.id == user_id).with_for_update())
+                if lock_user(db, user_id) is None:
+                    continue
                 ensure_wallet(db, user_id)
                 process_user_autopay(db, user_id)
                 db.commit()

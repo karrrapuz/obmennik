@@ -20,7 +20,7 @@ function HomePage() {
   return <>
     <div hidden={activePage !== 'profile'}><ProfilePage balance={balance} topUpRequest={topUpRequest} /></div>
     {activePage === 'deposit' && <DepositPage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} />}
-    {activePage === 'exchange' && <ExchangePage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} />}
+    <div hidden={activePage !== 'exchange'}><ExchangePage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} /></div>
     <PageFooter active={activePage} onNavigate={navigate} />
   </>;
 }

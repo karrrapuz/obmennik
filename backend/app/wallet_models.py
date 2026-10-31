@@ -31,7 +31,7 @@ class WalletTransaction(Base):
     __table_args__ = (
         UniqueConstraint('user_id', 'key', name='wallet_request_unique'),
         UniqueConstraint('id', 'user_id', name='wallet_transaction_owner'),
-        CheckConstraint("kind IN ('seed','topup','withdraw','referral','loan_credit','loan_repay','loan_interest','loan_extend')", name='wallet_transaction_kind'),
+        CheckConstraint("kind IN ('seed','topup','withdraw','referral','loan_credit','loan_repay','loan_interest','loan_extend','trade_credit','trade_debit')", name='wallet_transaction_kind'),
     )
 
 
