@@ -23,6 +23,8 @@
 | `src/services/snapshotRevision.ts` | Защита от устаревших ответов API |
 | `backend/app/loans.py`, `backend/app/loan_models.py` | Выдача, погашение, продление и автоплатёж займов |
 | `backend/app/ledger.py` | Общий транзакционный денежный учёт |
+| `backend/app/gift_provider.py` | Заменяемая заглушка подарков и режим отключения интеграции |
+| `docs/GIFT_PROVIDER.md` | Настройка заглушки и порядок подключения реальных подарков |
 | `docs/DEMO_LOANS.md` | Правила и ограничения демонстрационных займов |
 | `backend/app/` | Авторизация, пользователи и общий тестовый инвентарь |
 | `backend/migrations/` | Версии схемы базы данных |

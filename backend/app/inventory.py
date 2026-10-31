@@ -2,7 +2,6 @@
 
 import hashlib
 import json
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
@@ -12,6 +11,9 @@ from sqlalchemy.orm import Session
 
 from .inventory_models import InventoryGift, InventoryInit, InventoryReceipt
 from .models import User
+from .gift_provider import GiftProvider, create_gift_provider
+
+DEFAULT_GIFT_PROVIDER = create_gift_provider('demo')
 
 
 GiftId = Annotated[StrictInt, Field(gt=0)]
@@ -35,19 +37,21 @@ class GiftInput(EmptyInput):
     id: GiftId
 
 
-def ensure_inventory(db, user_id):
+def ensure_inventory(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
     if db.get(InventoryInit, user_id) is None:
-        catalog = json.loads((Path(__file__).resolve().parents[1] / 'data/catalog-sample.json').read_text(encoding='utf-8'))
+        initial = provider.initial_gifts()
+        if not initial:
+            return
         db.add(InventoryInit(user_id=user_id))
         db.flush()
-        for index, template in enumerate(catalog[:5]):
-            db.add(InventoryGift(user_id=user_id, catalog_id=template['id'], pledged=False, pledge_supported=index < 3))
+        for catalog_id, supported in initial:
+            db.add(InventoryGift(user_id=user_id, catalog_id=catalog_id, pledged=False, pledge_supported=supported))
         db.get(User, user_id).state_revision += 1
         db.flush()
 
 
-def inventory_snapshot(db, user_id):
-    catalog = json.loads((Path(__file__).resolve().parents[1] / 'data/catalog-sample.json').read_text(encoding='utf-8'))
+def inventory_snapshot(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
+    catalog = provider.catalog
     templates = {gift['id']: gift for gift in catalog}
     result = {'revision': db.get(User, user_id).state_revision, 'inventory': [], 'pledged': [], 'catalog': [
         {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id']} for gift in catalog]}
@@ -58,9 +62,8 @@ def inventory_snapshot(db, user_id):
     return result
 
 
-def register_inventory_routes(app, database, current_session):
-    path = Path(__file__).resolve().parents[1] / "data/catalog-sample.json"
-    catalog = json.loads(path.read_text(encoding="utf-8"))
+def register_inventory_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
+    catalog = provider.catalog
     templates = {gift["id"]: gift for gift in catalog}
     blocked_id = catalog[0]["id"]
 
@@ -71,10 +74,10 @@ def register_inventory_routes(app, database, current_session):
         return user.id
 
     def seed(db, user_id):
-        ensure_inventory(db, user_id)
+        ensure_inventory(db, user_id, provider)
 
     def snapshot(db, user_id):
-        return inventory_snapshot(db, user_id)
+        return inventory_snapshot(db, user_id, provider)
 
     def unique(ids):
         if len(ids) != len(set(ids)):
@@ -91,6 +94,7 @@ def register_inventory_routes(app, database, current_session):
 
     def mutate(operation, body, key, db, session):
         user_id = actor(db, session)
+        provider.require_available()
         digest = hashlib.sha256(json.dumps(
             {"operation": operation, "payload": body.model_dump()},
             sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -102,7 +106,7 @@ def register_inventory_routes(app, database, current_session):
             return snapshot(db, user_id)
         seed(db, user_id)
         if operation == "deposit":
-            db.add(InventoryGift(user_id=user_id, catalog_id=catalog[1]["id"],
+            db.add(InventoryGift(user_id=user_id, catalog_id=provider.deposit_catalog_id(),
                                  pledged=False, pledge_supported=True))
         elif operation in {"withdraw", "exchange"}:
             ids = body.ids if operation == "withdraw" else body.offered_ids

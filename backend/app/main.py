@@ -23,6 +23,7 @@ from .telegram_auth import InvalidInitData, validate_init_data
 from .inventory import register_inventory_routes
 from .wallet import register_wallet_routes
 from .loans import register_loan_routes, process_due_loans
+from .gift_provider import create_gift_provider
 
 
 class AuthInput(BaseModel):
@@ -30,6 +31,7 @@ class AuthInput(BaseModel):
 
 
 def create_app(settings: Settings):
+    gift_provider = create_gift_provider(settings.gift_provider_mode)
     engine = create_engine(settings.database_url, pool_pre_ping=True,
                            connect_args={'check_same_thread': False} if settings.database_url.startswith('sqlite') else {})
     if settings.database_url.startswith('sqlite'):
@@ -146,9 +148,13 @@ def create_app(settings: Settings):
         db.commit()
         return Response(status_code=204)
 
-    register_inventory_routes(app, database, current_session)
+    @app.get('/api/integrations/gifts')
+    def gift_integration(session=Depends(current_session)):
+        return gift_provider.status()
+
+    register_inventory_routes(app, database, current_session, gift_provider)
     register_wallet_routes(app, database, current_session)
-    register_loan_routes(app, database, current_session)
+    register_loan_routes(app, database, current_session, gift_provider)
     return app
 
 

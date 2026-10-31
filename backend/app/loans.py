@@ -11,7 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .inventory import ensure_inventory, inventory_snapshot
+from .inventory import ensure_inventory, inventory_snapshot, DEFAULT_GIFT_PROVIDER
+from .gift_provider import GiftProvider
 from .inventory_models import InventoryGift
 from .ledger import ensure_wallet, lock_actor, post_transfer, wallet_snapshot
 from .loan_models import DemoLoan, LoanReceipt
@@ -119,7 +120,7 @@ def process_due_loans(engine):
             logging.getLogger('giftmoney').error('Autopay attempt failed; retry on next tick')
 
 
-def register_loan_routes(app, database, current_session):
+def register_loan_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
     def snapshot(db, user_id):
         loans = db.scalars(select(DemoLoan).where(DemoLoan.user_id == user_id).order_by(DemoLoan.created_at, DemoLoan.id)).all()
         return {'revision': db.get(User, user_id).state_revision, 'loans': [{'id': loan.id, 'gift_id': loan.gift_id, 'weeks': loan.weeks,
@@ -128,12 +129,12 @@ def register_loan_routes(app, database, current_session):
             for loan in loans],
             'terms': [{'weeks': weeks, 'principal_nano': str(PRINCIPAL), 'repayment_nano': str(repayment)}
                       for weeks, repayment in REPAYMENTS.items()],
-            'wallet': wallet_snapshot(db, user_id), 'inventory': inventory_snapshot(db, user_id)}
+            'wallet': wallet_snapshot(db, user_id), 'inventory': inventory_snapshot(db, user_id, provider)}
 
     def prepare(db, session):
         user_id = lock_actor(db, session)
         ensure_wallet(db, user_id)
-        ensure_inventory(db, user_id)
+        ensure_inventory(db, user_id, provider)
         import_legacy_reservations(db, user_id)
         return user_id
 
@@ -165,6 +166,7 @@ def register_loan_routes(app, database, current_session):
             return result
         ledger_key = 'loan:' + hashlib.sha256(key.encode()).hexdigest()
         if operation == 'create':
+            provider.require_available()
             gift = db.get(InventoryGift, body.gift_id)
             if not gift or gift.user_id != user_id or gift.pledged or not gift.pledge_supported:
                 raise HTTPException(409, 'Gift unavailable for loan')
