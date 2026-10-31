@@ -37,6 +37,12 @@ for (const c of manifest.collections) {
   }
 }
 assert.ok(collisionChecked);
+const realCollection = manifest.collections.find(c => c.attributes.models.length > 1);
+const ownedActual = { ...collectionGift(realCollection), id: 9999999, modelName: realCollection.attributes.models[0].name, modelFilterId: telegramAttributeKey('models', realCollection.telegramId, realCollection.attributes.models[0].id), image: realCollection.attributes.models[0].image };
+const notOwnedModel = { models: [telegramAttributeKey('models', realCollection.telegramId, realCollection.attributes.models[1].id)] };
+assert.equal(previewTelegramGift(ownedActual, realCollection, notOwnedModel, 'inventory'), ownedActual);
+assert.equal(matchesGiftAttributes(ownedActual, notOwnedModel), false);
+assert.ok(matchesGiftAttributes(ownedActual, { models: [ownedActual.modelFilterId] }));
 assert.ok(matchesGiftAttributes(gifts[0], { models: [gifts[0].modelName] }));
 const labels = JSON.parse(fs.readFileSync('public/gifts/telegram/labels.json', 'utf8'));
 assert.equal(fs.readFileSync('public/gifts/telegram/labels.json', 'utf8'), fs.readFileSync('backend/data/catalog-labels.json', 'utf8'));

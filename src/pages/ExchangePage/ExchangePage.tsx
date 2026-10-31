@@ -75,7 +75,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
   };
 
   const visibleGifts = useMemo(() => (activeSection === 'inventory' ? inventoryGifts : gifts)
-    .map(gift => previewTelegramGift(gift, collections.get(gift.collectionId ?? ''), appliedFilters?.selected ?? {}))
+    .map(gift => previewTelegramGift(gift, collections.get(gift.collectionId ?? ''), appliedFilters?.selected ?? {}, activeSection))
     .filter((gift): gift is Gift => gift !== null)
     .filter((gift) => {
       if (!gift.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) return false;

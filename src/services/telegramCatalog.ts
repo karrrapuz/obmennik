@@ -101,8 +101,8 @@ export function nameTelegramGifts(list: Gift[], manifest: TelegramManifest | nul
   const collections = new Map(manifest.collections.map(collection => [collection.telegramId, collection]));
   return list.map(gift => { const collection = collections.get(gift.collectionId ?? ''); return collection ? { ...gift, name: displayTitle(collection, gift.name) } : gift; });
 }
-export function previewTelegramGift(gift: Gift, collection: TelegramCollection | undefined, selected: Record<string, string[]>): Gift | null {
-  if (!collection || !isUnpricedGift(gift)) return gift;
+export function previewTelegramGift(gift: Gift, collection: TelegramCollection | undefined, selected: Record<string, string[]>, source: 'inventory' | 'exchange' = 'exchange'): Gift | null {
+  if (source === 'inventory' || !collection || !isUnpricedGift(gift)) return gift;
   if (!matchesGiftCollection(gift, selected.collection ?? [])) return null;
   const matches = (kind: TelegramAttributeKind, item: { id: string | number; name: string }) => selected[kind]?.includes(telegramAttributeKey(kind, collection.telegramId, item.id)) || selected[kind]?.includes(item.name);
   const model = selected.models?.length ? collection.attributes.models.find(item => matches('models', item)) : undefined;

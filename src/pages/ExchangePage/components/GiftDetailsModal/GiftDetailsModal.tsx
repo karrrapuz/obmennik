@@ -28,7 +28,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
   const { feed: marketPrices, now: priceNow } = useTelegramPrices();
   const currentGift = originalGift ? mergeMarketPrices([originalGift], marketPrices, { collections: collection ? [collection] : [] })[0] : null;
-  const gift = currentGift ? previewTelegramGift(currentGift, collection, attributes) ?? currentGift : null;
+  const gift = currentGift ? previewTelegramGift(currentGift, collection, attributes, source) ?? currentGift : null;
   const unpriced = Boolean(gift && isUnpricedGift(gift));
   const dialog = useRef<HTMLDialogElement>(null);
   const scrollArea = useRef<HTMLDivElement>(null);
@@ -144,7 +144,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           </section>}
           {unpriced && collection && <>
             <dl className="gift-details__traits"><div><dt>Цена выпуска</dt><dd>{collection.stars} Stars</dd></div><div><dt>Улучшение</dt><dd>{collection.upgradeAvailable ? 'Доступно' : 'Недоступно'}</dd></div>{collection.firstSaleAt !== null && <div><dt>Первая продажа</dt><dd>{new Date(collection.firstSaleAt * 1000).toLocaleDateString('ru-RU')}</dd></div>}</dl>
-            <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />
+            {source === 'exchange' && <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />}
           </>}
           <div className="gift-details__actions">
             <button type="button" onClick={() => setPreview(true)}><img src={viewIcon} alt="" /><span>Посмотреть</span></button>
