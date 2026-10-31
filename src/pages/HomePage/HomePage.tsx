@@ -37,18 +37,18 @@ function HomePage() {
     });
     // Animate only visible items, independently of their artwork/press transforms.
     const animations = visible.map((element, index) => element.animate([
-      { translate: `${reducedMotion ? 0 : entryDirection.current * 10}px ${reducedMotion ? 4 : 24}px` },
+      { translate: `${reducedMotion ? 0 : entryDirection.current * 12}px ${reducedMotion ? 3 : entryDirection.current ? 8 : 16}px` },
       { translate: '0px 0px' },
-    ], { duration: reducedMotion ? 600 : 820, delay: Math.min(index, 6) * 22, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
+    ], { duration: reducedMotion ? 600 : 780, delay: Math.min(index, 6) * 35, easing: 'cubic-bezier(0.22, 0.8, 0.25, 1)', fill: 'backwards' }));
     return () => animations.forEach(animation => animation.cancel());
   }, [activePage]);
   const { wallet } = useWallet();
   const balance = displayTon(wallet.balance_nano);
   const [topUpRequest, setTopUpRequest] = useState(0);
   const openTopUp = () => setTopUpRequest((value) => value + 1);
-  const navigate = (page: PageSection) => {
+  const navigate = (page: PageSection, fromSwipe = false) => {
     if (page === activePage) return;
-    entryDirection.current = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
+    entryDirection.current = fromSwipe ? Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage)) : 0;
     setActivePage(page);
     window.scrollTo(0, 0);
   };
@@ -73,7 +73,7 @@ function HomePage() {
     if (Math.abs(distance) < 72 || Math.abs(distance) < Math.abs(touch.clientY - start.y) * 2.5) return;
     if (touch.clientX < 16 || touch.clientX > document.documentElement.clientWidth - 16) return;
     const nextPage = pageOrder[pageOrder.indexOf(activePage) + (distance < 0 ? 1 : -1)];
-    if (nextPage) navigate(nextPage);
+    if (nextPage) navigate(nextPage, true);
   };
   // Observe completed gestures only; native scrolling and Telegram edge gestures stay untouched.
   const swipeHandlers = { onTouchStart, onTouchMove, onTouchEnd, onTouchCancel: cancelSwipe };
