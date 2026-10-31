@@ -8,6 +8,8 @@ from app import wallet_models
 from app import loan_models
 from app import trade_models
 from app import grant_models
+from app import referral_models
+from app import market_models
 
 settings = Settings.from_env()
 if context.is_offline_mode():

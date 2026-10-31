@@ -15,6 +15,9 @@ class Settings:
     gift_provider_mode: str = 'demo'
     trade_markup_bps: int = 500
     trade_quote_ttl: int = 120
+    referral_rate_bps: int = 200
+    telegram_bot_username: str = ''
+    market_ingest_key: str = ''
 
     @classmethod
     def from_env(cls):
@@ -30,9 +33,12 @@ class Settings:
         try:
             markup = int(os.getenv('TRADE_MARKUP_BPS', '500'))
             ttl = int(os.getenv('TRADE_QUOTE_TTL', '120'))
+            referral_rate = int(os.getenv('REFERRAL_RATE_BPS', '200'))
         except ValueError:
             raise RuntimeError('Trade pricing configuration must use integers') from None
         return cls(token, url, tuple(x.strip() for x in os.getenv(
             'ALLOWED_ORIGINS', 'http://localhost:5173,https://obmennik-kappa.vercel.app'
         ).split(',') if x.strip()), gift_provider_mode=os.getenv('GIFT_PROVIDER_MODE', 'demo').strip(),
-            trade_markup_bps=markup, trade_quote_ttl=ttl)
+            trade_markup_bps=markup, trade_quote_ttl=ttl, referral_rate_bps=referral_rate,
+            telegram_bot_username=os.getenv('TELEGRAM_BOT_USERNAME', '').strip().lstrip('@'),
+            market_ingest_key=os.getenv('MARKET_INGEST_KEY', '').strip())

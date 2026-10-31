@@ -16,6 +16,7 @@ from .ledger import CAP, ensure_wallet, lock_actor, post_transfer, wallet_snapsh
 from .models import User
 from .pricing import PriceProvider, ask_price
 from .trade_models import TradeQuote, TradeReceipt
+from .referrals import accrue_trade_reward, lock_trade_participants
 
 Ids = Annotated[list[Annotated[StrictInt, Field(gt=0)]], Field(min_length=1, max_length=100)]
 
@@ -32,7 +33,7 @@ class ExecuteInput(BaseModel):
 
 
 def register_trade_routes(app, database, current_session, provider: GiftProvider,
-                          prices: PriceProvider, markup_bps: int, quote_ttl: int):
+                          prices: PriceProvider, markup_bps: int, quote_ttl: int, referral_rate_bps: int = 200):
     if type(markup_bps) is not int or not 0 <= markup_bps <= 10_000:
         raise ValueError('TRADE_MARKUP_BPS must be an integer from 0 to 10000')
     if type(quote_ttl) is not int or not 30 <= quote_ttl <= 600:
@@ -101,7 +102,8 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
         received_available(body.received_ids)
         offered = [{'gift_id': id, 'catalog_id': rows[id].catalog_id,
                     'unit_nano': str(base_price(rows[id].catalog_id))} for id in body.offered_ids]
-        received = [{'catalog_id': id, 'unit_nano': str(ask_price(base_price(id), markup_bps))}
+        received_bases = {id: base_price(id) for id in body.received_ids}
+        received = [{'catalog_id': id, 'unit_nano': str(ask_price(received_bases[id], markup_bps))}
                     for id in body.received_ids]
         offer = sum(int(item['unit_nano']) for item in offered)
         receive = sum(int(item['unit_nano']) for item in received)
@@ -111,6 +113,8 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
         quote = TradeQuote(id=uuid4().hex, user_id=user_id, expires_at=expires_at,
             status='open', payload={'asset': 'DEMO_TON', 'source': prices.source, 'source_version': prices.version,
                 'markup_bps': markup_bps, 'offered': offered, 'received': received,
+                'fee_nano': str(sum(int(item['unit_nano']) - received_bases[item['catalog_id']] for item in received)),
+                'referral_rate_bps': referral_rate_bps,
                 'offered_nano': str(offer), 'received_nano': str(receive),
                 'wallet_delta_nano': str(delta), 'required_balance_nano': str(max(-delta, 0))})
         db.add(quote)
@@ -125,7 +129,7 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
 
     @app.post('/api/trades/execute')
     def execute(body: ExecuteInput, key: Key, db: Session = Depends(database), session=Depends(current_session)):
-        user_id = lock_actor(db, session)
+        user_id = lock_trade_participants(db, session)
         digest = hashlib.sha256(body.quote_id.encode()).hexdigest()
         receipt = db.get(TradeReceipt, (user_id, key))
         if receipt and receipt.payload_hash != digest:
@@ -153,6 +157,7 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
                 db.add(InventoryGift(user_id=user_id, catalog_id=item['catalog_id'], pledged=False, pledge_supported=True))
             db.get(User, user_id).state_revision += 1
             quote.status = 'executed'
+            accrue_trade_reward(db, quote)
             db.flush()
         if receipt is None:
             db.add(TradeReceipt(user_id=user_id, key=key, payload_hash=digest, quote_id=quote.id))

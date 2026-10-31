@@ -5,6 +5,7 @@ import { previewTelegramGift, type TelegramCollection } from '../../../../servic
 import TelegramAttributes from './TelegramAttributes';
 import GiftPrice from '../../../../components/gifts/GiftPrice';
 import { useTelegramPrices } from '../../../../hooks/useTelegramPrices';
+import { applyMarketValuation, marketValuationQuery, useMarketValuation } from '../../../../hooks/useMarketValuation';
 import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegramPrices';
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
@@ -28,7 +29,15 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
   const { feed: marketPrices, now: priceNow } = useTelegramPrices();
   const currentGift = originalGift ? mergeMarketPrices([originalGift], marketPrices, { collections: collection ? [collection] : [] })[0] : null;
-  const gift = currentGift ? previewTelegramGift(currentGift, collection, attributes, source) ?? currentGift : null;
+  const previewGift = currentGift ? previewTelegramGift(currentGift, collection, attributes, source) ?? currentGift : null;
+  const valuationEnabled = Boolean(open && originalGift?.collectionId && isUnpricedGift(originalGift) && collection);
+  const valuationQuery = valuationEnabled && originalGift && collection
+    ? marketValuationQuery(originalGift, collection, source === 'exchange' ? attributes : {}) : null;
+  const valuation = useMarketValuation(valuationQuery);
+  const specificValuation = Boolean(valuationQuery && new URLSearchParams(valuationQuery).size > 1)
+    || Boolean(originalGift?.modelFilterId || originalGift?.symbol?.id !== undefined || originalGift?.backdrop?.id !== undefined)
+    || (source === 'exchange' && Object.values(attributes).some(values => values.length > 0));
+  const gift = previewGift && valuationEnabled ? applyMarketValuation(previewGift, valuation, specificValuation) : previewGift;
   const unpriced = Boolean(gift && isUnpricedGift(gift));
   const dialog = useRef<HTMLDialogElement>(null);
   const scrollArea = useRef<HTMLDivElement>(null);

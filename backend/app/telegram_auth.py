@@ -21,7 +21,7 @@ class InvalidInitData(ValueError):
     pass
 
 
-def validate_init_data(raw: str, token: str, max_age: int):
+def validate_init_data(raw: str, token: str, max_age: int, *, include_start_param=False):
     try:
         if not raw or len(raw) > 16384 or re.search(r'%(?![0-9a-fA-F]{2})', raw):
             raise ValueError()
@@ -46,6 +46,8 @@ def validate_init_data(raw: str, token: str, max_age: int):
         # Only Telegram's HTTPS photo URLs are rendered; no arbitrary schemes.
         if user.photo_url and not user.photo_url.startswith('https://'):
             user.photo_url = None
+        if include_start_param:
+            return user, expected, auth_date, fields.get('start_param', '')
         return user, expected, auth_date
     except (ValueError, KeyError, TypeError, ValidationError, UnicodeError):
         raise InvalidInitData('Invalid or expired Telegram data') from None

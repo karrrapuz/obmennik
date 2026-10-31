@@ -27,6 +27,8 @@ from .gift_provider import create_gift_provider
 from .pricing import SamplePriceProvider
 from .trades import register_trade_routes
 from .catalog_index import register_catalog_routes
+from .referrals import bind_first_launch, register_referral_routes
+from .market_valuation import register_market_routes
 
 
 class AuthInput(BaseModel):
@@ -114,7 +116,8 @@ def create_app(settings: Settings):
     @app.post('/api/auth/telegram')
     def login(body: AuthInput, db: Session = Depends(database)):
         try:
-            identity, init_hash, auth_date = validate_init_data(body.init_data, settings.bot_token, settings.init_data_max_age)
+            identity, init_hash, auth_date, start_param = validate_init_data(body.init_data, settings.bot_token,
+                settings.init_data_max_age, include_start_param=True)
         except InvalidInitData:
             raise HTTPException(401, 'Invalid or expired Telegram data') from None
         # Stable token for a signed launch makes retries/StrictMode idempotent.
@@ -125,6 +128,7 @@ def create_app(settings: Settings):
         if existing and (existing.revoked or existing.expires_at <= now):
             raise HTTPException(401, 'Reopen the Mini App to sign in')
         user = db.get(User, identity.id)
+        new_user = user is None
         if user is None:
             user = User(id=identity.id, first_name=identity.first_name, referral_code=secrets.token_urlsafe(18))
             db.add(user)
@@ -133,6 +137,8 @@ def create_app(settings: Settings):
         try:
             # Persist the parent first; both writes still commit atomically.
             db.flush()
+            if new_user:
+                bind_first_launch(db, identity.id, start_param)
             if existing is None:
                 db.add(LoginSession(token_hash=digest, user_id=identity.id, init_hash=init_hash,
                                     created_at=now, expires_at=auth_date + settings.session_ttl, revoked=0))
@@ -159,10 +165,12 @@ def create_app(settings: Settings):
 
     register_inventory_routes(app, database, current_session, gift_provider)
     register_catalog_routes(app, gift_provider)
+    register_market_routes(app, gift_provider, engine, settings.market_ingest_key)
+    register_referral_routes(app, database, current_session, settings.referral_rate_bps, settings.telegram_bot_username)
     register_wallet_routes(app, database, current_session)
     register_loan_routes(app, database, current_session, gift_provider)
     register_trade_routes(app, database, current_session, gift_provider,
-                          price_provider, settings.trade_markup_bps, settings.trade_quote_ttl)
+                          price_provider, settings.trade_markup_bps, settings.trade_quote_ttl, settings.referral_rate_bps)
     return app
 
 

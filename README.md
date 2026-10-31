@@ -25,6 +25,10 @@
 | `src/services/snapshotRevision.ts` | Защита от устаревших ответов API |
 | `backend/app/loans.py`, `backend/app/loan_models.py` | Выдача, погашение, продление и автоплатёж займов |
 | `backend/app/ledger.py` | Общий транзакционный денежный учёт |
+| `backend/app/referrals.py`, `backend/app/referral_models.py`, `src/hooks/useReferrals.ts`, `docs/REFERRALS.md` | Подписанные приглашения, начисления от подтверждённых обменов и получение заработанного |
+| `backend/app/market_valuation.py` | TON-предложения с совпадающими реальными атрибутами, без выдуманной оценки редкости |
+| `backend/app/market_storage.py`, `backend/app/market_models.py` | Проверка и постоянное хранение публичных снимков цен, защищённый приём обновлений |
+| `backend/market.credentials.example` | Шаблон локального ключа загрузки снимков, без Telegram-сессии на сервере |
 | `backend/app/ledger_audit.py`, `backend/scripts/audit_ledger.py` | Проверка совпадения балансов и проводок без изменения данных |
 | `backend/app/gift_provider.py` | Заменяемая заглушка подарков и режим отключения интеграции |
 | `backend/app/pricing.py` | Точные цены, версия источника и наценка |

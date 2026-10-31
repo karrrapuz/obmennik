@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from .wallet_models import WalletAccount, WalletTransaction
 from .ledger import CAP, SINGLE_LIMIT, lock_actor as actor, post_transfer as record, ensure_wallet as seed, wallet_snapshot as snapshot
+from .referrals import earned_available
 
 
 
@@ -45,7 +46,7 @@ class WithdrawInput(AmountInput):
 
 def register_wallet_routes(app, database, current_session):
     def mutate(kind, body, key, db, session):
-        if key.startswith(('trade:', 'loan:', 'auto:', '__')):
+        if key.startswith(('trade:', 'loan:', 'auto:', 'referral:', '__')):
             raise HTTPException(422, 'Reserved operation key prefix')
         user_id = actor(db, session)
         seed(db, user_id)
@@ -60,7 +61,7 @@ def register_wallet_routes(app, database, current_session):
             db.commit()
             return result
         if kind == 'referral':
-            amount = db.get(WalletAccount, (user_id, 'referral')).balance
+            amount = db.get(WalletAccount, (user_id, 'referral')).balance - earned_available(db, user_id)
             if amount <= 0:
                 raise HTTPException(409, 'No test referral reward available')
             record(db, user_id, key, digest, kind, amount, 'referral', 'wallet', amount)

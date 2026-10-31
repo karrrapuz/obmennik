@@ -17,6 +17,8 @@ jobs:
       - run: node scripts/check-catalog-filters.mjs
       - run: node scripts/check-gift-presentation.mjs
       - run: node scripts/check-wallet.mjs
+      - run: node scripts/check-referrals.mjs
+      - run: node scripts/check-market-hooks.mjs
   auth:
     runs-on: ubuntu-latest
     services:

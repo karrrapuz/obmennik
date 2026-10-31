@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useWallet } from '../../wallet/WalletProvider';
 import { displayTon, formatNano } from '../../wallet/wallet';
 import { useAnimatedBalance } from '../../hooks/useAnimatedBalance';
+import { useReferrals } from '../../hooks/useReferrals';
 import '../../styles/press-feedback.css';
 import SlideNotice from '../../components/feedback/SlideNotice/SlideNotice';
 import { isUnpricedGift, type Gift } from '../ExchangePage/data/gifts';
@@ -38,15 +39,19 @@ export type ProfileGift = Omit<Gift, 'price'> & { price: number };
 
 function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest: number }) {
   const { wallet: walletSnapshot, pending: walletPending, error: walletError, available: walletAvailable, operate, reload } = useWallet();
-  const referralReward = displayTon(walletSnapshot.referral_nano);
+  const referrals = useReferrals();
+  const profileRef = useRef<HTMLDivElement>(null);
+  const referralReward = displayTon(referrals.demo ? walletSnapshot.referral_nano : referrals.summary?.available_nano ?? '0');
+  const [demoClaimPending, setDemoClaimPending] = useState(false);
   const claimBusy = useRef(false);
   const [claimError, setClaimError] = useState('');
   const claimReferral = async () => {
+    if (!referrals.demo) { await referrals.claim(); return; }
     if (claimBusy.current || walletPending || !walletAvailable || BigInt(walletSnapshot.referral_nano) <= 0n) return;
-    claimBusy.current = true; setClaimError('');
+    claimBusy.current = true; setDemoClaimPending(true); setClaimError('');
     try { await operate('referral'); }
-    catch { setClaimError('Не удалось забрать демо-награду. Повторите попытку.'); }
-    finally { claimBusy.current = false; }
+    catch { setClaimError('Не удалось забрать награду. Повторите попытку.'); }
+    finally { claimBusy.current = false; setDemoClaimPending(false); }
   };
   const user = useUser();
   const name = displayName(user);
@@ -65,7 +70,18 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
   const [referralCopied, setReferralCopied] = useState(false);
   const [walletCopied, setWalletCopied] = useState(false);
   useEffect(() => { if (topUpRequest > 0) setModal('deposit-choice'); }, [topUpRequest]);
-  const referralLink = `${window.location.origin}/?ref=${encodeURIComponent(user.referral_code)}`;
+  const referralLink = referrals.summary?.invite_url ?? null;
+  const referralPending = referrals.demo ? demoClaimPending || walletPending : referrals.pending;
+  const refreshReferrals = referrals.refresh;
+  useEffect(() => {
+    const container = profileRef.current?.closest('.home-page-view');
+    if (!container) return;
+    const observer = new MutationObserver(() => {
+      if (!container.hasAttribute('hidden') && document.visibilityState === 'visible') void refreshReferrals();
+    });
+    observer.observe(container, { attributes: true, attributeFilter: ['hidden'] });
+    return () => observer.disconnect();
+  }, [refreshReferrals]);
 
   const copyText = async (value: string, onCopied: (copied: boolean) => void) => {
     try {
@@ -77,7 +93,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
     }
   };
 
-  return <div className="profile-page">
+  return <div className="profile-page" ref={profileRef}>
     <div className="profile-page__glow" aria-hidden="true" />
     <header className="profile-header">
       <button className="profile-header__user" type="button" aria-label={`Профиль ${name}`}><UserAvatar user={user} /><span title={name}>{name}</span></button>
@@ -107,7 +123,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
 
     <main className="profile-content">
       <p className="demo-inventory-caption">Тестовые подарки</p>
-      {(walletError || claimError) && <p className="demo-wallet-error" role="alert">{claimError || walletError} <button type="button" disabled={walletPending} onClick={() => { setClaimError(''); void reload().catch(() => {}); }}>Обновить</button></p>}
+      {(walletError || claimError || referrals.error) && <p className="demo-wallet-error" role="alert">{claimError || referrals.error || walletError} <button type="button" disabled={walletPending || referralPending} onClick={() => { setClaimError(''); void reload().catch(() => {}); void referrals.refresh(); }}>Обновить</button></p>}
       <section className="profile-gifts" aria-label="Ваши подарки">
         <div className="profile-gifts__header">
           <div className="profile-gifts__title"><span><img src={giftSmallIcon} alt="" /></span>Ваши подарки</div>
@@ -132,14 +148,14 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
       </section>
 
       <section className="profile-referral" aria-label="Реферальная программа">
-        <p>Приглашайте друзей и получайте <em>20% комиссии</em> от их обменов!</p>
+        <p>Приглашайте друзей и получайте <em>{(referrals.summary?.rate_bps ?? 200) / 100}% оборота</em> от их обменов!</p>
         <div className="profile-referral__stats">
-          <div className="profile-referral__stat"><img src={inviteBackdrop} alt="" /><span>Приглашено</span><strong>0 чел.</strong><button type="button" onClick={() => copyText(referralLink, setReferralCopied)}>{referralCopied ? 'Скопировано' : 'Пригласить'}</button></div>
-          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Демо-награда</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} TON</strong><button type="button" disabled={BigInt(walletSnapshot.referral_nano) === 0n || walletPending || !walletAvailable} onClick={claimReferral}>{walletPending && claimBusy.current ? 'Ожидание...' : 'Забрать'}</button></div>
+          <div className="profile-referral__stat"><img src={inviteBackdrop} alt="" /><span>Приглашено</span><strong>{referrals.summary?.invited_count ?? 0} чел.</strong><button type="button" disabled={!referralLink} onClick={() => referralLink && copyText(referralLink, setReferralCopied)}>{referralCopied ? 'Скопировано' : 'Пригласить'}</button></div>
+          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Заработано</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} TON</strong><button type="button" disabled={referralReward <= 0 || referralPending || !walletAvailable} onClick={claimReferral}>{referralPending ? 'Ожидание...' : 'Забрать'}</button></div>
         </div>
       </section>
-      <div className="profile-referral-link"><div><img src={referralIcon} alt="" /><span>Реферальная ссылка</span></div><button type="button" aria-label="Скопировать реферальную ссылку" onClick={() => copyText(referralLink, setReferralCopied)}><img src={referralCopied ? copiedIcon : copyIcon} alt="" /></button></div>
-      <details className="demo-wallet-history"><summary>История тестовых операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Демо-пополнение', withdraw: 'Демо-вывод', referral: 'Демо-награда', loan_credit: 'Выдача займа', loan_repay: 'Погашение займа', loan_interest: 'Проценты по займу', loan_extend: 'Продление займа', trade_credit: 'Остаток от обмена', trade_debit: 'Доплата за обмен' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} TON</strong></li>)}</ul></details>
+      <div className="profile-referral-link"><div><img src={referralIcon} alt="" /><span>Реферальная ссылка</span></div><button type="button" disabled={!referralLink} aria-label="Скопировать реферальную ссылку" onClick={() => referralLink && copyText(referralLink, setReferralCopied)}><img src={referralCopied ? copiedIcon : copyIcon} alt="" /></button></div>
+      <details className="demo-wallet-history"><summary>История тестовых операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Демо-пополнение', withdraw: 'Демо-вывод', referral: 'Демо-награда', referral_credit: 'Реферальное начисление', loan_credit: 'Выдача займа', loan_repay: 'Погашение займа', loan_interest: 'Проценты по займу', loan_extend: 'Продление займа', trade_credit: 'Остаток от обмена', trade_debit: 'Доплата за обмен' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} TON</strong></li>)}</ul></details>
     </main>
 
     <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>
