@@ -26,22 +26,20 @@ function HomePage() {
   const swipe = useRef<PageSwipe | null>(null);
   const pageView = useRef<HTMLDivElement>(null);
   const entryDirection = useRef(0);
-  const leaving = useRef(false);
-  const exits = useRef<Animation[]>([]);
-  const navigationRun = useRef(0);
-  useLayoutEffect(() => () => {
-    navigationRun.current += 1;
-    exits.current.forEach(animation => animation.cancel());
-  }, []);
   useLayoutEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const content = pageView.current?.querySelectorAll<HTMLElement>(
-      ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
+      '.exchange-summary, .exchange-toolbar, .gift-grid > .gift-card, .exchange-empty, .exchange-catalog__status, .profile-balance, .profile-actions, .profile-content > section, .pledge-banner, .pledge-tabs, .pledge-grid > .pledge-card, .pledge-empty, .pledge-empty-loans, .pledge-supported',
     );
-    const animations = Array.from(content ?? [], (element, index) => element.animate([
-      { opacity: 0, transform: reducedMotion ? 'none' : `translate(${entryDirection.current * 18}px, 12px)` },
-      { opacity: 1, transform: reducedMotion ? 'none' : 'translate(0, 0)' },
-    ], { duration: reducedMotion ? 220 : 440, delay: reducedMotion ? 0 : index * 35, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
+    const visible = Array.from(content ?? []).filter(element => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.height > 0 && bounds.bottom > 0 && bounds.top < window.innerHeight + 32;
+    });
+    // Animate only visible items, independently of their artwork/press transforms.
+    const animations = visible.map((element, index) => element.animate([
+      { translate: `${reducedMotion ? 0 : entryDirection.current * 10}px ${reducedMotion ? 4 : 24}px` },
+      { translate: '0px 0px' },
+    ], { duration: reducedMotion ? 600 : 820, delay: Math.min(index, 6) * 22, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
     return () => animations.forEach(animation => animation.cancel());
   }, [activePage]);
   const { wallet } = useWallet();
@@ -49,30 +47,10 @@ function HomePage() {
   const [topUpRequest, setTopUpRequest] = useState(0);
   const openTopUp = () => setTopUpRequest((value) => value + 1);
   const navigate = (page: PageSection) => {
-    if (page === activePage || leaving.current) return;
-    const direction = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
-    const finish = () => {
-      entryDirection.current = direction;
-      setActivePage(page);
-      window.scrollTo(0, 0);
-    };
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const elements = pageView.current?.querySelectorAll<HTMLElement>(
-      ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
-    );
-    leaving.current = true;
-    const run = ++navigationRun.current;
-    exits.current = Array.from(elements ?? [], element => element.animate([
-      { opacity: 1, transform: reducedMotion ? 'none' : 'translateX(0)' },
-      { opacity: 0, transform: reducedMotion ? 'none' : `translateX(${-direction * 8}px)` },
-    ], { duration: 120, easing: 'ease-in', fill: 'forwards' }));
-    void Promise.all(exits.current.map(animation => animation.finished)).then(() => {
-      if (navigationRun.current !== run) return;
-      exits.current.forEach(animation => animation.cancel());
-      exits.current = [];
-      leaving.current = false;
-      finish();
-    }).catch(() => { if (navigationRun.current === run) leaving.current = false; });
+    if (page === activePage) return;
+    entryDirection.current = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
+    setActivePage(page);
+    window.scrollTo(0, 0);
   };
   const cancelSwipe = () => { swipe.current = null; };
   const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
