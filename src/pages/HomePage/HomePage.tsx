@@ -1,4 +1,4 @@
-import { useRef, useState, type TouchEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type TouchEvent } from 'react';
 import ExchangePage from '../ExchangePage/ExchangePage';
 import ProfilePage from '../ProfilePage/ProfilePage';
 import DepositPage from '../DepositPage/DepositPage';
@@ -24,12 +24,26 @@ function blocksPageSwipe(target: EventTarget | null) {
 function HomePage() {
   const [activePage, setActivePage] = useState<PageSection>('exchange');
   const swipe = useRef<PageSwipe | null>(null);
+  const pageView = useRef<HTMLDivElement>(null);
+  const entryDirection = useRef(0);
+  useLayoutEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const content = pageView.current?.querySelectorAll<HTMLElement>(
+      ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
+    );
+    const animations = Array.from(content ?? [], (element, index) => element.animate([
+      { opacity: 0, transform: `translate(${entryDirection.current * 18}px, 12px)` },
+      { opacity: 1, transform: 'translate(0, 0)' },
+    ], { duration: 440, delay: index * 35, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
+    return () => animations.forEach(animation => animation.cancel());
+  }, [activePage]);
   const { wallet } = useWallet();
   const balance = displayTon(wallet.balance_nano);
   const [topUpRequest, setTopUpRequest] = useState(0);
   const openTopUp = () => setTopUpRequest((value) => value + 1);
   const navigate = (page: PageSection) => {
     if (page === activePage) return;
+    entryDirection.current = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
     setActivePage(page);
     window.scrollTo(0, 0);
   };
@@ -59,9 +73,9 @@ function HomePage() {
   // Observe completed gestures only; native scrolling and Telegram edge gestures stay untouched.
   const swipeHandlers = { onTouchStart, onTouchMove, onTouchEnd, onTouchCancel: cancelSwipe };
   return <>
-    <div className="home-page-view" {...swipeHandlers} hidden={activePage !== 'profile'} inert={activePage !== 'profile'} aria-hidden={activePage !== 'profile'}><ProfilePage balance={balance} topUpRequest={topUpRequest} /></div>
-    {activePage === 'deposit' && <div className="home-page-view" {...swipeHandlers}><DepositPage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} /></div>}
-    <div className="home-page-view" {...swipeHandlers} hidden={activePage !== 'exchange'} inert={activePage !== 'exchange'} aria-hidden={activePage !== 'exchange'}><ExchangePage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} /></div>
+    <div ref={activePage === 'profile' ? pageView : undefined} className="home-page-view" {...swipeHandlers} hidden={activePage !== 'profile'} inert={activePage !== 'profile'} aria-hidden={activePage !== 'profile'}><ProfilePage balance={balance} topUpRequest={topUpRequest} /></div>
+    {activePage === 'deposit' && <div ref={pageView} className="home-page-view" {...swipeHandlers}><DepositPage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} /></div>}
+    <div ref={activePage === 'exchange' ? pageView : undefined} className="home-page-view" {...swipeHandlers} hidden={activePage !== 'exchange'} inert={activePage !== 'exchange'} aria-hidden={activePage !== 'exchange'}><ExchangePage balance={balance} onTopUp={openTopUp} onNavigateProfile={() => navigate('profile')} /></div>
     <PageFooter active={activePage} onNavigate={navigate} />
   </>;
 }

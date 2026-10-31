@@ -25,6 +25,7 @@
 | `src/services/snapshotRevision.ts` | Защита от устаревших ответов API |
 | `backend/app/loans.py`, `backend/app/loan_models.py` | Выдача, погашение, продление и автоплатёж займов |
 | `backend/app/ledger.py` | Общий транзакционный денежный учёт |
+| `backend/app/ledger_audit.py`, `backend/scripts/audit_ledger.py` | Проверка совпадения балансов и проводок без изменения данных |
 | `backend/app/gift_provider.py` | Заменяемая заглушка подарков и режим отключения интеграции |
 | `backend/app/pricing.py` | Точные цены, версия источника и наценка |
 | `backend/app/trades.py`, `backend/app/trade_models.py` | Серверные котировки и атомарный обмен |

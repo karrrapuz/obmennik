@@ -154,7 +154,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
                 </span>
                 <span className="exchange-summary__offer-state exchange-summary__offer-state--minimum" style={{ opacity: 1 - exchangeAnimation.offerActivation }}>
                   <img src={tonIcon} alt="" />
-                  <span className="exchange-summary__offer-text"><span>{trade.server ? '—' : '0.00'}</span>{!trade.server && <span>мин. 10</span>}</span>
+                  <span className="exchange-summary__offer-text"><span>0.00</span><span>мин. 10</span></span>
                   <img className="exchange-summary__muted-mark" src={tonIcon} alt="" />
                 </span>
               </span>
