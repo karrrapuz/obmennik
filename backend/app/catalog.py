@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
+from .market_prices import load_market_prices
+
 
 DATA_PATH = Path(__file__).resolve().parents[1] / 'data'
 SAMPLE_CATALOG_PATH = DATA_PATH / 'catalog-sample.json'
@@ -53,4 +55,8 @@ def load_catalog(sample_path=None, telegram_path=None):
     if (any(type(id) is not int or id not in imported_ids for id in seasonal)
             or len(seasonal) != len(set(seasonal))):
         raise ValueError('Invalid Halloween catalog IDs')
+    observations = load_market_prices({(card['collectionId'], card['id']) for card in cards[len(sample):]})
+    for card in cards[len(sample):]:
+        if card['id'] in observations:
+            card['marketPrice'] = observations[card['id']]
     return LoadedCatalog(tuple(cards), tuple(seasonal))

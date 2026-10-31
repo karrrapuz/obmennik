@@ -23,6 +23,7 @@ __pycache__/
 *.session*
 backend/.local/
 backend/data/catalog-telegram.json.tmp
+backend/data/market-prices.json.tmp
 public/gifts/telegram/**/*.tmp
 
 # Editor directories and files
