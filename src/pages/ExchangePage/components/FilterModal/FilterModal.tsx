@@ -134,7 +134,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
     if (!area || !section) return;
     const start = area.scrollTop;
     const startedAt = performance.now();
-    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 420;
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 220 : 420;
     let frame = 0;
     let stopped = false;
     const stop = () => { stopped = true; cancelAnimationFrame(frame); };

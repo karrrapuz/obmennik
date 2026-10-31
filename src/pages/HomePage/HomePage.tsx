@@ -34,14 +34,14 @@ function HomePage() {
     exits.current.forEach(animation => animation.cancel());
   }, []);
   useLayoutEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const content = pageView.current?.querySelectorAll<HTMLElement>(
       ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
     );
     const animations = Array.from(content ?? [], (element, index) => element.animate([
-      { opacity: 0, transform: `translate(${entryDirection.current * 18}px, 12px)` },
-      { opacity: 1, transform: 'translate(0, 0)' },
-    ], { duration: 440, delay: index * 35, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
+      { opacity: 0, transform: reducedMotion ? 'none' : `translate(${entryDirection.current * 18}px, 12px)` },
+      { opacity: 1, transform: reducedMotion ? 'none' : 'translate(0, 0)' },
+    ], { duration: reducedMotion ? 220 : 440, delay: reducedMotion ? 0 : index * 35, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' }));
     return () => animations.forEach(animation => animation.cancel());
   }, [activePage]);
   const { wallet } = useWallet();
@@ -56,15 +56,15 @@ function HomePage() {
       setActivePage(page);
       window.scrollTo(0, 0);
     };
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const elements = pageView.current?.querySelectorAll<HTMLElement>(
       ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
     );
     leaving.current = true;
     const run = ++navigationRun.current;
     exits.current = Array.from(elements ?? [], element => element.animate([
-      { opacity: 1, transform: 'translateX(0)' },
-      { opacity: 0, transform: `translateX(${-direction * 8}px)` },
+      { opacity: 1, transform: reducedMotion ? 'none' : 'translateX(0)' },
+      { opacity: 0, transform: reducedMotion ? 'none' : `translateX(${-direction * 8}px)` },
     ], { duration: 120, easing: 'ease-in', fill: 'forwards' }));
     void Promise.all(exits.current.map(animation => animation.finished)).then(() => {
       if (navigationRun.current !== run) return;
