@@ -15,6 +15,10 @@ import '../../styles/press-feedback.css';
 import bannerExchange from './assets/banner-exchange.svg';
 import PledgeModal from './components/PledgeModal';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
+import GiftPrice from '../../components/gifts/GiftPrice';
+import { useTelegramPrices } from '../../hooks/useTelegramPrices';
+import { mergeMarketPrices } from '../../services/telegramPrices';
+import { useInventory } from '../../inventory/InventoryProvider';
 import PledgePayment from './components/PledgePayment';
 import pledgeIcon from './assets/zalog-gift-icon.svg';
 import timeIcon from './assets/zalog-gift-time.svg';
@@ -24,6 +28,8 @@ import './DepositPage.css';
 
 export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
   const state = useSyncExternalStore(pledgeStore.subscribe, pledgeStore.getSnapshot);
+  const { feed: marketPrices } = useTelegramPrices();
+  const { telegramCatalog } = useInventory();
   const [tab, setTab] = useState<'inventory' | 'pledges'>('inventory');
   const [gift, setGift] = useState<Gift | null>(null);
   const [open, setOpen] = useState(false);
@@ -31,7 +37,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
   const [paymentIds, setPaymentIds] = useState<number[] | null>(null);
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState(false);
-  const items = tab === 'inventory' ? state.inventory.map(item => isUnpricedGift(item) ? { ...item, pledgeSupported: false } : item) : state.pledges.map((item) => item.gift);
+  const items = tab === 'inventory' ? mergeMarketPrices(state.inventory, marketPrices, telegramCatalog).map(item => isUnpricedGift(item) ? { ...item, pledgeSupported: false } : item) : state.pledges.map((item) => item.gift);
   return <main className="deposit-page" aria-label="Залог">
     <PageHeader balance={balance} onNavigateProfile={onNavigateProfile} onTopUp={onTopUp} />
     <section className="pledge-banner">
@@ -53,7 +59,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
         const loan = state.pledges.find((p) => p.gift.id === item.id);
         return <article className="pledge-card" data-loan={tab === 'pledges'} data-selected={selected.includes(item.id)} key={item.id}>
           <button className="pledge-card__open" disabled={tab === 'inventory' && item.pledgeSupported === false} aria-label={item.pledgeSupported === false ? `${item.name}: не поддерживается для залога` : `Открыть ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><div className="pledge-card__art"><GiftArtwork gift={item} />{tab === 'inventory' && item.pledgeSupported === false && <div className="pledge-card__locked"><img src={LockKeyhole} alt="" /><span>Не поддерживается</span></div>}<div className="pledge-card__caption"><strong>{item.name}</strong><small>{item.modelName ?? 'Модель'}&nbsp;&nbsp;{item.model}</small></div></div></button>
-          {tab === 'inventory' ? <span className="pledge-card__price" data-unpriced={isUnpricedGift(item)}>{isUnpricedGift(item) ? 'Без TON-оценки' : <><img src={ton} alt="" />{item.price}</>}</span> : <>
+          {tab === 'inventory' ? <span className="pledge-card__price" data-unpriced={isUnpricedGift(item)}><GiftPrice gift={item} /></span> : <>
             <button className="pledge-card__loan-icon" aria-label={`Информация о залоге ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><img src={pledgeIcon} alt="" /></button>
             <button className="pledge-card__select" aria-label={`Выбрать ${item.name}`} aria-pressed={selected.includes(item.id)} disabled={loan?.status !== 'active' || loan.legacy} onClick={() => setSelected((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>{selected.includes(item.id) && <b><img src={check} alt="" /></b>}</button>
             <div className="pledge-card__due"><span><img src={timeIcon} alt="" /></span><div><small>{loan?.status === 'processing' ? 'Обработка...' : 'Дата выкупа до'}</small><strong>{loan && new Date(loan.dueAt).toLocaleDateString('ru-RU')} ({loan && new Date(loan.dueAt).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})})</strong></div></div>

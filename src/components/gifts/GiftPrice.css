@@ -1,0 +1,2 @@
+.gift-price-reference { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; max-width: 100%; overflow-wrap: anywhere; font-size: 11px; line-height: 14px; }
+.gift-price-reference img { width: 10px; height: 10px; flex: none; }

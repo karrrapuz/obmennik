@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import { isUnpricedGift, type Gift } from '../../data/gifts';
 import { previewTelegramGift, type TelegramCollection } from '../../../../services/telegramCatalog';
 import TelegramAttributes from './TelegramAttributes';
+import GiftPrice from '../../../../components/gifts/GiftPrice';
+import { useTelegramPrices } from '../../../../hooks/useTelegramPrices';
+import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegramPrices';
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import tonIcon from '../../../../assets/ton.svg';
@@ -23,7 +26,9 @@ type Props = {
 
 export default function GiftDetailsModal({ gift: originalGift, collection, source, open, selected, onClose, onSelect }: Props) {
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
-  const gift = originalGift ? previewTelegramGift(originalGift, collection, attributes) ?? originalGift : null;
+  const { feed: marketPrices, now: priceNow } = useTelegramPrices();
+  const currentGift = originalGift ? mergeMarketPrices([originalGift], marketPrices, { collections: collection ? [collection] : [] })[0] : null;
+  const gift = currentGift ? previewTelegramGift(currentGift, collection, attributes) ?? currentGift : null;
   const unpriced = Boolean(gift && isUnpricedGift(gift));
   const dialog = useRef<HTMLDialogElement>(null);
   const scrollArea = useRef<HTMLDivElement>(null);
@@ -90,7 +95,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
 
   const share = async () => {
     if (!gift) return;
-    const text = unpriced ? `${gift.name} — без TON-оценки${collection ? ` · ${collection.stars} Stars (цена выпуска, не TON)` : ''}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
+    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)} (рынок коллекции; не оценка конкретного варианта)${collection ? ` · ${collection.stars} Stars (цена выпуска, не TON)` : ''}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
     try {
       if (navigator.share) await navigator.share({ title: gift.name, text });
       else {
@@ -120,7 +125,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
             <GiftArtwork gift={gift} />
-            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? 'Без TON-оценки' : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
+            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? 'Только просмотр' : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>
           <dl className="gift-details__traits">
@@ -128,7 +133,15 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
             <div><dt>Символ</dt><dd>{gift.symbol?.name ?? '—'} <small>{gift.symbol?.rarity}</small></dd></div>
             <div><dt>Фон</dt><dd>{gift.backdrop?.name ?? '—'} <small>{gift.backdrop?.rarity}</small></dd></div>
           </dl>
-          {unpriced && <p className="telegram-gift-status">Только просмотр · Обмен и залог недоступны без TON-оценки.</p>}
+          {unpriced && <p className="telegram-gift-status">Только просмотр · Обмен и залог недоступны.</p>}
+          {(unpriced || gift.marketPrice) && <section className="gift-market-reference" aria-label="Рынок коллекции">
+            <h3>Рынок коллекции</h3>
+            <strong><GiftPrice gift={gift} referenceOnly /></strong>
+            {gift.marketPrice && <>
+              <p>Источник: Telegram · перепродажа. Минимум среди {gift.marketPrice.sampleCount} проверенных TON-объявлений.{gift.marketPrice.hasMore ? ' Проверена не вся выдача.' : ''} Не гарантированный минимум всего рынка и не оценка выбранной модели, символа или фона.</p>
+              <p>Проверено: <time dateTime={new Date(gift.marketPrice.checkedAt * 1000).toISOString()}>{new Date(gift.marketPrice.checkedAt * 1000).toLocaleString('ru-RU')}</time><br />{priceNow >= gift.marketPrice.validUntil ? 'Срок действия истёк: ' : 'Актуально до: '}<time dateTime={new Date(gift.marketPrice.validUntil * 1000).toISOString()}>{new Date(gift.marketPrice.validUntil * 1000).toLocaleString('ru-RU')}</time></p>
+            </>}
+          </section>}
           {unpriced && collection && <>
             <dl className="gift-details__traits"><div><dt>Цена выпуска</dt><dd>{collection.stars} Stars</dd></div><div><dt>Улучшение</dt><dd>{collection.upgradeAvailable ? 'Доступно' : 'Недоступно'}</dd></div>{collection.firstSaleAt !== null && <div><dt>Первая продажа</dt><dd>{new Date(collection.firstSaleAt * 1000).toLocaleDateString('ru-RU')}</dd></div>}</dl>
             <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />
@@ -139,7 +152,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           </div>
           <section className="gift-details__offer">
             <h3>{source === 'inventory' ? 'Не нравится?' : 'Нравится?'}</h3>
-            <p>{unpriced ? 'TON-оценка отсутствует' : source === 'inventory' ? 'Обменяй подарок на любой понравившийся!' : 'Обменяй на свой подарок и хвастайся!'}</p>
+            <p>{unpriced ? 'Обмен и залог для коллекции недоступны' : source === 'inventory' ? 'Обменяй подарок на любой понравившийся!' : 'Обменяй на свой подарок и хвастайся!'}</p>
             <button type="button" disabled={unpriced} onClick={onSelect}>{unpriced ? 'Обмен недоступен' : selected ? 'Убрать' : 'В Обмен'}</button>
           </section>
           {source === 'inventory' && <section className="gift-details__offer">

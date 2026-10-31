@@ -8,6 +8,9 @@ import ShortageNotice from './components/ShortageNotice/ShortageNotice';
 import { type Gift, isUnpricedGift, matchesGiftAttributes } from './data/gifts';
 import { previewTelegramGift } from '../../services/telegramCatalog';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
+import GiftPrice from '../../components/gifts/GiftPrice';
+import { useTelegramPrices } from '../../hooks/useTelegramPrices';
+import { compareBrowsingPrices, matchesBrowsingPrice } from '../../services/telegramPrices';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
 import { readTradeAttempt, useTradeQuote } from './hooks/useTradeQuote';
@@ -34,6 +37,7 @@ import subtractObmenIcon from './assets/Subtract_obmen.svg';
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
   const { catalog: gifts, inventory: inventoryGifts, telegramCatalog, catalogError, loading, error, reload, exchange } = useGiftLists();
   const collections = useMemo(() => new Map(telegramCatalog?.collections.map(item => [item.telegramId, item]) ?? []), [telegramCatalog]);
+  const { now: priceNow } = useTelegramPrices();
   const { state: auth } = useAuth();
   const [restored] = useState(() => auth.status === 'ready' && auth.mode !== 'demo' ? readTradeAttempt(auth.user.id) : null);
   const [activeSection, setActiveSection] = useState<'inventory' | 'exchange'>('exchange');
@@ -76,24 +80,20 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
     .filter((gift) => {
       if (!gift.name.toLowerCase().includes(searchQuery.trim().toLowerCase())) return false;
       if (!appliedFilters) return true;
-      if (isUnpricedGift(gift) && (appliedFilters.fromPrice || appliedFilters.toPrice)) return false;
-      const price = Number(gift.price);
-      if (appliedFilters.fromPrice && price < Number(appliedFilters.fromPrice)) return false;
-      if (appliedFilters.toPrice && price > Number(appliedFilters.toPrice)) return false;
+      if (!matchesBrowsingPrice(gift, appliedFilters.fromPrice, appliedFilters.toPrice, priceNow)) return false;
       return matchesGiftAttributes(gift, appliedFilters.selected);
     })
     .sort((first, second) => {
       for (const option of sortOptions) {
-        if ((option === 'price-asc' || option === 'price-desc') && isUnpricedGift(first) !== isUnpricedGift(second)) return isUnpricedGift(first) ? 1 : -1;
         let difference = 0;
         if (option === 'newest' || option === 'id-desc') difference = second.id - first.id;
         if (option === 'id-asc') difference = first.id - second.id;
-        if (option === 'price-asc') difference = Number(first.price) - Number(second.price);
-        if (option === 'price-desc') difference = Number(second.price) - Number(first.price);
+        if (option === 'price-asc') difference = compareBrowsingPrices(first, second, 'asc', priceNow);
+        if (option === 'price-desc') difference = compareBrowsingPrices(first, second, 'desc', priceNow);
         if (difference !== 0) return difference;
       }
       return 0;
-    }), [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions]);
+    }), [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions, priceNow]);
   const pageKey = JSON.stringify([activeSection, searchQuery, appliedFilters, sortOptions]);
   const [page, setPage] = useState({ key: '', count: 40 });
   const shownCount = page.key === pageKey ? page.count : 40;
@@ -220,12 +220,12 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
                   <div className="gift-card__meta">
                     <div><strong>{gift.name}</strong><span>{gift.modelName ?? 'Модель'}&nbsp;&nbsp;{gift.model}</span></div>
                   </div>
-                    <button className="gift-card__select" type="button" disabled={trade.locked || isUnpricedGift(gift)} title={isUnpricedGift(gift) ? 'Только просмотр: TON-оценка отсутствует' : undefined} aria-label={isUnpricedGift(gift) ? `${gift.name}: только просмотр, нет TON-оценки` : `Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => toggleGift(gift.id)}>
+                    <button className="gift-card__select" type="button" disabled={trade.locked || isUnpricedGift(gift)} title={isUnpricedGift(gift) ? 'Только просмотр: обмен и залог недоступны' : undefined} aria-label={isUnpricedGift(gift) ? `${gift.name}: только просмотр, обмен недоступен` : `Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => toggleGift(gift.id)}>
                       <img src={selectedGiftIds.includes(gift.id) ? giftAddonIcon : giftIcon} alt="" />
                       <span className="gift-card__status"><img src={selectedGiftIds.includes(gift.id) ? selectedGiftIcon : plusIcon} alt="" /></span>
                     </button>
                 </div>
-                <div className="gift-card__price" data-unpriced={isUnpricedGift(gift)}>{isUnpricedGift(gift) ? 'Без TON-оценки' : <><img src={tonIcon} alt="" />{gift.price}</>}</div>
+                <div className="gift-card__price" data-unpriced={isUnpricedGift(gift)}><GiftPrice gift={gift} /></div>
               </article>
             ))}
           </div>}

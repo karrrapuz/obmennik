@@ -439,3 +439,8 @@
 .telegram-attributes__options img, .telegram-attributes__swatch { width: 36px; height: 36px; flex: none; object-fit: contain; border-radius: 6px; }
 .telegram-attributes__options button > span { overflow-wrap: anywhere; min-width: 0; }
 .telegram-attributes__options small { display: block; color: #999; margin-top: 3px; }
+.gift-market-reference { margin: 16px; padding: 12px 0; border-top: 1px solid #303030; border-bottom: 1px solid #303030; }
+.gift-market-reference h3 { margin: 0 0 8px; font-size: 14px; line-height: 18px; }
+.gift-market-reference strong { display: block; color: #eee; }
+.gift-market-reference p { margin: 8px 0 0; color: #aaa; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.gift-market-reference .gift-price-reference { font-size: 15px; line-height: 20px; }

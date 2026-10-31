@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useAuth } from '../auth/AuthProvider';
 import { gifts, inventoryGifts, isUnpricedGift, type Gift } from '../pages/ExchangePage/data/gifts';
 import { collectionGift, mergeTelegramCatalog, useTelegramCatalog, type TelegramManifest } from '../services/telegramCatalog';
+import { useTelegramPrices } from '../hooks/useTelegramPrices';
+import { mergeMarketPrices } from '../services/telegramPrices';
 import { pledgeStore } from '../pages/DepositPage/services/pledgeStore';
 import { useBootReport } from '../boot/BootProvider';
 import { createRevisionGate, parseRevision } from '../services/snapshotRevision';
@@ -66,6 +68,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const token = state.status === 'ready' ? state.accessToken : null;
   const demo = state.status === 'ready' && state.mode === 'demo';
   const { manifest: telegramCatalog, error: catalogError } = useTelegramCatalog();
+  const { feed: marketPrices } = useTelegramPrices();
   const [snapshot, setSnapshot] = useState(empty); const [loading, setLoading] = useState(true); const [error, setError] = useState(false);
   const queue = useRef<Promise<unknown>>(Promise.resolve()); const alive = useRef(false);
   const uncertainActions = useRef(new Map<string, string>());
@@ -126,9 +129,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(localKey, JSON.stringify(next)); commit(next);
     }).catch(() => {});
   }, [demo, telegramCatalog, enqueue, commit]);
-  const catalog = useMemo(() => mergeTelegramCatalog(snapshot.catalog, telegramCatalog), [snapshot.catalog, telegramCatalog]);
+  const catalog = useMemo(() => mergeMarketPrices(mergeTelegramCatalog(snapshot.catalog, telegramCatalog), marketPrices, telegramCatalog), [snapshot.catalog, telegramCatalog, marketPrices]);
+  const inventory = useMemo(() => mergeMarketPrices(snapshot.inventory, marketPrices, telegramCatalog), [snapshot.inventory, marketPrices, telegramCatalog]);
+  const pledged = useMemo(() => mergeMarketPrices(snapshot.pledged, marketPrices, telegramCatalog), [snapshot.pledged, marketPrices, telegramCatalog]);
   useBootReport('inventory', loading, error && snapshot === empty, reload);
-  const value = useMemo(() => ({ ...snapshot, catalog, telegramCatalog, catalogError, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, catalog, telegramCatalog, catalogError, revision, applySnapshot, loading, error, reload, mutate]);
+  const value = useMemo(() => ({ ...snapshot, inventory, pledged, catalog, telegramCatalog, catalogError, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, inventory, pledged, catalog, telegramCatalog, catalogError, revision, applySnapshot, loading, error, reload, mutate]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useInventory() { const value = useContext(Context); if (!value) throw new Error('InventoryProvider is required'); return value; }

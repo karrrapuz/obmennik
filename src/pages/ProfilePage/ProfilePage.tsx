@@ -7,6 +7,7 @@ import SlideNotice from '../../components/feedback/SlideNotice/SlideNotice';
 import { isUnpricedGift, type Gift } from '../ExchangePage/data/gifts';
 import { useInventory } from '../../inventory/InventoryProvider';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
+import GiftPrice from '../../components/gifts/GiftPrice';
 import GiftWithdrawal from './components/GiftWithdrawal/GiftWithdrawal';
 import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/ProfileModal';
 import { displayName, useUser } from '../../auth/AuthProvider';
@@ -120,7 +121,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
           </> : gifts.map((gift) => <article className="profile-gifts__card" key={gift.id}>
             <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} /></div>
             <div className="profile-gifts__card-info"><strong>{gift.name}</strong><span>Модель&nbsp;&nbsp;{gift.model}</span></div>
-            <div className="profile-gifts__card-price" data-unpriced={isUnpricedGift(gift)}>{isUnpricedGift(gift) ? 'Без TON-оценки' : <><img src={tonIcon} alt="" />{gift.price.toFixed(3)}</>}</div>
+            <div className="profile-gifts__card-price" data-unpriced={isUnpricedGift(gift)}><GiftPrice gift={gift} /></div>
             <button className="profile-gifts__select" type="button" aria-label={`Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => setSelectedGiftIds((current) => current.includes(gift.id) ? current.filter((id) => id !== gift.id) : [...current, gift.id])}>
               <img src={selectedGiftIds.includes(gift.id) ? giftSelectedIcon : giftInactiveIcon} alt="" />
               <span><img src={selectedGiftIds.includes(gift.id) ? selectionCheck : selectionPlus} alt="" /></span>
