@@ -102,6 +102,7 @@ def process_user_autopay(db, user_id):
 
 
 def process_due_loans(engine):
+    result = {'selected': 0, 'processed': 0, 'failed': 0, 'discovery_failed': False}
     try:
         with Session(engine) as db:
             now = int(time.time())
@@ -113,7 +114,9 @@ def process_due_loans(engine):
                 .limit(100)).all()
     except Exception:
         logging.getLogger('giftmoney').error('Autopay discovery failed; retry on next tick')
-        return
+        result['discovery_failed'] = True
+        return result
+    result['selected'] = len(users)
     for user_id in users:
         try:
             with Session(engine) as db:
@@ -122,8 +125,11 @@ def process_due_loans(engine):
                 ensure_wallet(db, user_id)
                 process_user_autopay(db, user_id)
                 db.commit()
+                result['processed'] += 1
         except Exception:
+            result['failed'] += 1
             logging.getLogger('giftmoney').error('Autopay attempt failed; retry on next tick')
+    return result
 
 
 def register_loan_routes(app, database, current_session, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):

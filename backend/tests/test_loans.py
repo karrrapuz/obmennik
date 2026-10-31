@@ -15,6 +15,58 @@ DAY = 86400
 PRINCIPAL = 1_200_000_000
 
 
+def test_autopay_reports_failure_rolls_back_one_user_and_continues(client, monkeypatch, caplog):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from app import loans
+    from app.models import User
+    from app.inventory_models import InventoryGift
+    from app.loan_models import DemoLoan
+    from app.wallet_models import WalletAccount, WalletTransaction
+    from app.ledger import ensure_wallet, post_transfer
+    from app.ledger_audit import audit_ledger
+    now = int(time.time())
+    monkeypatch.setattr(loans.time, 'time', lambda: now)
+    engine = client.app.state.engine
+    gifts = {}
+    with Session(engine) as db:
+        for identity in (1, 2):
+            db.add(User(id=identity, first_name='Failure test', referral_code=f'failure-{identity}'))
+        db.flush()
+        for identity in (1, 2):
+            ensure_wallet(db, identity)
+            post_transfer(db, identity, 'fund', 'test', 'topup', 1_240_000_000,
+                          'treasury', 'wallet', 1_240_000_000)
+            gift = InventoryGift(user_id=identity, catalog_id=1, pledged=True)
+            db.add(gift)
+            db.flush()
+            gifts[identity] = gift.id
+            db.add(DemoLoan(id=f'{identity:032x}', user_id=identity, gift_id=gift.id,
+                weeks=1, principal=PRINCIPAL, repayment=1_240_000_000, created_at=now - 8 * DAY,
+                due_at=now - DAY, autopay=True, status='active', legacy=False))
+        db.commit()
+    original = loans.process_user_autopay
+    def fail_after_settlement(db, identity):
+        original(db, identity)
+        if identity == 1:
+            raise RuntimeError('PRIVATE_AUTOPAY_SENTINEL')
+    monkeypatch.setattr(loans, 'process_user_autopay', fail_after_settlement)
+    assert loans.process_due_loans(engine) == {'selected': 2, 'processed': 1, 'failed': 1, 'discovery_failed': False}
+    assert 'PRIVATE_AUTOPAY_SENTINEL' not in caplog.text
+    with Session(engine) as db:
+        assert db.get(DemoLoan, f'{1:032x}').status == 'active'
+        assert db.get(WalletAccount, (1, 'wallet')).balance == 1_240_000_000
+        assert db.get(InventoryGift, gifts[1]).pledged
+        assert db.get(DemoLoan, f'{2:032x}').status == 'repaid'
+    monkeypatch.setattr(loans, 'process_user_autopay', original)
+    assert loans.process_due_loans(engine) == {'selected': 1, 'processed': 1, 'failed': 0, 'discovery_failed': False}
+    with Session(engine) as db:
+        assert db.get(DemoLoan, f'{1:032x}').status == 'repaid'
+        assert len(db.scalars(select(WalletTransaction).where(WalletTransaction.kind == 'loan_repay')).all()) == 2
+    with engine.connect() as connection:
+        assert audit_ledger(connection)['ok']
+
+
 def test_autopay_batch_moves_past_users_in_retry_cooldown(client, monkeypatch):
     from sqlalchemy import select
     from sqlalchemy.orm import Session

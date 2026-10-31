@@ -345,12 +345,23 @@
   cursor: pointer;
 }
 
-.filter-modal__search-clear img {
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  max-width: none;
+.filter-modal__search-clear > span {
+  width: 10px;
+  height: 10px;
+  background: #ff383c;
+  -webkit-mask: url('./assets/Union.svg') center / contain no-repeat;
+  mask: url('./assets/Union.svg') center / contain no-repeat;
   pointer-events: none;
+}
+
+.filter-modal__empty {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.2);
+  font: 500 12px/18px 'Onest', Arial, sans-serif;
+  text-align: center;
 }
 
 .filter-modal__search-clear:focus-visible {

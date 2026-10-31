@@ -11,7 +11,6 @@ import checkIcon from './assets/galochka.svg';
 import plusIcon from './assets/plus.svg';
 import tonModalIcon from './assets/ton_modal.svg';
 import searchIcon from './assets/poisk_modal.svg';
-import clearSearchIcon from '../../../ProfilePage/assets/oshibka_krestik.svg';
 import './FilterModal.css';
 import type { Gift } from '../../data/gifts';
 import { telegramFilterOptions, type TelegramManifest } from '../../../../services/telegramCatalog';
@@ -212,7 +211,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                             setQueries(current => ({ ...current, [row.id]: '' }));
                             setLimits(current => ({ ...current, [row.id]: 60 }));
                             event.currentTarget.parentElement?.querySelector('input')?.focus();
-                          }}><img src={clearSearchIcon} alt="" /></button>}
+                          }}><span aria-hidden="true" /></button>}
                         </div>
                         <div className="filter-modal__options" onScroll={event => {
                           const list = event.currentTarget;
@@ -229,7 +228,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                             </button>;
                           })}
                           {options.length > shown && <button type="button" className="catalog-load-more" onClick={() => setLimits(current => ({ ...current, [row.id]: shown + 60 }))}>Показать ещё ({options.length - shown})</button>}
-                          {!options.length && <p role="status">Ничего не найдено</p>}
+                          {!options.length && <p className="filter-modal__empty" role="status">Пусто</p>}
                         </div>
                       </>
                     )}
