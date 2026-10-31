@@ -32,7 +32,7 @@ export function applyTelegramLabels(manifest: TelegramManifest, raw: unknown): T
     ? collection : { ...collection, title: titles.get(collection.telegramId)!, titleKind: 'descriptive' }) };
 }
 function displayTitle(collection: TelegramCollection, previous?: string): string {
-  return collection.sourceTitle || (collection.titleKind === 'descriptive' ? collection.title : previous && !/^Gift(?:\s|$)/.test(previous) ? previous : collection.title);
+  return collection.sourceTitle || (collection.titleKind === 'descriptive' ? collection.title : previous && !/^Gift (?:\p{Extended_Pictographic}|\d)/u.test(previous) ? previous : collection.title);
 }
 export function parseTelegramManifest(raw: unknown): TelegramManifest {
   const value = raw as TelegramManifest;
