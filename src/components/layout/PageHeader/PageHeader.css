@@ -4,7 +4,9 @@
   z-index: 4;
   top: 116px;
   left: 50%;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 12px;
   width: 358px;
   height: 46px;
   align-items: center;
@@ -33,11 +35,10 @@
 }
 
 .exchange-user {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 140px;
-  right: auto;
+  position: relative;
+  width: 100%;
+  max-width: 140px;
+  min-width: 0;
   gap: 10px;
   justify-content: flex-start;
   padding: 6px 14px 6px 6px;
@@ -55,28 +56,27 @@
 }
 
 .exchange-user span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 600;
 }
 
 .exchange-balance-group {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 60.89%;
-  width: auto;
+  position: relative;
+  width: max-content;
   height: 46px;
   justify-content: flex-end;
-  padding: 10px 12px;
-  gap: 10px;
+  padding: 0;
   isolation: isolate;
 }
 
 .exchange-balance {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 140px;
+  position: relative;
+  min-width: 160px;
+  width: max-content;
   gap: 7px;
   justify-content: flex-start;
   padding: 10px 12px;
@@ -86,14 +86,18 @@
 .exchange-balance__amount {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 8px;
+  justify-content: flex-start;
+  min-width: 27px;
+  width: auto;
+  height: 18px;
+  flex: 1 0 auto;
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   line-height: 18px;
-  text-align: center;
+  text-align: left;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .exchange-ton-icon {
@@ -101,6 +105,7 @@
   display: grid;
   width: 26px;
   height: 26px;
+  flex: none;
   place-items: center;
   background: #587ffe;
   border-radius: 50%;
@@ -118,6 +123,7 @@
   display: grid;
   width: 26px;
   height: 26px;
+  flex: none;
   margin-left: auto;
   place-items: center;
   padding: 8px;

@@ -23,7 +23,7 @@ export default function PageHeader({ balance, onNavigateProfile, onTopUp }: Page
       <div className="exchange-balance">
         <span className="exchange-ton-icon" aria-hidden="true"><img src={tonIcon} alt="" /></span>
         <span className="exchange-balance__amount">{displayedBalance.toFixed(2)}</span>
-        <button className="exchange-balance__add" type="button" aria-label="Пополнить тестовый баланс" onClick={onTopUp}><img src={plusIcon} alt="" /></button>
+        <button className="exchange-balance__add" type="button" aria-label="Пополнить баланс" onClick={onTopUp}><img src={plusIcon} alt="" /></button>
       </div>
     </div>
   </header>;

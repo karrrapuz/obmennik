@@ -170,7 +170,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
       </header>
 
       {kind === 'deposit-choice' && <div className="profile-modal__choices">
-        <button type="button" onClick={() => chooseWalletFlow('deposit-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Демо-кошелёк</span><small>Тестовое пополнение</small></button>
+        <button type="button" onClick={() => chooseWalletFlow('deposit-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Кошелёк</span><small>Тестовое пополнение</small></button>
         <button type="button" onClick={() => { setAmount(''); setKind('crypto-amount'); }}><i className="profile-modal__choice-icon profile-modal__choice-icon--crypto"><i><img src={cryptoIcon} alt="" /></i></i><span>CryptoBot · Демо</span><small>Тестовое пополнение</small></button>
         <button type="button" onClick={() => setKind('gift-deposit')}><i className="profile-modal__choice-icon"><i><img src={withdrawGiftIcon} alt="" /></i></i><span>Подарками</span><small>С вашего профиля</small></button>
       </div>}
@@ -180,7 +180,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
         <button type="button" onClick={() => { setSelectedGiftIds([]); setKind(gifts.length ? 'gift-withdraw' : 'gift-empty'); }}><i className="profile-modal__choice-icon"><i><img src={withdrawGiftIcon} alt="" /></i></i><span>Подарки</span><small>В ваш профиль</small></button>
       </div>}
 
-      {kind === 'wallet-warning' && <div className="profile-modal__wallet-warning"><p>Демо-кошелёк не выбран</p><button type="button" onClick={() => { setWalletInput(''); setKind('wallet-connect'); }}>Выбрать</button></div>}
+      {kind === 'wallet-warning' && <div className="profile-modal__wallet-warning"><p>Кошелёк не выбран</p><button type="button" onClick={() => { setWalletInput(''); setKind('wallet-connect'); }}>Выбрать</button></div>}
 
       {kind === 'wallet-connect' && <div className="profile-modal__form"><label>Демо-адрес<input value={walletInput} onChange={(event) => setWalletInput(event.target.value.trim())} placeholder="Тестовый адрес кошелька" autoComplete="off" maxLength={256} /></label><button type="button" disabled={walletInput.length < 10} onClick={() => { setWallet(walletInput); setKind(walletReturn); }}>Сохранить демо-адрес</button></div>}
 

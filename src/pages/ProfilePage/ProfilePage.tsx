@@ -83,7 +83,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
       <div className="profile-header__wallet-wrap" data-open={Boolean(wallet && walletOpen)}>
         <button className="profile-header__wallet" type="button" aria-expanded={walletOpen} onClick={() => wallet ? setWalletOpen((value) => !value) : setModal('wallet-connect')}>
           <span className="profile-header__wallet-icon"><img src={walletIcon} alt="" /></span>
-          <span>{wallet ? `Демо ${wallet.slice(0, 4)}...` : 'Демо-кошелёк'}</span>
+          <span>{wallet ? `${wallet.slice(0, 4)}...` : 'Кошелёк'}</span>
           {wallet && <span className="profile-header__chevron" aria-hidden="true" />}
         </button>
         {wallet && walletOpen && <div className="profile-header__wallet-menu">
