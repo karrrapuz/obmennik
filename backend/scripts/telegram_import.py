@@ -13,6 +13,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 ROOT = BACKEND.parent
 sys.path.insert(0, str(BACKEND))
 from scripts.telegram_catalog import CREDENTIALS, SESSION, load_credentials
+from app.catalog_labels import load_labels, resolve_title
 
 OUTPUT = BACKEND / 'data' / 'catalog-telegram.json'
 PUBLIC = ROOT / 'public' / 'gifts' / 'telegram'
@@ -87,6 +88,7 @@ async def export(client, inspect_only=False, metadata_only=False, base_only=Fals
 
     previous = json.loads(OUTPUT.read_text(encoding='utf-8')) if OUTPUT.exists() else {}
     prior = {item['telegramId']: item for item in previous.get('collections', [])}
+    labels = load_labels()
     next_id = max([99_999, *[item['catalogId'] for item in prior.values()]]) + 1
     collections = []
     imported_at = datetime.now(timezone.utc).isoformat()
@@ -150,8 +152,9 @@ async def export(client, inspect_only=False, metadata_only=False, base_only=Fals
                 next_id += 1
             emoji = next((getattr(item, 'alt', '') for item in gift.sticker.attributes if getattr(item, 'alt', '')), '')
             title = gift.title or (old or {}).get('title') or (f'Gift {emoji}' if emoji else f'Gift {external_id}')
+            title, title_kind = resolve_title({'telegramId': external_id, 'sourceTitle': gift.title, 'title': title}, labels)
             entry = {'telegramId': external_id, 'catalogId': catalog_id, 'title': title,
-                'sourceTitle': gift.title, 'emoji': emoji,
+                'sourceTitle': gift.title, 'titleKind': title_kind, 'emoji': emoji,
                 'stars': str(gift.stars), 'image': await media(gift.sticker) or (old or {}).get('image', ''),
                 'firstSaleAt': timestamp(gift.first_sale_date), 'lastSaleAt': timestamp(gift.last_sale_date),
                 'limited': bool(gift.limited), 'soldOut': bool(gift.sold_out),

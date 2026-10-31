@@ -5,8 +5,9 @@ export type Gift = {
   collectionId?: string; modelName?: string; image?: string; blockTradeGift?: boolean; pledgeSupported?: boolean;
   telegramCatalog?: boolean; tradeSupported?: boolean; priceSource?: string; stars?: string; previewOnly?: boolean;
   marketPrice?: MarketPrice;
-  symbol?: { name: string; image: string; rarity: string };
-  backdrop?: { name: string; rarity: string; centerColor: string; edgeColor: string; patternColor: string; textColor: string };
+  modelFilterId?: string;
+  symbol?: { id?: string; name: string; image: string; rarity: string };
+  backdrop?: { id?: number; name: string; rarity: string; centerColor: string; edgeColor: string; patternColor: string; textColor: string };
 };
 export const isUnpricedGift = (gift: Pick<Gift, 'telegramCatalog' | 'tradeSupported' | 'priceSource'>) => gift.telegramCatalog === true || gift.tradeSupported === false || gift.priceSource === 'unpriced';
 export const giftCollectionKey = (gift: Pick<Gift, 'collectionId' | 'name'>) => gift.collectionId ? `telegram:${gift.collectionId}` : gift.name;
@@ -14,8 +15,8 @@ export const matchesGiftCollection = (gift: Pick<Gift, 'collectionId' | 'name'>,
 export const gifts: Gift[] = sample.map((gift, index) => ({ ...gift, blockTradeGift: index === 0 }));
 export const inventoryGifts: Gift[] = sample.slice(0, 5).map((gift, index) => ({ ...gift, id: 101 + index, model: `#${9998 - index}`, pledgeSupported: index < 3 }));
 export function matchesGiftAttributes(gift: Gift, selected: Record<string, string[]>) {
-  const attributes: Record<string, string | undefined> = { collection: gift.name, models: gift.modelName, symbols: gift.symbol?.name, backdrops: gift.backdrop?.name };
-  return Object.entries(selected).every(([key, values]) => key === 'collection' ? matchesGiftCollection(gift, values) : !values.length || values.includes(attributes[key] ?? ''));
+  const attributes: Record<string, (string | undefined)[]> = { models: [gift.modelName, gift.modelFilterId], symbols: [gift.symbol?.name, gift.symbol?.id ? `tg:symbol:${gift.symbol.id}` : undefined], backdrops: [gift.backdrop?.name, gift.backdrop?.id !== undefined ? `tg:backdrop:${gift.backdrop.id}` : undefined] };
+  return Object.entries(selected).every(([key, values]) => key === 'collection' ? matchesGiftCollection(gift, values) : !values.length || (attributes[key] ?? []).some(value => value !== undefined && values.includes(value)));
 }
 export type FilterOption = { name: string; value?: string; description?: string; price?: string; rarity?: string; image?: string; color?: string };
 export function getFilterOptions(list: Gift[]): Record<string, FilterOption[]> {

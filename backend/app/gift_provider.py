@@ -9,6 +9,7 @@ from .catalog import load_catalog
 class GiftProvider(Protocol):
     mode: str
     catalog: tuple[dict, ...]
+    collections: tuple[dict, ...]
 
     def require_available(self) -> None: ...
     def initial_gifts(self) -> tuple[tuple[int, bool], ...]: ...
@@ -24,6 +25,7 @@ class StubGiftProvider:
         self.mode = mode
         loaded = load_catalog()
         self.catalog = loaded.cards
+        self.collections = loaded.collections
         self.halloween_catalog_ids = loaded.halloween_catalog_ids
 
     def require_available(self) -> None:

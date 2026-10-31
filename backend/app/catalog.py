@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from .market_prices import load_market_prices
+from .catalog_labels import load_labels, resolve_title
 
 
 DATA_PATH = Path(__file__).resolve().parents[1] / 'data'
@@ -16,6 +17,7 @@ TELEGRAM_CATALOG_PATH = DATA_PATH / 'catalog-telegram.json'
 class LoadedCatalog:
     cards: tuple[dict, ...]
     halloween_catalog_ids: tuple[int, ...]
+    collections: tuple[dict, ...] = ()
 
 
 def load_catalog(sample_path=None, telegram_path=None):
@@ -34,6 +36,8 @@ def load_catalog(sample_path=None, telegram_path=None):
     telegram_ids = set()
     imported_ids = set()
     cards = list(sample)
+    normalized = []
+    labels = load_labels()
     for collection in collections:
         catalog_id = collection.get('catalogId')
         telegram_id = collection.get('telegramId')
@@ -49,6 +53,8 @@ def load_catalog(sample_path=None, telegram_path=None):
         ids.add(catalog_id)
         imported_ids.add(catalog_id)
         telegram_ids.add(telegram_id)
+        title, title_kind = resolve_title(collection, labels)
+        normalized.append({**collection, 'title': title, 'titleKind': title_kind})
         cards.append({'id': catalog_id, 'name': title, 'model': '\u2014', 'price': '0.000',
                       'image': image, 'collectionId': telegram_id, 'telegramCatalog': True,
                       'tradeSupported': False, 'pledgeSupported': False, 'priceSource': 'unpriced'})
@@ -59,4 +65,4 @@ def load_catalog(sample_path=None, telegram_path=None):
     for card in cards[len(sample):]:
         if card['id'] in observations:
             card['marketPrice'] = observations[card['id']]
-    return LoadedCatalog(tuple(cards), tuple(seasonal))
+    return LoadedCatalog(tuple(cards), tuple(seasonal), tuple(normalized))

@@ -72,7 +72,10 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
     setSelected((current) => {
       const values = current[id] ?? [];
       const next = { ...current, [id]: values.includes(name) ? values.filter((value) => value !== name) : [...values, name] };
-      return id === 'collection' ? { ...next, models: [], symbols: [], backdrops: [] } : next;
+      if (id !== 'collection') return next;
+      const available = telegramFilterOptions(catalog, manifest, next.collection ?? []);
+      for (const key of ['models', 'symbols', 'backdrops']) next[key] = (current[key] ?? []).filter(value => available[key].some(option => (option.value ?? option.name) === value || option.name === value));
+      return next;
     });
   };
 
@@ -124,7 +127,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
             const isExpanded = expanded === row.id;
             const count = row.id === 'price' ? Number(Boolean(fromPrice || toPrice)) : (selected[row.id]?.length ?? 0);
             const options = (filterOptions[row.id] ?? []).filter((option) =>
-              option.name.toLocaleLowerCase().includes((queries[row.id] ?? '').toLocaleLowerCase()),
+              `${option.name} ${option.description ?? ''}`.toLocaleLowerCase().includes((queries[row.id] ?? '').toLocaleLowerCase()),
             );
             return (
               <div className="filter-modal__section" data-expanded={isExpanded} key={row.id}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { TelegramCollection } from '../../../../services/telegramCatalog';
+import { telegramAttributeKey, type TelegramCollection } from '../../../../services/telegramCatalog';
 
 const rows = [{ id: 'models', label: 'Модели' }, { id: 'symbols', label: 'Символы' }, { id: 'backdrops', label: 'Фоны' }] as const;
 export default function TelegramAttributes({ collection, selected, onChange }: { collection: TelegramCollection; selected: Record<string, string[]>; onChange: (value: Record<string, string[]>) => void }) {
@@ -15,7 +15,7 @@ export default function TelegramAttributes({ collection, selected, onChange }: {
         <button className="telegram-attributes__heading" type="button" aria-expanded={active === row.id} onClick={() => setActive(active === row.id ? null : row.id)}>{row.label} <span>{items.length}</span></button>
         {active === row.id && <div className="telegram-attributes__options">
           <input type="search" aria-label={`${row.label}: поиск вариантов`} placeholder="Поиск" value={queries[row.id] ?? ''} onChange={event => { setQueries(current => ({ ...current, [row.id]: event.target.value })); setLimits(current => ({ ...current, [row.id]: 40 })); }} />
-          {options.slice(0, limit).map(item => <button type="button" key={item.id} aria-pressed={selected[row.id]?.includes(item.name) ?? false} onClick={() => onChange({ ...selected, [row.id]: selected[row.id]?.includes(item.name) ? [] : [item.name] })}>
+          {options.slice(0, limit).map(item => <button type="button" key={item.id} aria-pressed={selected[row.id]?.includes(telegramAttributeKey(row.id, collection.telegramId, item.id)) ?? false} onClick={() => { const value = telegramAttributeKey(row.id, collection.telegramId, item.id); onChange({ ...selected, [row.id]: selected[row.id]?.includes(value) ? [] : [value] }); }}>
             {'image' in item ? item.image && <img src={item.image} alt="" loading="lazy" /> : <span className="telegram-attributes__swatch" style={{ background: item.centerColor }} />}
             <span>{item.name}<small>{item.rarity}{'crafted' in item && item.crafted ? ' · Crafted' : ''}</small></span>
           </button>)}

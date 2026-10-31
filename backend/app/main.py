@@ -26,6 +26,7 @@ from .loans import register_loan_routes, process_due_loans
 from .gift_provider import create_gift_provider
 from .pricing import SamplePriceProvider
 from .trades import register_trade_routes
+from .catalog_index import register_catalog_routes
 
 
 class AuthInput(BaseModel):
@@ -157,6 +158,7 @@ def create_app(settings: Settings):
         return gift_provider.status()
 
     register_inventory_routes(app, database, current_session, gift_provider)
+    register_catalog_routes(app, gift_provider)
     register_wallet_routes(app, database, current_session)
     register_loan_routes(app, database, current_session, gift_provider)
     register_trade_routes(app, database, current_session, gift_provider,

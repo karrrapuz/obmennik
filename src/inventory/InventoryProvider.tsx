@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { gifts, inventoryGifts, isUnpricedGift, type Gift } from '../pages/ExchangePage/data/gifts';
-import { collectionGift, mergeTelegramCatalog, useTelegramCatalog, type TelegramManifest } from '../services/telegramCatalog';
+import { collectionGift, mergeTelegramCatalog, nameTelegramGifts, useTelegramCatalog, type TelegramManifest } from '../services/telegramCatalog';
 import { useTelegramPrices } from '../hooks/useTelegramPrices';
 import { mergeMarketPrices } from '../services/telegramPrices';
 import { pledgeStore } from '../pages/DepositPage/services/pledgeStore';
@@ -130,8 +130,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, [demo, telegramCatalog, enqueue, commit]);
   const catalog = useMemo(() => mergeMarketPrices(mergeTelegramCatalog(snapshot.catalog, telegramCatalog), marketPrices, telegramCatalog), [snapshot.catalog, telegramCatalog, marketPrices]);
-  const inventory = useMemo(() => mergeMarketPrices(snapshot.inventory, marketPrices, telegramCatalog), [snapshot.inventory, marketPrices, telegramCatalog]);
-  const pledged = useMemo(() => mergeMarketPrices(snapshot.pledged, marketPrices, telegramCatalog), [snapshot.pledged, marketPrices, telegramCatalog]);
+  const inventory = useMemo(() => mergeMarketPrices(nameTelegramGifts(snapshot.inventory, telegramCatalog), marketPrices, telegramCatalog), [snapshot.inventory, marketPrices, telegramCatalog]);
+  const pledged = useMemo(() => mergeMarketPrices(nameTelegramGifts(snapshot.pledged, telegramCatalog), marketPrices, telegramCatalog), [snapshot.pledged, marketPrices, telegramCatalog]);
   useBootReport('inventory', loading, error && snapshot === empty, reload);
   const value = useMemo(() => ({ ...snapshot, inventory, pledged, catalog, telegramCatalog, catalogError, getRevision: revision.current, applySnapshot, loading, error, reload, mutate }), [snapshot, inventory, pledged, catalog, telegramCatalog, catalogError, revision, applySnapshot, loading, error, reload, mutate]);
   return <Context.Provider value={value}>{children}</Context.Provider>;

@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "labels": [
+    {
+      "telegramId": "5992502615223568003",
+      "displayTitle": "Мишка с тыквой",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170145012310081615",
+      "displayTitle": "Сердце с бантом",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170250947678437525",
+      "displayTitle": "Подарочная коробка",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5168103777563050263",
+      "displayTitle": "Красная роза",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170144170496491616",
+      "displayTitle": "Праздничный торт",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170314324215857265",
+      "displayTitle": "Букет цветов",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170564780938756245",
+      "displayTitle": "Ракета",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5168043875654172773",
+      "displayTitle": "Золотой кубок",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170690322832818290",
+      "displayTitle": "Кольцо с бриллиантом",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5170521118301225164",
+      "displayTitle": "Бриллиант",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "6028601630662853006",
+      "displayTitle": "Шампанское",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5775966332847654507",
+      "displayTitle": "Хоккейная маска",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5775955135867913556",
+      "displayTitle": "Надгробие",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5776227780391864916",
+      "displayTitle": "Гроб",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "6003477390536213997",
+      "displayTitle": "Фигурка бойца",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "6001425315291727333",
+      "displayTitle": "Свитшот Telegram",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "6001229799790478558",
+      "displayTitle": "Кроссовки",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5884080014126745057",
+      "displayTitle": "Портфель",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5834918435477259676",
+      "displayTitle": "Песочный замок",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5832371318007268701",
+      "displayTitle": "Кокосовый коктейль",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5897607679345427347",
+      "displayTitle": "Мороженое в креманке",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5830323722413671504",
+      "displayTitle": "Красная звезда",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5832325860073407546",
+      "displayTitle": "Марка с голубем",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5807641025165919973",
+      "displayTitle": "Первое мая",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5773791997064119815",
+      "displayTitle": "Пасхальный кулич",
+      "kind": "descriptive"
+    },
+    {
+      "telegramId": "5933770397739647689",
+      "displayTitle": "Восьмёрка из роз",
+      "kind": "descriptive"
+    }
+  ]
+}

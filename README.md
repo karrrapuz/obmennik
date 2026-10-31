@@ -40,6 +40,9 @@
 | `backend/scripts/telegram_import.py` | Возобновляемый импорт публичных типов, моделей, символов, фонов и изображений Telegram |
 | `backend/app/catalog.py`, `backend/app/grant_models.py` | Проверка каталога и однократные сезонные примеры без финансовой стоимости |
 | `src/services/telegramCatalog.ts` | Загрузка каталога Telegram и варианты фильтров |
+| `backend/app/catalog_index.py`, `docs/CATALOG_API.md` | Публичный поиск коллекций и атрибутов по устойчивым ID с пагинацией |
+| `backend/app/catalog_labels.py`, `backend/data/catalog-labels.json`, `public/gifts/telegram/labels.json` | Общие описательные названия подарков без официального имени |
+| `scripts/check-catalog-filters.mjs` | Полнота вариантов фильтров, коллизии имён и совместимость старого инвентаря |
 | `backend/scripts/telegram_prices.py` | Локальное чтение рыночных предложений в TON без пересчёта Stars |
 | `backend/app/market_prices.py`, `backend/data/market-prices.json` | Проверка справочных рыночных цен коллекций для API |
 | `src/services/telegramPrices.ts`, `src/hooks/useTelegramPrices.ts`, `src/components/gifts/GiftPrice.tsx` | Загрузка и единое отображение TON-ориентиров, проверка актуальности |
