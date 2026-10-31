@@ -15,6 +15,45 @@ DAY = 86400
 PRINCIPAL = 1_200_000_000
 
 
+def test_autopay_batch_moves_past_users_in_retry_cooldown(client, monkeypatch):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from app import loans
+    from app.models import User
+    from app.inventory_models import InventoryGift
+    from app.loan_models import DemoLoan
+    from app.ledger import ensure_wallet, post_transfer
+    now = int(time.time())
+    monkeypatch.setattr(loans.time, 'time', lambda: now)
+    engine = client.app.state.engine
+    with Session(engine) as db:
+        for identity in range(1, 102):
+            db.add(User(id=identity, first_name='Batch test', referral_code=f'batch-{identity}'))
+        db.flush()
+        for identity in range(1, 102):
+            ensure_wallet(db, identity)
+            gift = InventoryGift(user_id=identity, catalog_id=1, pledged=True)
+            db.add(gift)
+            db.flush()
+            db.add(DemoLoan(id=f'{identity:032x}', user_id=identity, gift_id=gift.id,
+                weeks=1, principal=PRINCIPAL, repayment=1_240_000_000, created_at=now - 8 * DAY,
+                due_at=now - DAY, autopay=True, status='active', legacy=False))
+        post_transfer(db, 101, 'fund', 'test', 'topup', 1_240_000_000,
+                      'treasury', 'wallet', 1_240_000_000)
+        db.commit()
+    loans.process_due_loans(engine)
+    with Session(engine) as db:
+        assert db.get(DemoLoan, f'{101:032x}').status == 'active'
+        assert db.get(DemoLoan, f'{1:032x}').last_autopay_attempt == now
+    loans.process_due_loans(engine)
+    loans.process_due_loans(engine)
+    with Session(engine) as db:
+        target = db.get(DemoLoan, f'{101:032x}')
+        assert target.status == 'repaid'
+        assert not db.get(InventoryGift, target.gift_id).pledged
+        assert len(db.scalars(select(DemoLoan).where(DemoLoan.status == 'repaid')).all()) == 1
+
+
 @pytest.fixture
 def settings(tmp_path):
     return Settings(bot_token=BOT_TOKEN,

@@ -26,6 +26,13 @@ function HomePage() {
   const swipe = useRef<PageSwipe | null>(null);
   const pageView = useRef<HTMLDivElement>(null);
   const entryDirection = useRef(0);
+  const leaving = useRef(false);
+  const exits = useRef<Animation[]>([]);
+  const navigationRun = useRef(0);
+  useLayoutEffect(() => () => {
+    navigationRun.current += 1;
+    exits.current.forEach(animation => animation.cancel());
+  }, []);
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const content = pageView.current?.querySelectorAll<HTMLElement>(
@@ -42,10 +49,30 @@ function HomePage() {
   const [topUpRequest, setTopUpRequest] = useState(0);
   const openTopUp = () => setTopUpRequest((value) => value + 1);
   const navigate = (page: PageSection) => {
-    if (page === activePage) return;
-    entryDirection.current = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
-    setActivePage(page);
-    window.scrollTo(0, 0);
+    if (page === activePage || leaving.current) return;
+    const direction = Math.sign(pageOrder.indexOf(page) - pageOrder.indexOf(activePage));
+    const finish = () => {
+      entryDirection.current = direction;
+      setActivePage(page);
+      window.scrollTo(0, 0);
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    const elements = pageView.current?.querySelectorAll<HTMLElement>(
+      ':scope > .exchange-page > .exchange-content, :scope > .profile-page > :is(.profile-balance, .profile-actions, .profile-content), :scope > .deposit-page > :is(.pledge-banner, .pledge-tabs, .pledge-catalog)',
+    );
+    leaving.current = true;
+    const run = ++navigationRun.current;
+    exits.current = Array.from(elements ?? [], element => element.animate([
+      { opacity: 1, transform: 'translateX(0)' },
+      { opacity: 0, transform: `translateX(${-direction * 8}px)` },
+    ], { duration: 120, easing: 'ease-in', fill: 'forwards' }));
+    void Promise.all(exits.current.map(animation => animation.finished)).then(() => {
+      if (navigationRun.current !== run) return;
+      exits.current.forEach(animation => animation.cancel());
+      exits.current = [];
+      leaving.current = false;
+      finish();
+    }).catch(() => { if (navigationRun.current === run) leaving.current = false; });
   };
   const cancelSwipe = () => { swipe.current = null; };
   const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {

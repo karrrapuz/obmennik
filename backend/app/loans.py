@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from fastapi import Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from .inventory import ensure_inventory, inventory_snapshot, DEFAULT_GIFT_PROVIDER
@@ -104,8 +104,13 @@ def process_user_autopay(db, user_id):
 def process_due_loans(engine):
     try:
         with Session(engine) as db:
+            now = int(time.time())
             users = db.scalars(select(DemoLoan.user_id).where(DemoLoan.status == 'active',
-                DemoLoan.autopay.is_(True), DemoLoan.due_at <= int(time.time())).distinct().limit(100)).all()
+                DemoLoan.autopay.is_(True), DemoLoan.legacy.is_(False), DemoLoan.due_at <= now,
+                or_(DemoLoan.last_autopay_attempt.is_(None), DemoLoan.last_autopay_attempt <= now - 60))
+                .group_by(DemoLoan.user_id)
+                .order_by(func.min(func.coalesce(DemoLoan.last_autopay_attempt, 0)), DemoLoan.user_id)
+                .limit(100)).all()
     except Exception:
         logging.getLogger('giftmoney').error('Autopay discovery failed; retry on next tick')
         return

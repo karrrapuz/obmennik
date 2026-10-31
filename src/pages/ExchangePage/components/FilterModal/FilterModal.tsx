@@ -129,17 +129,34 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
 
   useEffect(() => {
     if (!visible || !expanded) return;
-    const revealSection = () => {
-      const area = content.current;
-      const section = area?.querySelector<HTMLElement>('[data-expanded="true"]');
-      if (!area || !section) return;
-      const top = section.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
-      area.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    const area = content.current;
+    const section = area?.querySelector<HTMLElement>('[data-expanded="true"]');
+    if (!area || !section) return;
+    const start = area.scrollTop;
+    const startedAt = performance.now();
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 420;
+    let frame = 0;
+    let stopped = false;
+    const stop = () => { stopped = true; cancelAnimationFrame(frame); };
+    const reveal = (now: number) => {
+      if (stopped) return;
+      const progress = duration ? Math.min((now - startedAt) / duration, 1) : 1;
+      const eased = 1 - Math.pow(1 - progress, 3);
+      // Follow the changing accordion geometry in the same animation, without a delayed second scroll.
+      const target = section.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop;
+      area.scrollTop = start + (target - start) * eased;
+      if (progress < 1) frame = requestAnimationFrame(reveal);
     };
-    const frame = requestAnimationFrame(revealSection);
-    // The final height becomes available after the accordion transition.
-    const timer = window.setTimeout(revealSection, 450);
-    return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
+    area.addEventListener('touchstart', stop, { passive: true });
+    area.addEventListener('wheel', stop, { passive: true });
+    area.addEventListener('pointerdown', stop, { passive: true });
+    frame = requestAnimationFrame(reveal);
+    return () => {
+      stop();
+      area.removeEventListener('touchstart', stop);
+      area.removeEventListener('wheel', stop);
+      area.removeEventListener('pointerdown', stop);
+    };
   }, [expanded, visible]);
 
   if (!mounted) return null;
