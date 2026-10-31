@@ -95,9 +95,11 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 18px;
+  font-family: 'Onest', Arial, sans-serif;
+  letter-spacing: 0;
   text-align: left;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: proportional-nums;
 }
 
 .exchange-ton-icon {

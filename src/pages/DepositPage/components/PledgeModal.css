@@ -47,6 +47,7 @@
 .pledge-processing p { font-size: 12px; color: #fff3; line-height: 18px; margin: 10px 0 0; }
 .pledge-processing strong span { display: inline-block; animation: pledge-dots 1.2s steps(4,end) infinite; }
 .pledge-details { display: grid; gap: 12px; }
+.pledge-legacy-note { margin: 16px 0 0; color: #aaa; font-size: 12px; line-height: 18px; }
 .pledge-details section { padding: 16px 16px 20px; border-radius: 20px; background: #0d0d0d; }
 .pledge-details h3 { font-size: 14px; line-height: 18px; margin: 0 0 8px; }
 .pledge-details p { margin: 0; color: #fff3; font-size: 12px; line-height: 18px; font-weight: 600; }
