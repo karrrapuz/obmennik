@@ -423,10 +423,3 @@
   font-size: 12px;
   text-align: center;
 }
-.exchange-modal__quote { position: absolute; bottom: 96px; left: 16px; right: 16px; padding: 8px; background: #181818; color: #ddd; font-size: 11px; line-height: 16px; z-index: 3; }
-.exchange-modal__quote span { display: block; }
-.exchange-modal__quote button { border: 0; background: transparent; color: #7cddab; padding: 4px 0; cursor: pointer; }
-.exchange-modal[data-server='true'] .exchange-modal__gifts { bottom: 226px; }
-.exchange-modal[data-server='true'] .exchange-modal__total strong { font-size: 16px; overflow-wrap: anywhere; }
-.exchange-modal[data-server='true'] .exchange-modal__notice { display: none; }
-.exchange-modal__quote { max-height: 120px; overflow-y: auto; overflow-wrap: anywhere; }

@@ -13,6 +13,7 @@ import { useTelegramPrices } from '../../hooks/useTelegramPrices';
 import { compareBrowsingPrices, comparePriceAvailability, matchesBrowsingPrice } from '../../services/telegramPrices';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
+import { tradeDisplayTotals } from './services/tradeDisplay';
 import { readTradeAttempt, useTradeQuote } from './hooks/useTradeQuote';
 import { useAuth } from '../../auth/AuthProvider';
 import './styles/page.css';
@@ -110,8 +111,9 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
 
   const selectedGifts = new ExchangeDraft(receivedIds).selectFrom(gifts);
   const offeredGifts = new ExchangeDraft(offeredIds).selectFrom(inventoryGifts);
-  const offeredAmount = trade.server ? Number(trade.quote?.offered_nano ?? 0) / 1e9 : offeredGifts.reduce((total, gift) => total + Number(gift.price), 0);
-  const receivedAmount = trade.server ? Number(trade.quote?.received_nano ?? 0) / 1e9 : selectedGifts.reduce((total, gift) => total + Number(gift.price), 0);
+  const totals = tradeDisplayTotals(offeredGifts, selectedGifts, trade.server ? trade.quote : null);
+  const offeredAmount = Number(totals.offeredNano) / 1e9;
+  const receivedAmount = Number(totals.receivedNano) / 1e9;
   const [exchangeAnimation, setExchangeAnimation] = useState({ amount: 0, offered: 0, activation: 0, offerActivation: 0 });
   const animationValue = useRef(exchangeAnimation);
   const displayedReceivedAmount = exchangeAnimation.amount;
@@ -245,9 +247,9 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
 
       <ShortageNotice
         className="exchange-shortage"
-        label={trade.server ? 'Доплата из кошелька:' : 'Добавьте ещё:'}
-        amount={trade.server ? Number(trade.quote?.required_balance_nano ?? 0) / 1e9 : displayedShortage}
-        visible={trade.server ? Boolean(trade.quote && BigInt(trade.quote.required_balance_nano) > 0n) : displayedShortage > 0.0005}
+        label="Добавьте ещё:"
+        amount={displayedShortage}
+        visible={displayedShortage > 0.0005}
       />
 
       <div className="exchange-section-switcher" data-active={activeSection} role="tablist" aria-label="Раздел каталога">
@@ -257,7 +259,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       </div>
       <FilterModal open={filtersOpen} onClose={() => setFiltersOpen(false)} onApply={applyFilters} resetVersion={filterResetVersion} catalog={activeSection === 'inventory' ? inventoryGifts : gifts} manifest={telegramCatalog} />
       <SortModal open={sortOpen} value={sortOptions} onApply={setSortOptions} onClose={() => setSortOpen(false)} />
-      <ExchangeModal trade={trade} open={exchangeOpen} gifts={selectedGifts} offeredGifts={offeredGifts} offeredAmount={trade.server ? Number(trade.quote?.offered_nano ?? 0) / 1e9 : exchangeAnimation.offered} receivedAmount={trade.server ? Number(trade.quote?.received_nano ?? 0) / 1e9 : displayedReceivedAmount} onRemove={(id, side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)((current) => current.filter((giftId) => giftId !== id)); }} onClear={(side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)([]); }} onSuccess={async () => { if (trade.server) await trade.execute(); else await exchange(offeredGifts.map((gift) => gift.id), selectedGifts.map((gift) => gift.id)); setOfferedIds([]); setReceivedIds([]); }} onClose={() => { if (!trade.locked) setExchangeOpen(false); }} />
+      <ExchangeModal trade={trade} open={exchangeOpen} gifts={selectedGifts} offeredGifts={offeredGifts} offeredAmount={offeredAmount} receivedAmount={receivedAmount} onRemove={(id, side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)((current) => current.filter((giftId) => giftId !== id)); }} onClear={(side) => { if (!trade.locked) (side === 'offer' ? setOfferedIds : setReceivedIds)([]); }} onSuccess={async () => { if (trade.server) await trade.execute(); else await exchange(offeredGifts.map((gift) => gift.id), selectedGifts.map((gift) => gift.id)); setOfferedIds([]); setReceivedIds([]); }} onClose={() => { if (!trade.locked) setExchangeOpen(false); }} />
       <GiftDetailsModal gift={giftDetails?.gift ?? null} collection={collections.get(giftDetails?.gift.collectionId ?? '')} source={giftDetails?.source ?? 'exchange'} open={giftDetailsOpen} selected={giftDetails ? (giftDetails.source === 'inventory' ? offeredIds : receivedIds).includes(giftDetails.gift.id) : false} onClose={() => setGiftDetailsOpen(false)} onSelect={() => {
         if (!giftDetails) return;
         toggleGift(giftDetails.gift.id, giftDetails.source);

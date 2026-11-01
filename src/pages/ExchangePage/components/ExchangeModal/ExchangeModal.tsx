@@ -55,6 +55,11 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
   const [activeSide, setActiveSide] = useState<'offer' | 'receive'>('receive');
   const modalRef = useRef<HTMLElement>(null);
   const [noticeOverGifts, setNoticeOverGifts] = useState(false);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpen.current && trade.server && !trade.locked && (trade.error || trade.expired)) trade.refresh();
+    wasOpen.current = open;
+  }, [open, trade.server, trade.locked, trade.error, trade.expired, trade.refresh]);
 
   useLayoutEffect(() => {
     const modal = modalRef.current;
@@ -127,11 +132,14 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
     if (hasBlockedGift) return;
     const offer = offeredGifts.reduce((sum, gift) => sum + Number(gift.price), 0);
     const receive = gifts.reduce((sum, gift) => sum + Number(gift.price), 0);
-    if (trade.server ? !trade.uncertain && !trade.canExecute : !gifts.length || !offeredGifts.length || offer + 0.000001 < receive) { setNotice(true); return; }
+    if (trade.server ? !trade.uncertain && !trade.canExecute : !gifts.length || !offeredGifts.length || offer + 0.000001 < receive) {
+      if (trade.server && gifts.length && offeredGifts.length && (!trade.quote || trade.expired)) trade.refresh();
+      setNotice(true); return;
+    }
     submitted.current = true;
     setReceivedCount(gifts.length);
     setPending(true);
-    try { await onSuccess(); setResult('success'); } catch { if (!trade.server) setResult('error'); }
+    try { await onSuccess(); setResult('success'); } catch { if (!trade.server) setResult('error'); else setNotice(true); }
     finally { setPending(false); submitted.current = false; }
   };
 
@@ -154,10 +162,10 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
           <button className="exchange-modal__close" type="button" aria-label="Закрыть обмен" onClick={onClose}><img src={closeIcon} alt="" /></button>
           <div className="exchange-modal__totals">
             <button className="exchange-modal__total" type="button" data-active={activeSide === 'offer'} data-muted={offeredAmount < receivedAmount} aria-pressed={activeSide === 'offer'} onClick={() => setActiveSide('offer')}>
-              <span>Предлагаете</span><strong><img src={tonIcon} alt="" />{trade.server ? trade.quote ? formatNano(trade.quote.offered_nano) : '—' : formatAmount(offeredAmount)}</strong>
+              <span>Предлагаете</span><strong><img src={tonIcon} alt="" />{formatAmount(offeredAmount)}</strong>
             </button>
             <button className="exchange-modal__total exchange-modal__total--receive" type="button" data-active={activeSide === 'receive'} data-muted={gifts.length === 0} aria-pressed={activeSide === 'receive'} onClick={() => setActiveSide('receive')}>
-              <span>Получаете</span><strong><img src={tonIcon} alt="" />{trade.server ? trade.quote ? formatNano(trade.quote.received_nano) : '—' : formatAmount(receivedAmount)}</strong>
+              <span>Получаете</span><strong><img src={tonIcon} alt="" />{formatAmount(receivedAmount)}</strong>
             </button>
           </div>
           <div className="exchange-modal__tools">
@@ -173,7 +181,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
               <span className="exchange-modal__model"><span>Модель</span><span>{gift.model}</span></span>
               <span className="exchange-modal__price">
                 <span className="exchange-modal__ton"><img src={tonIcon} alt="" /></span>
-                <span className="exchange-modal__price-value">{trade.server ? (() => { const unit = activeSide === 'offer' ? trade.quote?.offered.find(item => item.gift_id === gift.id)?.unit_nano : trade.quote?.received.find(item => item.catalog_id === gift.id)?.unit_nano; return unit ? formatNano(unit) : '—'; })() : gift.price}</span>
+                <span className="exchange-modal__price-value">{trade.server ? (() => { const unit = activeSide === 'offer' ? trade.quote?.offered.find(item => item.gift_id === gift.id)?.unit_nano : trade.quote?.received.find(item => item.catalog_id === gift.id)?.unit_nano; return unit ? formatNano(unit) : gift.price; })() : gift.price}</span>
               </span>
               <button className="exchange-modal__remove" type="button" disabled={pending || trade.locked} aria-label={`Удалить ${gift.name}`} onClick={() => onRemove(gift.id, activeSide)}><img src={deleteGiftIcon} alt="" /></button>
             </article>)}
@@ -183,17 +191,12 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
           className="exchange-modal__shortage"
           label="Вам не хватает:"
           amount={shortage}
-          visible={!trade.server && !hasBlockedGift && shortage > 0.0005}
+          visible={!hasBlockedGift && shortage > 0.0005}
           glass={noticeOverGifts}
         />
         {hasBlockedGift && <p className="exchange-modal__blocked-notice" role="status">Выбранный вами подарок уже обменяли, пожалуйста выберите другой!</p>}
-        {!hasBlockedGift && notice && <p className="exchange-modal__notice" role="status">{offeredGifts.length === 0 ? 'Для обмена добавьте подарок из инвентаря' : 'Стоимость предлагаемых подарков меньше получаемых'}</p>}
-        {trade.server && <div className="exchange-modal__quote" role="status">
-          {trade.quote && <span>Наценка {trade.quote.markup_bps / 100}%<br />{BigInt(trade.quote.wallet_delta_nano) < 0n ? `Доплата: ${formatNano(-BigInt(trade.quote.wallet_delta_nano))} TON` : BigInt(trade.quote.wallet_delta_nano) > 0n ? `Остаток на баланс: ${formatNano(trade.quote.wallet_delta_nano)} TON` : 'Без доплаты'}<br />Нужно на балансе: {formatNano(trade.quote.required_balance_nano)} · {trade.expired ? 'Котировка истекла' : `До ${new Date(trade.quote.expires_at * 1000).toLocaleTimeString('ru-RU')}`}</span>}
-          {trade.loading ? <span>Расчёт котировки…</span> : <span>{trade.error}</span>}
-          {!trade.locked && <button type="button" onClick={trade.refresh} disabled={trade.loading}>Обновить котировку</button>}
-        </div>}
-        <button className="exchange-modal__submit" type="button" disabled={pending || trade.pending || (trade.server ? !trade.uncertain && !trade.canExecute : gifts.length === 0)} aria-disabled={hasBlockedGift || gifts.length === 0} onClick={submit}>{pending ? 'Ожидание...' : trade.uncertain ? 'Повторить тот же обмен' : 'Обменять'}</button>
+        {!hasBlockedGift && notice && <p className="exchange-modal__notice" role="status">{offeredGifts.length === 0 ? 'Для обмена добавьте подарок из инвентаря' : trade.uncertain ? 'Результат обмена уточняется. Повторите тот же обмен.' : trade.server ? (!trade.quote || trade.expired || trade.error ? 'Не удалось выполнить обмен. Повторите попытку.' : 'Баланса недостаточно!') : 'Стоимость предлагаемых подарков меньше получаемых'}</p>}
+        <button className="exchange-modal__submit" type="button" disabled={pending || trade.pending || trade.loading || gifts.length === 0} aria-disabled={hasBlockedGift || gifts.length === 0} onClick={submit}>{pending || trade.loading ? 'Ожидание...' : trade.uncertain ? 'Повторить тот же обмен' : 'Обменять'}</button>
         </>}
       </section>
     </div>,

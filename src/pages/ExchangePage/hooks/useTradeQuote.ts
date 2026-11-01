@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAuth } from '../../../auth/AuthProvider';
 import { parseSnapshot, useInventory } from '../../../inventory/InventoryProvider';
 import { useWallet } from '../../../wallet/WalletProvider';
@@ -55,6 +55,8 @@ export function useTradeQuote(offered: number[], received: number[]) {
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(() => server && Boolean(readTradeAttempt(state.status === 'ready' ? state.user.id : undefined)));
   const [version, refresh] = useState(0);
+  const refreshQuote = useCallback(() => refresh(value => value + 1), []);
+  const retries = useRef({ signature: '', failures: 0 });
   const attempt = useRef<Attempt | null>(server ? readTradeAttempt(state.status === 'ready' ? state.user.id : undefined) : null);
   const busy = useRef(false);
   const session = useRef({ generation: 0, active: false, identity: '' });
@@ -69,6 +71,7 @@ export function useTradeQuote(offered: number[], received: number[]) {
     return () => { session.current = { generation: session.current.generation + 1, active: false, identity: sessionIdentity }; };
   }, [sessionIdentity, server, userId]);
   const signature = JSON.stringify([offered, received]);
+  const blocked = received.some(id => inventory.catalog.some(gift => gift.id === id && gift.blockTradeGift));
   const quote = quotedSignature === signature ? savedQuote : null;
   useEffect(() => {
     const saved = attempt.current;
@@ -83,26 +86,48 @@ export function useTradeQuote(offered: number[], received: number[]) {
     if (!server || attempt.current) return;
     setQuote(null); setError('');
     const [offer, receive] = JSON.parse(signature) as number[][];
-    if (!validIds(offer) || !validIds(receive)) { setLoading(false); return; }
+    if (!validIds(offer) || !validIds(receive) || blocked) { setLoading(false); return; }
+    if (retries.current.signature !== signature) retries.current = { signature, failures: 0 };
     let active = true;
     const generation = session.current.generation;
     const isCurrent = () => active && session.current.active && session.current.generation === generation;
     const controller = new AbortController();
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     setLoading(true);
     const timer = setTimeout(async () => {
+      let retryable = true;
       try {
         const response = await fetch(`${api}/api/trades/quote`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ offered_ids: offer, received_ids: receive }), signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) });
+        retryable = response.status >= 500 || response.status === 408 || response.status === 429;
         if (!response.ok) throw new Error('Не удалось получить котировку.');
         const next = parseTradeQuote(await response.json(), { offered: offer, received: receive });
-        if (isCurrent()) { setQuote(next); setQuotedSignature(signature); }
-      } catch { if (isCurrent()) setError('Не удалось получить котировку. Повторите обновление.'); }
+        if (isCurrent()) { setQuote(next); setQuotedSignature(signature); retries.current.failures = 0; }
+      } catch {
+        if (isCurrent()) {
+          setError('Не удалось получить котировку. Повторите обновление.');
+          if (retryable && !document.hidden && retries.current.failures < 2) {
+            retries.current.failures++;
+            retryTimer = setTimeout(refreshQuote, retries.current.failures * 1500);
+          }
+        }
+      }
       finally { if (isCurrent()) setLoading(false); }
     }, 200);
-    return () => { active = false; clearTimeout(timer); controller.abort(); };
-  }, [signature, server, token, version]);
+    return () => { active = false; clearTimeout(timer); clearTimeout(retryTimer); controller.abort(); };
+  }, [signature, server, token, version, blocked, refreshQuote]);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { if (!server) return; const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, [server]);
   const expired = Boolean(quote && quote.expires_at * 1000 <= now);
+  useEffect(() => {
+    if (expired && !document.hidden && !attempt.current) refreshQuote();
+  }, [expired, refreshQuote]);
+  useEffect(() => {
+    const resume = () => {
+      if (!document.hidden && server && !attempt.current && quote && quote.expires_at * 1000 <= Date.now()) refreshQuote();
+    };
+    document.addEventListener('visibilitychange', resume);
+    return () => document.removeEventListener('visibilitychange', resume);
+  }, [server, quote, refreshQuote]);
   const execute = async () => {
     const generation = session.current.generation;
     const isCurrent = () => session.current.active && session.current.identity === sessionIdentity && session.current.generation === generation;
@@ -152,6 +177,6 @@ export function useTradeQuote(offered: number[], received: number[]) {
       throw cause;
     } finally { if (isCurrent()) { busy.current = false; setPending(false); } }
   };
-  return { server, quote, loading, error, pending, uncertain, locked: pending || uncertain, expired, refresh: () => refresh(v => v + 1), execute,
+  return { server, quote, loading, error, pending, uncertain, locked: pending || uncertain, expired, refresh: refreshQuote, execute,
     canExecute: Boolean(quote && !expired && !loading && wallet.available && BigInt(quote.required_balance_nano) <= BigInt(wallet.wallet.balance_nano)) };
 }
