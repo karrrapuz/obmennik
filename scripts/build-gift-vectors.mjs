@@ -40,10 +40,10 @@ try {
       return node.outerHTML;
     });
     if (!svg.includes('<path') || /<image\b|<script\b|<foreignObject\b/i.test(svg)) throw new Error('Unexpected SVG content');
-    await fs.writeFile(`${target}/posters/${stem}.svg`, svg);
+    await fs.writeFile(`${target}/posters/${stem}-last.svg`, svg);
     await fs.writeFile(`${target}/animations/${stem}.tgs`, raw);
     entries.push({ collectionId: card.collectionId, modelName: card.modelName, originalImage: card.image,
-      poster: `/gifts/vector/posters/${stem}.svg`, animation: `/gifts/vector/animations/${stem}.tgs` });
+      poster: `/gifts/vector/posters/${stem}-last.svg`, animation: `/gifts/vector/animations/${stem}.tgs`, posterFrame: Math.floor(data.op - data.ip) - 1 });
   }
 } finally { await browser.close(); }
 const manifest = JSON.stringify({ schema: 1, source: 'telegram-model-documents', entries }, null, 2) + '\n';

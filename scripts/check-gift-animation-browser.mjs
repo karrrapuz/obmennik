@@ -33,6 +33,13 @@ try {
     const art = card.locator('.catalog-artwork');
     await page.waitForFunction(() => [...document.querySelectorAll('.gift-card .catalog-artwork > img')].slice(0, 2).every(img => img.complete && img.naturalWidth === 512 && img.src.endsWith('.svg')), null, { timeout: 15000 });
     assert.equal(animations.length, 0); assert.equal(players.length, 0);
+    if (width === 1280) {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await card.hover();
+      await art.locator('.catalog-artwork__animation[data-playing="true"] svg').waitFor();
+      await page.mouse.move(0, 0);
+      console.log('Desktop hover works with reduced motion enabled');
+    }
     const select = card.getByRole('button', { name: 'Выбрать Astral Shard', exact: true });
     await select.click();
     await art.locator('.catalog-artwork__animation[data-playing="true"] svg').waitFor();
