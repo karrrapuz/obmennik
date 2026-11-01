@@ -6,6 +6,8 @@
 | `src/components/layout/PageFooter/` | Нижняя навигация и её стили |
 | `src/components/layout/AppShell/` | Внешний контейнер приложения |
 | `src/components/gifts/GiftArtwork/` | Модель, фон и символ подарка |
+| `src/services/giftMedia.ts`, `src/services/giftAnimation.ts`, `public/gifts/vector/`, `docs/GIFT_MEDIA.md` | Чёткие SVG из оригинальных TGS, однократная анимация при выборе и ограниченный кеш |
+| `src/styles/input-behavior.css` | Размер полей ввода на сенсорных устройствах без отключения pinch zoom |
 | `src/services/giftPresentation.ts`, `backend/app/gift_presentation.py` | Декоративные фоны без изменения настоящих атрибутов и стоимости подарков |
 | `src/components/feedback/SlideNotice/` | Анимация уведомлений |
 | `src/hooks/` | Анимация баланса, блокировка прокрутки за модалкой |

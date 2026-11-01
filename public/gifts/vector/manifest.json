@@ -1,0 +1,216 @@
+{
+  "schema": 1,
+  "source": "telegram-model-documents",
+  "entries": [
+    {
+      "collectionId": "6005797617768858105",
+      "modelName": "Pro Gamer",
+      "originalImage": "/gifts/models/1.webp",
+      "poster": "/gifts/vector/posters/5195366267158033241-271c6f6cc31c.svg",
+      "animation": "/gifts/vector/animations/5195366267158033241-271c6f6cc31c.tgs"
+    },
+    {
+      "collectionId": "5933629604416717361",
+      "modelName": "Ethereal",
+      "originalImage": "/gifts/models/2.webp",
+      "poster": "/gifts/vector/posters/5228725956750894991-f899af344e1b.svg",
+      "animation": "/gifts/vector/animations/5228725956750894991-f899af344e1b.tgs"
+    },
+    {
+      "collectionId": "5782984811920491178",
+      "modelName": "Multicolor",
+      "originalImage": "/gifts/models/3.webp",
+      "poster": "/gifts/vector/posters/5391320701179293297-140153b6912c.svg",
+      "animation": "/gifts/vector/animations/5391320701179293297-140153b6912c.tgs"
+    },
+    {
+      "collectionId": "5882252952218894938",
+      "modelName": "Rose Gold",
+      "originalImage": "/gifts/models/4.webp",
+      "poster": "/gifts/vector/posters/5413433795569282370-d0b1232574d4.svg",
+      "animation": "/gifts/vector/animations/5413433795569282370-d0b1232574d4.tgs"
+    },
+    {
+      "collectionId": "6028283532500009446",
+      "modelName": "Frida Kahlo",
+      "originalImage": "/gifts/models/5.webp",
+      "poster": "/gifts/vector/posters/5242289201478658590-925226d5a8e5.svg",
+      "animation": "/gifts/vector/animations/5242289201478658590-925226d5a8e5.tgs"
+    },
+    {
+      "collectionId": "5902339509239940491",
+      "modelName": "Cthulhu",
+      "originalImage": "/gifts/models/6.webp",
+      "poster": "/gifts/vector/posters/5190640647786236373-928edaaff19c.svg",
+      "animation": "/gifts/vector/animations/5190640647786236373-928edaaff19c.tgs"
+    },
+    {
+      "collectionId": "5870661333703197240",
+      "modelName": "Hourglass",
+      "originalImage": "/gifts/models/7.webp",
+      "poster": "/gifts/vector/posters/5345802307063804294-8591f31e8487.svg",
+      "animation": "/gifts/vector/animations/5345802307063804294-8591f31e8487.tgs"
+    },
+    {
+      "collectionId": "5895544372761461960",
+      "modelName": "Football",
+      "originalImage": "/gifts/models/8.webp",
+      "poster": "/gifts/vector/posters/5397937231442766605-cd0fd8eb4acb.svg",
+      "animation": "/gifts/vector/animations/5397937231442766605-cd0fd8eb4acb.tgs"
+    },
+    {
+      "collectionId": "5935936766358847989",
+      "modelName": "Ice Cream",
+      "originalImage": "/gifts/models/9.webp",
+      "poster": "/gifts/vector/posters/5213231853640640477-95303cc9fe0f.svg",
+      "animation": "/gifts/vector/animations/5213231853640640477-95303cc9fe0f.tgs"
+    },
+    {
+      "collectionId": "6003373314888696650",
+      "modelName": "Toxicane",
+      "originalImage": "/gifts/models/10.webp",
+      "poster": "/gifts/vector/posters/5341422960840302937-fedf8ee736f5.svg",
+      "animation": "/gifts/vector/animations/5341422960840302937-fedf8ee736f5.tgs"
+    },
+    {
+      "collectionId": "5960747083030856414",
+      "modelName": "Crystal Hearts",
+      "originalImage": "/gifts/models/11.webp",
+      "poster": "/gifts/vector/posters/5260218551045747517-bda6abc25439.svg",
+      "animation": "/gifts/vector/animations/5260218551045747517-bda6abc25439.tgs"
+    },
+    {
+      "collectionId": "6001538689543439169",
+      "modelName": "Midsummer",
+      "originalImage": "/gifts/models/12.webp",
+      "poster": "/gifts/vector/posters/5222084223619326297-b363dade9478.svg",
+      "animation": "/gifts/vector/animations/5222084223619326297-b363dade9478.tgs"
+    },
+    {
+      "collectionId": "5841336413697606412",
+      "modelName": "Silver",
+      "originalImage": "/gifts/models/13.webp",
+      "poster": "/gifts/vector/posters/5406966798887180595-be04eb7ccecb.svg",
+      "animation": "/gifts/vector/animations/5406966798887180595-be04eb7ccecb.tgs"
+    },
+    {
+      "collectionId": "5868561433997870501",
+      "modelName": "Ruby Red",
+      "originalImage": "/gifts/models/14.webp",
+      "poster": "/gifts/vector/posters/5345778654678906543-ac2f6df143d3.svg",
+      "animation": "/gifts/vector/animations/5345778654678906543-ac2f6df143d3.tgs"
+    },
+    {
+      "collectionId": "5782988952268964995",
+      "modelName": "Crunch Time",
+      "originalImage": "/gifts/models/15.webp",
+      "poster": "/gifts/vector/posters/5195457165845896078-969f83be9980.svg",
+      "animation": "/gifts/vector/animations/5195457165845896078-969f83be9980.tgs"
+    },
+    {
+      "collectionId": "5868503709637411929",
+      "modelName": "Copper Rose",
+      "originalImage": "/gifts/models/16.webp",
+      "poster": "/gifts/vector/posters/5271506339279957860-d64b194150b8.svg",
+      "animation": "/gifts/vector/animations/5271506339279957860-d64b194150b8.tgs"
+    },
+    {
+      "collectionId": "5773668482394620318",
+      "modelName": "Choco Bunny",
+      "originalImage": "/gifts/models/17.webp",
+      "poster": "/gifts/vector/posters/5194977065811604584-2a410fd929ef.svg",
+      "animation": "/gifts/vector/animations/5194977065811604584-2a410fd929ef.tgs"
+    },
+    {
+      "collectionId": "5846192273657692751",
+      "modelName": "Nightfall",
+      "originalImage": "/gifts/models/18.webp",
+      "poster": "/gifts/vector/posters/5237900977557761551-76f3538a4a94.svg",
+      "animation": "/gifts/vector/animations/5237900977557761551-76f3538a4a94.tgs"
+    },
+    {
+      "collectionId": "5821205665758053411",
+      "modelName": "Tortuga",
+      "originalImage": "/gifts/models/19.webp",
+      "poster": "/gifts/vector/posters/5231491305804163956-fdb51d4dd495.svg",
+      "animation": "/gifts/vector/animations/5231491305804163956-fdb51d4dd495.tgs"
+    },
+    {
+      "collectionId": "5882125812596999035",
+      "modelName": "Halftone",
+      "originalImage": "/gifts/models/20.webp",
+      "poster": "/gifts/vector/posters/5424931861107336115-c6cb80e0f650.svg",
+      "animation": "/gifts/vector/animations/5424931861107336115-c6cb80e0f650.tgs"
+    },
+    {
+      "collectionId": "5999277561060787166",
+      "modelName": "Satis-fire",
+      "originalImage": "/gifts/telegram/media/5280789644802299649.webp",
+      "poster": "/gifts/vector/posters/5280789644802299649-22ccaccc1a67.svg",
+      "animation": "/gifts/vector/animations/5280789644802299649-22ccaccc1a67.tgs"
+    },
+    {
+      "collectionId": "5898012527257715797",
+      "modelName": "Tralashark",
+      "originalImage": "/gifts/telegram/media/5273795900446119823.webp",
+      "poster": "/gifts/vector/posters/5273795900446119823-62e1d6ecd43d.svg",
+      "animation": "/gifts/vector/animations/5273795900446119823-62e1d6ecd43d.tgs"
+    },
+    {
+      "collectionId": "5999298447486747746",
+      "modelName": "Marilyn",
+      "originalImage": "/gifts/telegram/media/5283065152835458743.webp",
+      "poster": "/gifts/vector/posters/5283065152835458743-87b45ec9dc2f.svg",
+      "animation": "/gifts/vector/animations/5283065152835458743-87b45ec9dc2f.tgs"
+    },
+    {
+      "collectionId": "5913351908466098791",
+      "modelName": "Warm Pixel",
+      "originalImage": "/gifts/telegram/media/5215476038477328208.webp",
+      "poster": "/gifts/vector/posters/5215476038477328208-6a4a89e6caaf.svg",
+      "animation": "/gifts/vector/animations/5215476038477328208-6a4a89e6caaf.tgs"
+    },
+    {
+      "collectionId": "6014591077976114307",
+      "modelName": "King Snoop",
+      "originalImage": "/gifts/telegram/media/5413414472511418217.webp",
+      "poster": "/gifts/vector/posters/5413414472511418217-022d297abc60.svg",
+      "animation": "/gifts/vector/animations/5413414472511418217-022d297abc60.tgs"
+    },
+    {
+      "collectionId": "6005564615793050414",
+      "modelName": "Pika-Pika!",
+      "originalImage": "/gifts/telegram/media/5350667972434232183.webp",
+      "poster": "/gifts/vector/posters/5350667972434232183-3bbc7f9e8d55.svg",
+      "animation": "/gifts/vector/animations/5350667972434232183-3bbc7f9e8d55.tgs"
+    },
+    {
+      "collectionId": "5170594532177215681",
+      "modelName": "Satellite",
+      "originalImage": "/gifts/telegram/media/5219947262641207064.webp",
+      "poster": "/gifts/vector/posters/5219947262641207064-00f2513d5bea.svg",
+      "animation": "/gifts/vector/animations/5219947262641207064-00f2513d5bea.tgs"
+    },
+    {
+      "collectionId": "5900177027566142759",
+      "modelName": "Cryo Pepe",
+      "originalImage": "/gifts/telegram/media/5332330747002910847.webp",
+      "poster": "/gifts/vector/posters/5332330747002910847-ee94189a76dd.svg",
+      "animation": "/gifts/vector/animations/5332330747002910847-ee94189a76dd.tgs"
+    },
+    {
+      "collectionId": "5832644211639321671",
+      "modelName": "Luxury Yacht",
+      "originalImage": "/gifts/telegram/media/5278234487153530919.webp",
+      "poster": "/gifts/vector/posters/5278234487153530919-081e124eb78b.svg",
+      "animation": "/gifts/vector/animations/5278234487153530919-081e124eb78b.tgs"
+    },
+    {
+      "collectionId": "5886756255493523118",
+      "modelName": "Proton Pack",
+      "originalImage": "/gifts/telegram/media/5395720255223929058.webp",
+      "poster": "/gifts/vector/posters/5395720255223929058-a7dcc284f350.svg",
+      "animation": "/gifts/vector/animations/5395720255223929058-a7dcc284f350.tgs"
+    }
+  ]
+}

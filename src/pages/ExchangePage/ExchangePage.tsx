@@ -47,7 +47,17 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
   const selectedGiftIds = activeSection === 'inventory' ? offeredIds : receivedIds;
   const [giftDetails, setGiftDetails] = useState<{ gift: Gift; source: 'inventory' | 'exchange' } | null>(null);
   const [giftDetailsOpen, setGiftDetailsOpen] = useState(false);
-  const toggleGift = (id: number, source = activeSection) => { const gift = (source === 'inventory' ? inventoryGifts : gifts).find(item => item.id === id); if (!trade.locked && gift && !isUnpricedGift(gift)) (source === 'inventory' ? setOfferedIds : setReceivedIds)((current) => current.includes(id) || current.length < 100 ? new ExchangeDraft(current).toggle(id).ids : current); };
+  const [artworkReplay, setArtworkReplay] = useState<{ id: number; source: 'inventory' | 'exchange'; key: number } | null>(null);
+  const replaySequence = useRef(0);
+  const toggleGift = (id: number, source = activeSection) => {
+    const gift = (source === 'inventory' ? inventoryGifts : gifts).find(item => item.id === id);
+    const selected = source === 'inventory' ? offeredIds : receivedIds;
+    const adding = !selected.includes(id);
+    if (trade.locked || !gift || isUnpricedGift(gift) || adding && selected.length >= 100) return;
+    (source === 'inventory' ? setOfferedIds : setReceivedIds)(current => current.includes(id) || current.length < 100 ? new ExchangeDraft(current).toggle(id).ids : current);
+    if (adding) setArtworkReplay({ id, source, key: ++replaySequence.current });
+    else setArtworkReplay(current => current?.id === id && current.source === source ? null : current);
+  };
   const [exchangeOpen, setExchangeOpen] = useState(Boolean(restored));
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -94,6 +104,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       return activeSection === 'exchange' && sortOptions.length === 0 ? comparePriceAvailability(first, second, priceNow) : 0;
     }), [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions, priceNow]);
   const pageKey = JSON.stringify([activeSection, searchQuery, appliedFilters, sortOptions]);
+  useEffect(() => { setArtworkReplay(null); }, [pageKey]);
   const [page, setPage] = useState({ key: '', count: 40 });
   const shownCount = page.key === pageKey ? page.count : 40;
 
@@ -215,7 +226,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
                   setGiftDetailsOpen(true);
                 }} />
                 <div className="gift-card__visual">
-                  <GiftArtwork gift={gift} />
+                  <GiftArtwork gift={gift} playKey={artworkReplay?.id === gift.id && artworkReplay.source === activeSection ? artworkReplay.key : 0} />
                   <div className="gift-card__meta">
                     <div><strong>{gift.name}</strong><span>{gift.modelName ?? 'Модель'}&nbsp;&nbsp;{gift.model}</span></div>
                   </div>

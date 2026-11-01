@@ -9,6 +9,7 @@ import { applyMarketValuation, marketValuationQuery, useMarketValuation } from '
 import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegramPrices';
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
+import { giftPoster } from '../../../../services/giftMedia';
 import tonIcon from '../../../../assets/ton.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import viewIcon from './assets/modal-gift-posmotret.svg';
@@ -169,7 +170,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
         </footer>
         {preview && <div className="gift-details__preview">
           <button className="gift-details__close" type="button" aria-label="Закрыть просмотр" onClick={() => setPreview(false)}><img src={closeIcon} alt="" /></button>
-          <img src={gift?.image || giftIcon} alt={gift?.name} />
+          <img src={gift ? giftPoster(gift) || giftIcon : giftIcon} alt={gift?.name} />
           <strong>{gift?.name} {gift?.model}</strong>
         </div>}
       </section>

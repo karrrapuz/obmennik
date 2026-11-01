@@ -1,0 +1,8 @@
+@media (hover: none) and (pointer: coarse) {
+  /* Keep focused controls above iOS's zoom threshold, including modal font shorthands. */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
+}

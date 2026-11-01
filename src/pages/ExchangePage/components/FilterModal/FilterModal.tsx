@@ -12,6 +12,7 @@ import plusIcon from './assets/plus.svg';
 import tonModalIcon from './assets/ton_modal.svg';
 import searchIcon from './assets/poisk_modal.svg';
 import './FilterModal.css';
+import { upgradeGiftImage } from '../../../../services/giftMedia';
 import type { Gift } from '../../data/gifts';
 import { telegramFilterOptions, type TelegramManifest } from '../../../../services/telegramCatalog';
 
@@ -222,7 +223,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                             const checked = selected[row.id]?.includes(value) ?? false;
                             return <button className="filter-modal__option" data-described={Boolean(option.description)} type="button" aria-pressed={checked} key={value} onClick={() => toggleOption(row.id, value)}>
                               <span className="filter-modal__option-check" aria-hidden="true"><span><img src={checked ? checkIcon : plusIcon} alt="" /></span></span>
-                              <span className="filter-modal__option-image" aria-hidden="true" style={option.color ? { background: option.color } : undefined}>{option.image && <img src={option.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</span>
+                              <span className="filter-modal__option-image" aria-hidden="true" style={option.color ? { background: option.color } : undefined}>{option.image && <img src={upgradeGiftImage(option.image)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</span>
                               <span className="filter-modal__option-title"><span className="filter-modal__option-name">{option.name}</span>{option.description && <small className="filter-modal__option-description">{option.description}</small>}{option.rarity && <em>{option.rarity}</em>}</span>
                               {option.price && <span className="filter-modal__option-price">{option.price}<img src={tonModalIcon} alt="TON" /></span>}
                             </button>;
