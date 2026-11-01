@@ -3,7 +3,7 @@
   position: relative;
   margin-top: 78px;
   width: 100%;
-  min-height: max(522px, calc(100dvh - 256px));
+  min-height: max(522px, calc(100dvh - 322px));
   padding: 16px 16px 190px;
   background: #131313;
   border-radius: 20px 20px 0 0;
