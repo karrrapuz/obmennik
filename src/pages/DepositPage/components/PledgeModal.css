@@ -1,5 +1,6 @@
 .pledge-dialog { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #fff; overflow: hidden; font: 600 14px/18px 'Onest', Arial, sans-serif; }
 .pledge-dialog::backdrop { background: transparent; }
+.pledge-dialog { overflow: clip; }
 .pledge-dialog__scrim { position: fixed; inset: 0; background: #0d0d0d80; backdrop-filter: blur(15px); opacity: 0; will-change: opacity; transition: opacity 300ms ease; }
 .pledge-dialog[data-visible='true'] .pledge-dialog__scrim { opacity: 1; }
 .pledge-sheet { position: absolute; bottom: -7px; left: 50%; width: min(100%,390px); height: min(735px,calc(100dvh - 24px)); overflow: hidden; transform: translate3d(-50%,calc(100% + 24px),0); transform-origin: 50% 100%; backface-visibility: hidden; will-change: transform; transition: transform 400ms cubic-bezier(.22,1,.36,1); }
