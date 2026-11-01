@@ -2,7 +2,7 @@
 .pledge-dialog::backdrop { background: transparent; }
 .pledge-dialog__scrim { position: fixed; inset: 0; background: #0d0d0d80; backdrop-filter: blur(15px); opacity: 0; will-change: opacity; transition: opacity 300ms ease; }
 .pledge-dialog[data-visible='true'] .pledge-dialog__scrim { opacity: 1; }
-.pledge-sheet { position: absolute; bottom: 0; left: 50%; width: min(100%,390px); height: min(735px,calc(100dvh - 24px)); overflow: hidden; transform: translate3d(-50%,calc(100% + 24px),0); transform-origin: 50% 100%; backface-visibility: hidden; will-change: transform; transition: transform 400ms cubic-bezier(.22,1,.36,1); }
+.pledge-sheet { position: absolute; bottom: -7px; left: 50%; width: min(100%,390px); height: min(735px,calc(100dvh - 24px)); overflow: hidden; transform: translate3d(-50%,calc(100% + 24px),0); transform-origin: 50% 100%; backface-visibility: hidden; will-change: transform; transition: transform 400ms cubic-bezier(.22,1,.36,1); }
 .pledge-dialog[data-visible='true'] .pledge-sheet { transform: translate3d(-50%,0,0); }
 .pledge-sheet::before { position: absolute; inset: 0; content: ''; background: #131313; mask: url('../../ExchangePage/components/GiftDetailsModal/assets/sheet-mask.svg') top center / 100% 1192px no-repeat; }
 .pledge-sheet__body { position: relative; height: 100%; display: flex; flex-direction: column; }
@@ -84,7 +84,7 @@
 .pledge-feedback__actions button + button { background: rgba(47,47,47,.2); }
 .pledge-feedback__actions button:focus-visible,.pledge-confirm button:focus-visible { outline: 2px solid #06d7a0; outline-offset: 3px; }
 .pledge-confirm p { overflow-wrap: anywhere; line-height: 22px; }
-.pledge-notice { position: absolute; top: min(421px, calc(100% - 160px)); left: calc(50% - 100px); display: grid; place-items: center; width: 200px; min-height: 40px; padding: 8px; line-height: 18px; text-align: center; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 15px; font-size: 12px; pointer-events: none; }
+.pledge-notice { position: absolute; bottom: min(442px, calc(100% - 96px)); left: calc(50% - 100px); display: grid; place-items: center; width: 200px; min-height: 40px; padding: 8px; line-height: 18px; text-align: center; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 15px; font-size: 12px; pointer-events: none; }
 @keyframes pledge-spin { to { transform: rotate(360deg); } }
 @keyframes pledge-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33% 0 0); } }
 @keyframes pledge-confirm-in { from { opacity: 0; } to { opacity: 1; } }

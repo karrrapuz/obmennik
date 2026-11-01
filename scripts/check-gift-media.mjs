@@ -24,6 +24,7 @@ for (const card of cards) {
   const data = JSON.parse(gunzipSync(raw, { maxOutputLength: 4000000 }));
   assert.equal(data.w, 512); assert.equal(data.h, 512);
   assert(data.op > data.ip && data.fr > 0 && data.fr <= 60);
+  assert.equal(media.posterFrame, Math.floor(data.op - data.ip) - 1, 'Poster must be the actual final frame');
   assert(data.assets.every(asset => !('p' in asset)));
 }
 assert.equal(giftPoster({ image: '/unknown.webp', collectionId: 'unknown', modelName: 'unknown' }), '/unknown.webp');

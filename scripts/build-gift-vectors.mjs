@@ -31,7 +31,7 @@ try {
       const animation = window.lottie.loadAnimation({ container: document.getElementById('art'), renderer: 'svg', animationData: data, autoplay: false, loop: false });
       window.animation = animation;
       const timeout = setTimeout(() => reject(new Error('Vector rendering timeout')), 5000);
-      const done = () => { clearTimeout(timeout); animation.goToAndStop(60, true); resolve(); };
+      const done = () => { clearTimeout(timeout); animation.goToAndStop(Math.max(0, animation.totalFrames - 1), true); resolve(); };
       if (animation.isLoaded) done(); else animation.addEventListener('DOMLoaded', done);
     }), data);
     const svg = await page.locator('#art svg').evaluate(node => {

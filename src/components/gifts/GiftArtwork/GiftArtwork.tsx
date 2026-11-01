@@ -19,19 +19,17 @@ export default function GiftArtwork({ gift, autoPlay = false, playKey = 0 }: Gif
   useEffect(() => {
     const parent = artwork.current?.closest<HTMLElement>('.gift-card, .profile-gifts__card, .pledge-card, .exchange-modal__gift, .gift-details__preview, .pledge-preview') ?? artwork.current?.parentElement;
     if (!parent || !media) return;
-    const enter = (event: PointerEvent) => {
-      if (event.pointerType !== 'touch' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
-          && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) setHoverKey(key => key + 1);
+    const enter = (event: Event) => {
+      if ((event as PointerEvent).pointerType !== 'touch') setHoverKey(key => key + 1);
     };
-    parent.addEventListener('pointerenter', enter);
-    return () => parent.removeEventListener('pointerenter', enter);
+    const eventName = 'PointerEvent' in window ? 'pointerenter' : 'mouseenter';
+    parent.addEventListener(eventName, enter);
+    return () => parent.removeEventListener(eventName, enter);
   }, [media]);
   useEffect(() => {
     setPlaying(false);
     const node = host.current;
     if ((!playKey && !autoPlay && !hoverKey) || !media || !node || document.hidden) return;
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (motion.matches && !playKey && !autoPlay) return;
     const bounds = node.getBoundingClientRect();
     let intersecting = bounds.height > 0 && bounds.bottom > 0 && bounds.top < window.innerHeight;
     const controller = new AbortController();
@@ -44,18 +42,15 @@ export default function GiftArtwork({ gift, autoPlay = false, playKey = 0 }: Gif
     let loadStarted = false;
     let start = () => {};
     const visibility = () => { if (document.hidden) stop(); };
-    const motionChange = () => { if (motion.matches && !playKey && !autoPlay) stop(); };
     const stop = () => {
       controller.abort();
       item?.destroy(); item = undefined;
       window.clearTimeout(timeout); observer?.disconnect();
       document.removeEventListener('visibilitychange', visibility);
-      motion.removeEventListener('change', motionChange);
       release();
       if (alive) setPlaying(false);
     };
     document.addEventListener('visibilitychange', visibility);
-    motion.addEventListener('change', motionChange);
     observer = new IntersectionObserver(entries => {
       intersecting = Boolean(entries[0]?.isIntersecting);
       if (intersecting) { load(); start(); } else if (loadStarted) stop();
@@ -76,6 +71,7 @@ export default function GiftArtwork({ gift, autoPlay = false, playKey = 0 }: Gif
       };
       item.addEventListener('complete', () => {
         // Keep the actual final frame, not the unrelated static poster pose.
+        item?.goToAndStop(Math.max(0, item.totalFrames - 1), true);
         window.clearTimeout(timeout);
         release();
       });
@@ -87,7 +83,6 @@ export default function GiftArtwork({ gift, autoPlay = false, playKey = 0 }: Gif
     return () => {
       alive = false; stop(); window.clearTimeout(timeout);
       observer?.disconnect(); document.removeEventListener('visibilitychange', visibility);
-      motion.removeEventListener('change', motionChange);
     };
   }, [media, playKey, autoPlay, hoverKey]);
   const poster = failedPoster === media?.poster ? gift.image : media?.poster ?? gift.image;

@@ -2,7 +2,7 @@
 
 The 30 presentation models use original public Telegram TGS documents, not
 enlarged 128px thumbnails. Their 512x512 vector animations were verified locally.
-Static frame-60 SVG posters contain paths/gradients, not embedded raster images.
+Static final-frame SVG posters contain paths/gradients, not embedded raster images.
 Models are matched by collection ID and normalized model name, never owned gift
 instance IDs. Unknown future models retain their existing image fallback.
 
@@ -19,8 +19,8 @@ instance IDs. Unknown future models retain their existing image fallback.
 player is a separate dynamic chunk, loaded on the first visible selection, desktop
 hover or opened gift modal. Each animation plays once and retains its final SVG
 frame, avoiding a jump to the poster's different pose. Offscreen navigation or
-backgrounding destroys the player. Explicit selection/modal playback works even
-when reduced motion is set; passive hover respects that preference. Obsolete fetches
+backgrounding destroys the player. Explicit selection, mouse hover and modal
+playback work even when system reduced motion is set. Obsolete fetches
 and stream readers are cancelled. The decoded cache holds at most four models;
 player input is cloned so Lottie repeaters cannot mutate cached originals.
 No constant grid-wide animation or per-frame React state is used. Settled SVGs
