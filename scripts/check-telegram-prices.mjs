@@ -23,7 +23,7 @@ function load(filename) {
   new Function('require', 'module', 'exports', compiled)(require, module, module.exports);
   return module.exports;
 }
-const { parseTelegramPrices, hasMarketPrice, marketPriceLabel, mergeMarketPrices, browsingPriceNano, compareBrowsingPrices, matchesBrowsingPrice } = load(path.join(root, 'src/services/telegramPrices.ts'));
+const { parseTelegramPrices, hasMarketPrice, marketPriceLabel, mergeMarketPrices, browsingPriceNano, compareBrowsingPrices, comparePriceAvailability, matchesBrowsingPrice } = load(path.join(root, 'src/services/telegramPrices.ts'));
 const { isUnpricedGift } = load(path.join(root, 'src/pages/ExchangePage/data/gifts.ts'));
 const now = 1800000000;
 const fixture = () => ({ schema: 1, source: 'telegram-resale', kind: 'lowest_observed_listing', capturedAt: now - 600, validUntil: now - 600 + 86400, complete: true, collections: [{ telegramId: '18446744073709551615', catalogId: 100001, checkedAt: now - 1, status: 'available', floorNano: '5140000000', sampleCount: 200, hasMore: true }] });
@@ -56,6 +56,22 @@ test('unknown or malformed metadata does not produce fake zero/stale price', () 
 test('sample transaction prices stay unchanged despite market reference', () => { const sample = { ...merged, telegramCatalog: false, tradeSupported: true, priceSource: 'sample', price: '2.750' }; assert.equal(browsingPriceNano(sample, now), 2750000000n); assert.equal(sample.price, '2.750'); });
 test('fresh reference range uses exact nanos; unknown and stale excluded', () => { assert.equal(matchesBrowsingPrice(merged, '5.14', '5.14', now), true); assert.equal(matchesBrowsingPrice(merged, '5.140000001', '', now), false); assert.equal(matchesBrowsingPrice(imported, '', '100', now), false); assert.equal(matchesBrowsingPrice(merged, '', '100', merged.marketPrice.validUntil), false); const tiny = { ...merged, marketPrice: { ...merged.marketPrice, floorNano: '1' } }; assert.equal(matchesBrowsingPrice(tiny, '.000000001', '.000000001', now), true); });
 test('unknown prices sort last in both directions', () => { for (const direction of ['asc', 'desc']) assert.equal(compareBrowsingPrices(imported, merged, direction, now), 1); const cheaper = { ...merged, marketPrice: { ...merged.marketPrice, floorNano: '1' } }; assert.equal(compareBrowsingPrices(cheaper, merged, 'asc', now), -1); assert.equal(compareBrowsingPrices(cheaper, merged, 'desc', now), 1); });
+test('default catalog puts known TON prices before unpriced entries without reshuffling peers', () => {
+  assert.equal(comparePriceAvailability(imported, merged, now), 1);
+  assert.equal(comparePriceAvailability(merged, imported, now), -1);
+  assert.equal(comparePriceAvailability(merged, { ...merged, id: 42 }, now), 0);
+  assert.equal(comparePriceAvailability(imported, { ...imported, id: 43 }, now), 0);
+});
+test('unavailable source status is honest and cleared when a price appears', () => {
+  const feed = fixture(); Object.assign(feed.collections[0], { status: 'not_collectible', floorNano: null, sampleCount: 0 });
+  const missing = mergeMarketPrices([merged], feed, identities)[0];
+  assert.equal(missing.marketPrice, undefined);
+  assert.equal(marketPriceLabel(missing, now), 'Нет предложений в TON');
+  const recovered = mergeMarketPrices([missing], fixture(), identities)[0];
+  assert.equal(recovered.marketStatus, undefined);
+  assert.equal(marketPriceLabel(recovered, now), 'от 5.14 TON');
+  assert.equal(mergeMarketPrices([missing], null, identities)[0].marketStatus, undefined);
+});
 const realFile = path.join(root, 'public/gifts/telegram/prices.json');
 if (fs.existsSync(realFile)) {
   test('real public feed parses and all IDs match manifest pairs', () => {

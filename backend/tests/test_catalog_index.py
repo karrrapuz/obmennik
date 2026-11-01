@@ -138,7 +138,7 @@ def test_real_artifact_all_choices_and_named_untitled_types(settings):
     manifest = json.loads((root / 'catalog-telegram.json').read_text(encoding='utf-8'))
     index = CatalogIndex(manifest['collections'])
     assert index.omitted_attributes == 0
-    assert {k: len(v) for k, v in index.attributes.items()} == {'models': 7808, 'symbols': 717, 'backdrops': 80}
+    assert {k: len(v) for k, v in index.attributes.items()} == {'models': 7942, 'symbols': 717, 'backdrops': 80}
     assert (root / 'catalog-labels.json').read_bytes() == (root.parents[1] / 'public/gifts/telegram/labels.json').read_bytes()
     labels = catalog_labels.load_labels()
     assert len(labels) == 26

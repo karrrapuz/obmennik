@@ -60,10 +60,14 @@ for (const kind of ['symbols', 'backdrops']) {
     if (rarities.size > 1) assert.equal(option.rarity, undefined);
   }
 }
-assert.equal(labels.labels.length, manifest.collections.filter(c => !c.sourceTitle).length);
+assert.ok(manifest.collections.filter(c => !c.sourceTitle).every(c => labels.labels.some(label => label.telegramId === c.telegramId)));
 for (const label of labels.labels) {
   const c = manifest.collections.find(c => c.telegramId === label.telegramId);
-  assert.ok(c && !c.sourceTitle);
+  assert.ok(c);
+  if (c.sourceTitle) {
+    assert.equal(labeled.collections.find(item => item.telegramId === c.telegramId).title, c.sourceTitle);
+    continue;
+  }
   assert.equal(label.kind, 'descriptive');
   assert.match(label.displayTitle, /^[\x20-\x7e]+$/, 'Descriptive gift names must be English');
   const named = { ...manifest, collections: [{ ...c, title: label.displayTitle }] };

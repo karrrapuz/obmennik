@@ -8,6 +8,14 @@ import pytest
 from app.config import Settings
 from scripts import telegram_prices as prices
 from telethon.types import StarsAmount, StarsTonAmount
+from telethon.tl.functions.payments import GetStarGiftsRequest
+
+
+def public_metadata(request):
+    if isinstance(request, GetStarGiftsRequest):
+        assert request.hash == 0
+        return SimpleNamespace(gifts=[SimpleNamespace(id=123, upgrade_stars=None),
+                                      SimpleNamespace(id=456, upgrade_stars=None)])
 
 
 @pytest.fixture
@@ -33,6 +41,7 @@ def export_setup(tmp_path, monkeypatch):
     monkeypatch.setattr(prices, 'OUTPUT', tmp_path / 'backend/prices.json')
     monkeypatch.setattr(prices, 'PUBLIC', tmp_path / 'public/prices.json')
     monkeypatch.setattr(prices, 'CHECKPOINT', tmp_path / '.local/prices-progress.json')
+    monkeypatch.setattr(prices, 'LISTINGS', tmp_path / 'backend/listings.json')
     prices.CATALOG.write_text(json.dumps({'collections': [
         {'telegramId': '123', 'catalogId': 100000, 'title': 'Public', 'attributes': {'models': [{}]}},
         {'telegramId': '456', 'catalogId': 100001, 'title': 'Ordinary', 'attributes': {'models': []}},
@@ -52,6 +61,8 @@ def test_bounded_pages_minimum_and_allowlisted_export(export_setup):
         calls = 0
 
         async def __call__(self, request):
+            if isinstance(request, GetStarGiftsRequest):
+                return public_metadata(request)
             assert isinstance(request, GetResaleStarGiftsRequest)
             assert request.gift_id == 123 and request.limit == 100 and request.sort_by_price
             self.calls += 1
@@ -73,7 +84,9 @@ def test_bounded_pages_minimum_and_allowlisted_export(export_setup):
 
 
 def test_stars_only_means_no_ton_quote_not_zero(export_setup):
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return public_metadata(request)
         return SimpleNamespace(gifts=[gift(StarsAmount(amount=999, nanos=0))], next_offset='')
 
     feed = asyncio.run(prices.collect(client))
@@ -82,7 +95,9 @@ def test_stars_only_means_no_ton_quote_not_zero(export_setup):
 
 
 def test_probe_never_publishes(export_setup):
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return public_metadata(request)
         return SimpleNamespace(gifts=[], next_offset='')
 
     asyncio.run(prices.collect(client, probe=True))
@@ -90,7 +105,9 @@ def test_probe_never_publishes(export_setup):
 
 
 def test_failed_request_not_success_and_no_private_error_export(export_setup, capsys):
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return public_metadata(request)
         raise RuntimeError('PRIVATE_API_PAYLOAD')
 
     feed = asyncio.run(prices.collect(client))
@@ -104,7 +121,9 @@ def test_failed_request_not_success_and_no_private_error_export(export_setup, ca
 def test_large_flood_wait_preserves_checkpoint_without_retry(export_setup):
     from telethon.errors import FloodWaitError
 
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return public_metadata(request)
         raise FloodWaitError(request=None, capture=121)
 
     with pytest.raises(FloodWaitError):
@@ -117,10 +136,77 @@ def test_failed_refresh_preserves_previous_published_snapshot(export_setup):
     previous = {'schema': 1, 'complete': True, 'collections': [{'public': 'previous'}]}
     prices.save_feed(previous, publish=True)
 
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return public_metadata(request)
         raise RuntimeError('temporary failure')
 
     assert not asyncio.run(prices.collect(client))['complete']
     assert json.loads(prices.OUTPUT.read_text()) == previous
     assert json.loads(prices.PUBLIC.read_text()) == previous
     assert not json.loads(prices.CHECKPOINT.read_text())['complete']
+
+
+@pytest.mark.parametrize('upgrade_stars', [0, 25])
+def test_fresh_metadata_prices_newly_upgradeable_without_cached_traits(export_setup, upgrade_stars):
+    from telethon.tl.functions.payments import GetResaleStarGiftsRequest
+    from telethon.types import StarGiftAttributeModel
+
+    catalog = json.loads(prices.CATALOG.read_text())
+    catalog['collections'].append({'telegramId': '789', 'catalogId': 100002, 'title': 'Still ordinary',
+                                   'attributes': {'models': []}})
+    prices.CATALOG.write_text(json.dumps(catalog))
+    before = prices.CATALOG.read_bytes()
+    requests = []
+
+    async def client(request):
+        requests.append(request)
+        if isinstance(request, GetStarGiftsRequest):
+            assert request.hash == 0 and len(requests) == 1
+            return SimpleNamespace(gifts=[
+                SimpleNamespace(id=123, upgrade_stars=None),
+                SimpleNamespace(id=456, upgrade_stars=upgrade_stars),
+                SimpleNamespace(id=789, upgrade_stars=None),
+                SimpleNamespace(id=999, upgrade_stars=1)])
+        assert isinstance(request, GetResaleStarGiftsRequest) and request.gift_id in (123, 456)
+        return SimpleNamespace(gifts=[gift(StarsTonAmount(17), gift_id=request.gift_id,
+            id=1000 + request.gift_id,
+            attributes=[StarGiftAttributeModel('Uncached actual model', SimpleNamespace(id=919), None)])], next_offset='')
+
+    feed = asyncio.run(prices.collect(client, listings=True))
+    by_id = {item['telegramId']: item for item in feed['collections']}
+    assert feed['complete'] is True
+    assert set(by_id) == {'123', '456', '789'}
+    assert by_id['456']['status'] == 'available' and by_id['456']['floorNano'] == '17'
+    assert by_id['456']['sampleCount'] == 1
+    assert by_id['789']['status'] == 'not_collectible' and by_id['789']['floorNano'] is None
+    assert [r.gift_id for r in requests if isinstance(r, GetResaleStarGiftsRequest)] == [123, 456]
+    observations = json.loads(prices.LISTINGS.read_text())['listings']
+    newly_upgradeable = next(item for item in observations if item['telegramId'] == '456')
+    assert newly_upgradeable['priceNano'] == '17'
+    assert not {'modelId', 'symbolId', 'backdropId'} & newly_upgradeable.keys()
+    assert prices.CATALOG.read_bytes() == before
+
+
+@pytest.mark.parametrize('failure', ['rpc', 'missing_gifts', 'empty', 'oversized'])
+def test_metadata_failure_aborts_before_resale_and_preserves_all_snapshots(export_setup, failure):
+    previous = {'schema': 1, 'complete': True, 'previous': True}
+    prices.save_feed(previous, publish=True)
+    prices.LISTINGS.write_text(json.dumps(previous))
+    paths = (prices.OUTPUT, prices.PUBLIC, prices.LISTINGS, prices.CHECKPOINT, prices.CATALOG)
+    before = [path.read_bytes() for path in paths]
+    requests = []
+
+    async def client(request):
+        requests.append(request)
+        assert isinstance(request, GetStarGiftsRequest) and request.hash == 0
+        if failure == 'rpc':
+            raise RuntimeError('metadata unavailable')
+        if failure == 'missing_gifts':
+            return SimpleNamespace()
+        return SimpleNamespace(gifts=[] if failure == 'empty' else [None] * 1001)
+
+    with pytest.raises(RuntimeError if failure == 'rpc' else ValueError):
+        asyncio.run(prices.collect(client, listings=True))
+    assert len(requests) == 1
+    assert [path.read_bytes() for path in paths] == before

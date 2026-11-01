@@ -13,6 +13,7 @@ from app.catalog_index import CatalogIndex
 from app.config import Settings
 from app import market_valuation as market
 from scripts import telegram_prices as collector
+from telethon.tl.functions.payments import GetStarGiftsRequest
 
 
 @pytest.fixture
@@ -135,7 +136,9 @@ def test_optional_artifact_full_success_only(setup, monkeypatch):
     async def no_sleep(_):
         pass
 
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return SimpleNamespace(gifts=[SimpleNamespace(id=123, upgrade_stars=None)])
         return SimpleNamespace(gifts=[SimpleNamespace(id=99, gift_id=123, attributes=[],
             resell_amount=[StarsTonAmount(1)], burned=False)], next_offset='')
 
@@ -145,7 +148,9 @@ def test_optional_artifact_full_success_only(setup, monkeypatch):
     asyncio.run(collector.collect(client, listings=True))
     previous = path.read_bytes()
 
-    async def broken(_):
+    async def broken(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return SimpleNamespace(gifts=[SimpleNamespace(id=123, upgrade_stars=None)])
         raise RuntimeError('PRIVATE')
 
     asyncio.run(collector.collect(broken, listings=True))
@@ -170,7 +175,9 @@ def test_listing_mode_preserves_previous_snapshots_on_count_mismatch(setup, monk
     async def no_sleep(_):
         pass
 
-    async def client(_):
+    async def client(request):
+        if isinstance(request, GetStarGiftsRequest):
+            return SimpleNamespace(gifts=[SimpleNamespace(id=123, upgrade_stars=None)])
         amounts = [StarsTonAmount(1)] if case == 'duplicate_page' else [StarsTonAmount(1), StarsTonAmount(2)]
         return SimpleNamespace(gifts=[SimpleNamespace(id=99, gift_id=123, attributes=[],
             resell_amount=amounts, burned=False)], next_offset='again' if case == 'duplicate_page' else '')

@@ -6,6 +6,7 @@ export type Gift = {
   collectionId?: string; modelName?: string; image?: string; blockTradeGift?: boolean; pledgeSupported?: boolean;
   telegramCatalog?: boolean; tradeSupported?: boolean; priceSource?: string; stars?: string; previewOnly?: boolean;
   marketPrice?: MarketPrice;
+  marketStatus?: 'available' | 'no_ton_listings' | 'not_collectible' | 'error';
   presentation?: GiftPresentation;
   modelFilterId?: string;
   symbol?: { id?: string; name: string; image: string; rarity: string };

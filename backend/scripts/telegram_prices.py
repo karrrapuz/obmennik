@@ -76,15 +76,24 @@ async def collect(client, pages=2, probe=False, listings=False):
     captured = int(time.time())
     if type(pages) is not int or not 1 <= pages <= 3 or len(catalog) > 151:
         raise ValueError('Collection/page bound exceeded')
+    metadata = await client(functions.payments.GetStarGiftsRequest(hash=0))
+    public_gifts = getattr(metadata, 'gifts', None)
+    if not isinstance(public_gifts, list) or not 0 < len(public_gifts) <= 1000:
+        raise ValueError('Invalid or oversized public gift metadata')
+    known_ids = {collection['telegramId'] for collection in catalog}
+    upgradeable_ids = {str(gift.id) for gift in public_gifts
+                       if type(getattr(gift, 'id', None)) is int and str(gift.id) in known_ids
+                       and getattr(gift, 'upgrade_stars', None) is not None}
     observations = {}
     feed = {'schema': 1, 'source': 'telegram-resale', 'kind': 'lowest_observed_listing',
             'capturedAt': captured, 'validUntil': captured + TTL, 'complete': False, 'collections': []}
-    candidates = [c for c in catalog if c['attributes']['models']]
+    candidates = [c for c in catalog if c['attributes']['models'] or c['telegramId'] in upgradeable_ids]
+    candidate_ids = {collection['telegramId'] for collection in candidates}
     if probe:
         candidates = candidates[:1]
     else:
         for collection in catalog:
-            if not collection['attributes']['models']:
+            if collection['telegramId'] not in candidate_ids:
                 feed['collections'].append({'telegramId': collection['telegramId'], 'catalogId': collection['catalogId'],
                     'checkedAt': captured, 'status': 'not_collectible', 'floorNano': None,
                     'sampleCount': 0, 'inspectedCount': 0, 'hasMore': False})

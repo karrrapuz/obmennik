@@ -10,7 +10,7 @@ import { previewTelegramGift } from '../../services/telegramCatalog';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftPrice from '../../components/gifts/GiftPrice';
 import { useTelegramPrices } from '../../hooks/useTelegramPrices';
-import { compareBrowsingPrices, matchesBrowsingPrice } from '../../services/telegramPrices';
+import { compareBrowsingPrices, comparePriceAvailability, matchesBrowsingPrice } from '../../services/telegramPrices';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
 import { readTradeAttempt, useTradeQuote } from './hooks/useTradeQuote';
@@ -91,7 +91,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
         if (option === 'price-desc') difference = compareBrowsingPrices(first, second, 'desc', priceNow);
         if (difference !== 0) return difference;
       }
-      return 0;
+      return activeSection === 'exchange' && sortOptions.length === 0 ? comparePriceAvailability(first, second, priceNow) : 0;
     }), [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions, priceNow]);
   const pageKey = JSON.stringify([activeSection, searchQuery, appliedFilters, sortOptions]);
   const [page, setPage] = useState({ key: '', count: 40 });

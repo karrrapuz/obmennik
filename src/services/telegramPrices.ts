@@ -41,22 +41,29 @@ export function hasMarketPrice(gift: Pick<Gift, 'marketPrice'>, now: number): bo
   return validMarketPrice(gift, now) && now < gift.marketPrice!.validUntil;
 }
 
-export function marketPriceLabel(gift: Pick<Gift, 'marketPrice'>, now: number): string {
+export function marketPriceLabel(gift: Pick<Gift, 'marketPrice' | 'marketStatus'>, now: number): string {
   if (hasMarketPrice(gift, now)) return `от ${formatNano(gift.marketPrice!.floorNano)} TON`;
   const price = gift.marketPrice;
-  return validMarketPrice(gift, now) && price && now >= price.validUntil ? 'Цена устарела' : 'Нет TON-цены';
+  if (validMarketPrice(gift, now) && price && now >= price.validUntil) return 'Цена устарела';
+  return gift.marketStatus === 'not_collectible' || gift.marketStatus === 'no_ton_listings' ? 'Нет предложений в TON' : 'Нет TON-цены';
 }
 
-export function mergeMarketPrices<T extends Pick<Gift, 'collectionId' | 'marketPrice'>>(gifts: T[], feed: TelegramPrices | null, manifest: { collections: readonly { telegramId: string; catalogId: number }[] } | null): T[] {
+export function mergeMarketPrices<T extends Pick<Gift, 'collectionId' | 'marketPrice' | 'marketStatus'>>(gifts: T[], feed: TelegramPrices | null, manifest: { collections: readonly { telegramId: string; catalogId: number }[] } | null): T[] {
   const prices = new Map(feed?.collections.map(item => [item.telegramId, item]) ?? []);
   const catalogIds = new Map(manifest?.collections.map(item => [item.telegramId, item.catalogId]) ?? []);
   return gifts.map(gift => {
-    const { marketPrice: previous, ...rest } = gift;
+    const { marketPrice: previous, marketStatus: previousStatus, ...rest } = gift;
     void previous;
+    void previousStatus;
     const item = prices.get(gift.collectionId ?? '');
-    if (!feed || !item || item.catalogId !== catalogIds.get(item.telegramId) || item.status !== 'available' || item.floorNano === null) return rest as T;
+    if (!feed || !item || item.catalogId !== catalogIds.get(item.telegramId)) return rest as T;
+    if (item.status !== 'available' || item.floorNano === null) return { ...rest, marketStatus: item.status } as T;
     return { ...rest, marketPrice: { floorNano: item.floorNano, checkedAt: item.checkedAt, validUntil: feed.validUntil, source: feed.source, kind: feed.kind, sampleCount: item.sampleCount, hasMore: item.hasMore } } as T;
   });
+}
+
+export function comparePriceAvailability(first: PriceGift, second: PriceGift, now: number): number {
+  return Number(browsingPriceNano(first, now) === null) - Number(browsingPriceNano(second, now) === null);
 }
 
 export function browsingPriceNano(gift: PriceGift, now: number): bigint | null {
