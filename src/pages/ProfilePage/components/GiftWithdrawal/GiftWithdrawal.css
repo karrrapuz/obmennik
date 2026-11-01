@@ -29,6 +29,8 @@
   padding: 20px 16px 16px; border-radius: 20px; background: #131313;
   font: 600 16px/18px 'Onest', Arial, sans-serif;
   animation: withdrawal-in 180ms ease-out;
+  max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
 }
 .gift-withdraw-confirm p { margin: 0 8px 20px; text-align: center; overflow-wrap: anywhere; }
 .gift-withdraw-confirm section > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }

@@ -476,6 +476,60 @@
 .balance-withdraw > button:disabled { background: rgba(47,47,47,0.2); color: rgba(255,255,255,0.2); backdrop-filter: blur(15px); cursor: default; }
 .balance-withdraw__dots { display: inline-block; animation: balance-dots 1.2s steps(4, end) infinite; }
 @keyframes balance-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33.333% 0 0); } }
-.profile-modal__header h2 { max-width: calc(100% - 100px); margin-left: auto; margin-right: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.profile-modal__choices span, .profile-modal__choices small { overflow-wrap: anywhere; }
+.profile-modal__header h2 { left: 16px; right: 16px; width: auto; line-height: 28px; overflow-wrap: anywhere; }
+.profile-modal__choices span, .profile-modal__choices small { overflow-wrap: anywhere; height: auto; min-height: 18px; }
 .balance-withdraw small { overflow-wrap: anywhere; }
+
+/* Keep actions in document flow so short viewports can scroll every control. */
+.profile-modal {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: none;
+  isolation: isolate;
+}
+.profile-modal::before { z-index: -1; position: fixed; mask-size: 100% 100%; -webkit-mask-size: 100% 100%; }
+.profile-modal__header { flex: none; min-height: 84px; height: auto; padding: 40px 16px 16px; }
+.profile-modal__header h2 { position: static; margin: 0; }
+.profile-modal__choices { flex: none; }
+.profile-modal__choices button { grid-template-rows: auto auto; padding-right: 32px; }
+.profile-modal__choices .profile-modal__choice-icon { grid-column: 1; }
+.profile-modal__wallet-warning,
+.profile-modal__result,
+.balance-withdraw {
+  position: relative; inset: auto; display: flex; flex: 1 0 auto;
+  flex-direction: column; gap: 12px; margin: 0 16px; min-height: 214px;
+}
+.profile-modal__wallet-warning p,
+.profile-modal__result p,
+.profile-modal[data-kind^='gift-result-'] .profile-modal__result p,
+.balance-withdraw__input,
+.balance-withdraw__available {
+  position: static; inset: auto; transform: none; width: auto;
+  margin: 0; max-height: none; overflow: visible; flex-shrink: 0;
+}
+.profile-modal__wallet-warning p { margin: auto; padding: 24px 0; }
+.profile-modal__result-icon { flex-shrink: 0; }
+.profile-modal__result button,
+.profile-modal__wallet-warning button,
+.balance-withdraw > button {
+  position: static; margin-top: auto; flex-shrink: 0; min-height: 56px;
+}
+.profile-modal__result p { padding-bottom: 4px; overflow-wrap: anywhere; }
+.balance-withdraw__wallet { flex-shrink: 0; }
+.profile-modal[data-kind='crypto-amount'] .balance-withdraw { min-height: 132px; }
+.profile-modal__form { flex: none; padding-top: 0; padding-bottom: 0; }
+.profile-modal__gift-deposit,
+.profile-modal__empty-gifts {
+  position: relative; inset: auto; transform: none; flex: none;
+  width: min(208px, calc(100% - 32px)); margin: 30px auto 24px;
+}
+.profile-modal__bottom { position: relative; inset: auto; margin: auto 16px 0; min-height: 56px; flex-shrink: 0; }
+.profile-modal__recipient { position: relative; inset: auto; margin: 0 auto 24px; flex-shrink: 0; }
+.profile-modal__gift-grid {
+  position: relative; inset: auto; min-height: 203px; flex: 1 0 203px;
+  margin: 0 16px 16px; overflow: visible;
+}
+.profile-modal button { white-space: normal; overflow-wrap: anywhere; }

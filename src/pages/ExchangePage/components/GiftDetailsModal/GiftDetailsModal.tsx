@@ -134,7 +134,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
         {gift && <div ref={scrollArea} className="gift-details__scroll" onScroll={updateScrollState}>
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
-            <GiftArtwork gift={gift} />
+            <GiftArtwork gift={gift} autoPlay={open && visible && !preview} />
             <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? <GiftPrice gift={gift} referenceOnly /> : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>

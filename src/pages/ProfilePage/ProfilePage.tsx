@@ -62,6 +62,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
   const { inventory, mutate } = useInventory();
   const gifts: ProfileGift[] = inventory.map((gift) => ({ ...gift, price: Number(gift.price) }));
   const [selectedGiftIds, setSelectedGiftIds] = useState<number[]>([]);
+  const [giftPlayKeys, setGiftPlayKeys] = useState<Record<number, number>>({});
   const [withdrawalGifts, setWithdrawalGifts] = useState<ProfileGift[]>([]);
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [withdrawalFromModal, setWithdrawalFromModal] = useState(false);
@@ -135,10 +136,13 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
             <button className="profile-gifts__placeholder" type="button" onClick={() => setModal('gift-deposit')}><img src={giftBackdrop} alt="" /><span>Добавить</span></button>
             <div className="profile-gifts__placeholder profile-gifts__placeholder--muted"><img src={giftBackdropMuted} alt="" /></div>
           </> : gifts.map((gift) => <article className="profile-gifts__card" key={gift.id}>
-            <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} /></div>
+            <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} playKey={giftPlayKeys[gift.id] ?? 0} /></div>
             <div className="profile-gifts__card-info"><strong>{gift.name}</strong><span>Модель&nbsp;&nbsp;{gift.model}</span></div>
             <div className="profile-gifts__card-price" data-unpriced={isUnpricedGift(gift)}><GiftPrice gift={gift} /></div>
-            <button className="profile-gifts__select" type="button" aria-label={`Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => setSelectedGiftIds((current) => current.includes(gift.id) ? current.filter((id) => id !== gift.id) : [...current, gift.id])}>
+            <button className="profile-gifts__select" type="button" aria-label={`Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => {
+              if (!selectedGiftIds.includes(gift.id)) setGiftPlayKeys((current) => ({ ...current, [gift.id]: (current[gift.id] ?? 0) + 1 }));
+              setSelectedGiftIds((current) => current.includes(gift.id) ? current.filter((id) => id !== gift.id) : [...current, gift.id]);
+            }}>
               <img src={selectedGiftIds.includes(gift.id) ? giftSelectedIcon : giftInactiveIcon} alt="" />
               <span><img src={selectedGiftIds.includes(gift.id) ? selectionCheck : selectionPlus} alt="" /></span>
             </button>

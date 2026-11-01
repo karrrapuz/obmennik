@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import ts from 'typescript';
 const code = ts.transpileModule(fs.readFileSync('src/services/giftAnimation.ts', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-}).outputText;
+}).outputText.replace("import('fflate')", `import(${JSON.stringify(import.meta.resolve('fflate'))})`);
 const { loadGiftAnimation, claimGiftPlayback } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
 const entries = JSON.parse(fs.readFileSync('src/services/gift-media.json')).entries;
 const originalFetch = globalThis.fetch;
@@ -23,6 +23,11 @@ try {
   assert.equal(calls, 5);
   await loadGiftAnimation(entries[0].animation, signal);
   assert.equal(calls, 6, 'Oldest decoded animation must be evicted at four entries');
+  const native = globalThis.DecompressionStream;
+  try {
+    globalThis.DecompressionStream = undefined;
+    assert.equal((await loadGiftAnimation(entries[8].animation, signal)).w, 512, 'Older desktop clients use bounded fallback decoding');
+  } finally { globalThis.DecompressionStream = native; }
   await assert.rejects(loadGiftAnimation('https://example.com/asset.tgs', signal));
   const aborted = new AbortController(); aborted.abort();
   await assert.rejects(loadGiftAnimation(entries[6].animation, aborted.signal));
@@ -31,13 +36,19 @@ try {
   let stopped = 0;
   const releaseFirst = claimGiftPlayback(() => stopped++);
   const releaseSecond = claimGiftPlayback(() => stopped++);
-  assert.equal(stopped, 1);
-  releaseFirst();
+  assert.equal(stopped, 0);
   const releaseThird = claimGiftPlayback(() => stopped++);
-  assert.equal(stopped, 2, 'Old cleanup cannot revoke a newer playback lease');
-  releaseSecond();
+  assert.equal(stopped, 0);
   const releaseFourth = claimGiftPlayback(() => stopped++);
-  assert.equal(stopped, 3);
-  releaseThird(); releaseFourth();
-  console.log('Animation cache cloning, four-entry LRU, URL/byte bounds, cancellation and single-player lease: OK');
+  assert.equal(stopped, 0, 'Four selected gifts can animate concurrently');
+  const releaseFifth = claimGiftPlayback(() => stopped++);
+  assert.equal(stopped, 1, 'Fifth playback evicts only the oldest');
+  releaseFirst(); releaseFirst();
+  const releaseSixth = claimGiftPlayback(() => stopped++);
+  assert.equal(stopped, 2, 'Stale cleanup cannot revoke a newer lease');
+  releaseThird(); releaseFourth(); releaseSecond(); releaseFifth(); releaseSixth();
+  const releaseFresh = claimGiftPlayback(() => stopped++);
+  assert.equal(stopped, 2, 'Released slots are reusable');
+  releaseFresh();
+  console.log('Animation cache cloning, four-entry LRU, URL/byte bounds, cancellation and four-player leases: OK');
 } finally { globalThis.fetch = originalFetch; }

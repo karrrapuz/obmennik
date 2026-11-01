@@ -9,6 +9,8 @@ const browser = await chromium.launch({ headless: true, ...(process.env.GIFT_BRO
 try {
   for (const width of [390, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 844 }, deviceScaleFactor: width === 390 ? 3 : 1, isMobile: width === 390, hasTouch: width === 390 });
+    page.setDefaultTimeout(15000);
+    page.setDefaultNavigationTimeout(20000);
     const animations = [], players = [];
     page.on('request', request => {
       if (request.url().includes('/gifts/vector/animations/')) animations.push(request.url());
@@ -23,11 +25,13 @@ try {
         return animate.apply(this, args);
       };
     });
-    await page.goto(url);
+    await page.route('https://fonts.googleapis.com/**', route => route.abort());
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.querySelectorAll('.gift-card').length === 30, null, { timeout: 45000 });
+    console.log('Catalog ready', width);
     const card = page.locator('.gift-card').filter({ has: page.getByRole('button', { name: 'Выбрать Astral Shard', exact: true }) });
     const art = card.locator('.catalog-artwork');
-    await page.waitForFunction(() => [...document.querySelectorAll('.gift-card .catalog-artwork > img')].slice(0, 2).every(img => img.complete && img.naturalWidth === 512 && img.src.endsWith('.svg')));
+    await page.waitForFunction(() => [...document.querySelectorAll('.gift-card .catalog-artwork > img')].slice(0, 2).every(img => img.complete && img.naturalWidth === 512 && img.src.endsWith('.svg')), null, { timeout: 15000 });
     assert.equal(animations.length, 0); assert.equal(players.length, 0);
     const select = card.getByRole('button', { name: 'Выбрать Astral Shard', exact: true });
     await select.click();
@@ -36,13 +40,19 @@ try {
     const first = hash(await art.screenshot());
     await page.waitForTimeout(450);
     assert.notEqual(hash(await art.screenshot()), first, 'Actual rendered frames must change');
-    await art.locator('svg').waitFor({ state: 'detached', timeout: 6000 });
-    assert.equal(await art.locator('img').evaluate(img => getComputedStyle(img).visibility), 'visible');
+    console.log('Selection rendered', width);
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(6500);
+    assert.equal(await art.locator('svg').count(), 1, 'Completion retains the final SVG frame');
+    const finalFrame = hash(await art.screenshot());
+    await page.waitForTimeout(200);
+    assert.equal(hash(await art.screenshot()), finalFrame, 'Final frame stays settled');
+    assert.equal(await art.locator('img').evaluate(img => getComputedStyle(img).visibility), 'hidden');
     await select.click(); await select.click();
     await art.locator('.catalog-artwork__animation[data-playing="true"] svg').waitFor();
     assert.equal(animations.length, 1, 'Decoded animation must be reused');
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await art.locator('svg').waitFor({ state: 'detached' });
+    assert.equal(await art.locator('svg').count(), 1, 'Explicit playback overrides reduced motion');
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await select.click(); await select.click();
     await art.locator('.catalog-artwork__animation[data-playing="true"] svg').waitFor();
@@ -53,9 +63,11 @@ try {
     assert.equal(await art.locator('svg').count(), 0, 'Navigation must not replay a selection');
     assert.deepEqual(await page.evaluate(() => window.__entryAnimations), []);
     for (const name of ['B-Day Candle', 'Berry Box', 'Big Year']) await page.getByRole('button', { name: `Выбрать ${name}`, exact: true }).click();
-    assert(await page.locator('.catalog-artwork__animation svg').count() <= 1, 'Only one player may exist');
+    await page.waitForFunction(() => document.querySelectorAll('.catalog-artwork__animation svg').length >= 2, null, { timeout: 10000 });
+    assert(await page.locator('.catalog-artwork__animation svg').count() >= 2, 'Selected gifts retain concurrent artwork');
+    await page.mouse.move(0, 0);
     await page.locator('.gift-card').last().scrollIntoViewIfNeeded();
-    await page.waitForFunction(() => document.querySelectorAll('.catalog-artwork__animation svg').length === 0);
+    await page.waitForFunction(() => document.querySelectorAll('.catalog-artwork__animation svg').length === 0, null, { timeout: 10000 });
     await card.scrollIntoViewIfNeeded();
     if (width === 390) {
       const input = page.locator('.exchange-search input');
@@ -74,10 +86,17 @@ try {
   await reduced.route('https://telegram.org/js/**', route => route.fulfill({ body: '' }));
   await reduced.goto(url);
   await reduced.getByRole('button', { name: 'Выбрать Astral Shard', exact: true }).click({ timeout: 45000 });
-  await reduced.waitForTimeout(500);
-  assert.equal(requests, 0);
-  assert.equal(await reduced.locator('.catalog-artwork__animation svg').count(), 0);
+  await reduced.locator('.catalog-artwork__animation[data-playing="true"] svg').first().waitFor();
+  assert(requests > 0, 'Explicit selection plays under reduced motion');
   await reduced.close();
+  const legacy = await browser.newPage({ viewport: { width: 1280, height: 844 } });
+  await legacy.route('https://telegram.org/js/**', route => route.fulfill({ body: '' }));
+  await legacy.route('https://fonts.googleapis.com/**', route => route.abort());
+  await legacy.addInitScript(() => { window.DecompressionStream = undefined; });
+  await legacy.goto(url, { waitUntil: 'domcontentloaded' });
+  await legacy.getByRole('button', { name: 'Выбрать Astral Shard', exact: true }).click({ timeout: 45000 });
+  await legacy.locator('.catalog-artwork__animation[data-playing="true"] svg').first().waitFor({ timeout: 15000 });
+  await legacy.close();
   const fallback = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await fallback.route('https://telegram.org/js/**', route => route.fulfill({ body: '' }));
   await fallback.route('**/gifts/vector/animations/**', route => route.fulfill({ status: 503, body: '' }));
@@ -91,5 +110,5 @@ try {
   assert((await fallbackImage.getAttribute('src')).endsWith('.svg'));
   assert.equal(await fallbackImage.evaluate(img => getComputedStyle(img).visibility), 'visible');
   await fallback.close();
-  console.log('PASS mobile/desktop: SVG quality, no idle animation downloads, visible one-shot playback, cache reuse, hidden-page cleanup, no page entry motion, mobile input sizes and reduced-motion fallback.');
+  console.log('PASS mobile/desktop: stable SVG posters, lazy playback, held final frames, cache reuse, concurrent gifts, offscreen cleanup and explicit reduced-motion playback.');
 } finally { await browser.close(); }

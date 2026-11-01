@@ -176,7 +176,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
         {displayedGifts.length === 0 ? <p className="exchange-modal__empty">{activeSide === 'offer' ? 'Вы ничего не предлагаете' : 'Вы ничего не получаете'}</p> : (
           <div className="exchange-modal__gifts">
             {displayedGifts.map((gift) => <article className={`exchange-modal__gift${gift.blockTradeGift ? ' block-trade-gift' : ''}`} aria-label={gift.blockTradeGift ? `${gift.name}: уже обменяли` : undefined} key={gift.id}>
-              <div className="exchange-modal__visual" style={{ position: 'relative' }}><GiftArtwork gift={gift} /></div>
+              <div className="exchange-modal__visual" style={{ position: 'relative' }}><GiftArtwork gift={gift} autoPlay={open} /></div>
               <strong>{gift.name}</strong>
               <span className="exchange-modal__model"><span>Модель</span><span>{gift.model}</span></span>
               <span className="exchange-modal__price">

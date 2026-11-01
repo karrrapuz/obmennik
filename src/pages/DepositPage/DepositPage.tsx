@@ -3,10 +3,7 @@ import { useState, useSyncExternalStore } from 'react';
 import SlideNotice from '../../components/feedback/SlideNotice/SlideNotice';
 import LockKeyhole from './assets/block-zalog-gift.svg';
 import { isUnpricedGift, type Gift } from '../ExchangePage/data/gifts';
-import supportedPepe from './assets/gifts_emoji_by_gifts_changes_bot_AgADpWAAAh80YUo.png';
-import supportedLocket from './assets/gifts_emoji_by_gifts_changes_bot_AgADjXUAAtmUcEo.png';
-import supportedPeach from './assets/gifts_emoji_by_gifts_changes_bot_AgADNGAAAnlKWUo.png';
-import supportedCap from './assets/gifts_emoji_by_gifts_changes_bot_AgADaFwAAk7xGUo.png';
+import { giftPoster } from '../../services/giftMedia';
 import giftBlur from './assets/gift-blur.svg';
 import giftExpandIcon from '../ProfilePage/assets/gift-expand.svg';
 import giftExpandActiveIcon from './assets/gift-expand-active.svg';
@@ -25,6 +22,13 @@ import timeIcon from './assets/zalog-gift-time.svg';
 import check from '../ExchangePage/assets/galochka.svg';
 import { pledgeStore } from './services/pledgeStore';
 import './DepositPage.css';
+
+const supportedGifts = [
+  { name: 'Plush Pepes', amount: '1800', collectionId: '5936013938331222567', modelName: 'Gucci Leap', image: '/gifts/telegram/media/5422606814921386856.webp' },
+  { name: 'Heart Lockets', amount: '1200', collectionId: '5868455043362980631', modelName: 'Neptune', image: '/gifts/telegram/media/5220127616907898032.webp' },
+  { name: 'Durov’s Caps', amount: '454.45', collectionId: '5915521180483191380', modelName: 'Asterix', image: '/gifts/telegram/media/5427175586382504169.webp' },
+  { name: 'Precious Peaches', amount: '234.50', collectionId: '5933671725160989227', modelName: 'Caramel Red', image: '/gifts/telegram/media/5427078318258154873.webp' },
+];
 
 export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
   const state = useSyncExternalStore(pledgeStore.subscribe, pledgeStore.getSnapshot);
@@ -57,7 +61,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
       {items.length ? <div className="pledge-grid">{items.filter((item) => tab === 'inventory' || `${item.name} ${item.model}`.toLowerCase().includes(search.toLowerCase())).map((item) => {
         const loan = state.pledges.find((p) => p.gift.id === item.id);
         return <article className="pledge-card" data-loan={tab === 'pledges'} data-selected={selected.includes(item.id)} key={item.id}>
-          <button className="pledge-card__open" disabled={tab === 'inventory' && item.pledgeSupported === false} aria-label={item.pledgeSupported === false ? `${item.name}: не поддерживается для залога` : `Открыть ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><div className="pledge-card__art"><GiftArtwork gift={item} />{tab === 'inventory' && item.pledgeSupported === false && <div className="pledge-card__locked"><img src={LockKeyhole} alt="" /><span>Не поддерживается</span></div>}<div className="pledge-card__caption"><strong>{item.name}</strong><small>{item.modelName ?? 'Модель'}&nbsp;&nbsp;{item.model}</small></div></div></button>
+          <button className="pledge-card__open" disabled={tab === 'inventory' && item.pledgeSupported === false} aria-label={item.pledgeSupported === false ? `${item.name}: не поддерживается для залога` : `Открыть ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><div className="pledge-card__art"><GiftArtwork gift={item} playKey={selected.includes(item.id) ? 1 : 0} />{tab === 'inventory' && item.pledgeSupported === false && <div className="pledge-card__locked"><img src={LockKeyhole} alt="" /><span>Не поддерживается</span></div>}<div className="pledge-card__caption"><strong>{item.name}</strong><small>{item.modelName ?? 'Модель'}&nbsp;&nbsp;{item.model}</small></div></div></button>
           {tab === 'inventory' ? <span className="pledge-card__price" data-unpriced={isUnpricedGift(item)}><GiftPrice gift={item} /></span> : <>
             <button className="pledge-card__loan-icon" aria-label={`Информация о залоге ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><img src={pledgeIcon} alt="" /></button>
             <button className="pledge-card__select" aria-label={`Выбрать ${item.name}`} aria-pressed={selected.includes(item.id)} disabled={loan?.status !== 'active' || loan.legacy} onClick={() => setSelected((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}>{selected.includes(item.id) && <b><img src={check} alt="" /></b>}</button>
@@ -66,7 +70,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
         </article>;
       })}</div> : tab === 'inventory' ? <div className="pledge-empty pledge-empty--inventory"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button onClick={onNavigateProfile}>GiftRelayer</button></div> : <div className="pledge-empty-loans"><img className="pledge-empty-loans__cards" src={giftBlur} alt="" /><p>У вас нет подарков в залоге</p></div>}
       </div></div>
-      {tab === 'pledges' && <section className="pledge-supported"><h2>Поддерживаемые подарки</h2>{[['Plush Pepes','1800',supportedPepe],['Heart Lockets','1200',supportedLocket],['Durov’s Caps','454.45',supportedCap],['Precious Peaches','234.50',supportedPeach]].map(([name,amount,icon]) => <button key={name} onClick={() => setTab('inventory')}><span className="pledge-supported__icon"><img src={icon} alt="" /></span><span className="pledge-supported__text"><strong>{name}</strong><small>Получите: <span>{amount} TON</span> / 14 дней</small></span></button>)}</section>}
+      {tab === 'pledges' && <section className="pledge-supported"><h2>Поддерживаемые подарки</h2>{supportedGifts.map((item) => <button key={item.collectionId} onClick={() => setTab('inventory')}><span className="pledge-supported__icon"><img src={giftPoster(item)} alt="" /></span><span className="pledge-supported__text"><strong>{item.name}</strong><small>Получите: <span>{item.amount} TON</span> / 14 дней</small></span></button>)}</section>}
     </section>
     <SlideNotice show={tab === 'pledges' && selected.some((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy))}><button className="pledge-extend-button" onClick={() => setPaymentIds(selected.filter((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy)))}>Продлить</button></SlideNotice>
     {paymentIds && <PledgePayment ids={paymentIds} onClose={() => { setPaymentIds(null); setSelected([]); }} onTopUp={onNavigateProfile} />}

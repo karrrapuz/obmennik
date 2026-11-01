@@ -8,6 +8,7 @@ type TelegramWebApp = {
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
   setBottomBarColor: (color: string) => void;
+  enableClosingConfirmation?: () => void;
 };
 
 export function getTelegramInitData(): string {
@@ -25,6 +26,7 @@ export function initializeTelegram() {
 
   app.ready();
   app.expand();
+  if (app.isVersionAtLeast('6.2')) app.enableClosingConfirmation?.();
   if (app.isVersionAtLeast('6.1')) app.setBackgroundColor('#0d0d0d');
   if (app.isVersionAtLeast('6.9')) app.setHeaderColor('#0d0d0d');
   if (app.isVersionAtLeast('7.7')) app.disableVerticalSwipes();

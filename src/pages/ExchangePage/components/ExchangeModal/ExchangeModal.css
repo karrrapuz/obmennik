@@ -83,12 +83,12 @@
 .exchange-modal__header h2 {
   position: absolute;
   top: 40px;
-  left: 155px;
-  width: 78px;
+  left: 16px;
+  right: 16px;
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 30px;
   text-align: center;
 }
 

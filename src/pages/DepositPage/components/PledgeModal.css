@@ -51,7 +51,7 @@
 .pledge-details section { padding: 16px 16px 20px; border-radius: 20px; background: #0d0d0d; }
 .pledge-details h3 { font-size: 14px; line-height: 18px; margin: 0 0 8px; }
 .pledge-details p { margin: 0; color: #fff3; font-size: 12px; line-height: 18px; font-weight: 600; }
-.pledge-details .pledge-details__summary { position: relative; height: 104px; overflow: hidden; isolation: isolate; padding: 16px; }
+.pledge-details .pledge-details__summary { position: relative; height: 104px; overflow: hidden; isolation: isolate; padding: 16px; border-radius: 20px; clip-path: inset(0 round 20px); }
 .pledge-details__summary::before { content: ''; position: absolute; z-index: -1; width: 133px; height: 133px; right: -58px; top: 76px; background: #06d7a0; filter: blur(60px); pointer-events: none; }
 .pledge-details__summary > strong { display: block; margin-top: 8px; color: #06d7a0; font-size: 20px; line-height: 24px; }
 .pledge-details__summary p { margin-top: 4px; }
@@ -84,7 +84,7 @@
 .pledge-feedback__actions button + button { background: rgba(47,47,47,.2); }
 .pledge-feedback__actions button:focus-visible,.pledge-confirm button:focus-visible { outline: 2px solid #06d7a0; outline-offset: 3px; }
 .pledge-confirm p { overflow-wrap: anywhere; line-height: 22px; }
-.pledge-notice { position: absolute; bottom: 90px; left: calc(50% - 100px); display: grid; place-items: center; width: 200px; height: 40px; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 15px; font-size: 12px; pointer-events: none; }
+.pledge-notice { position: absolute; top: min(421px, calc(100% - 160px)); left: calc(50% - 100px); display: grid; place-items: center; width: 200px; min-height: 40px; padding: 8px; line-height: 18px; text-align: center; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 15px; font-size: 12px; pointer-events: none; }
 @keyframes pledge-spin { to { transform: rotate(360deg); } }
 @keyframes pledge-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33% 0 0); } }
 @keyframes pledge-confirm-in { from { opacity: 0; } to { opacity: 1; } }

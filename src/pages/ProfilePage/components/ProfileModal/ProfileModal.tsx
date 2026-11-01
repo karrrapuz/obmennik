@@ -213,7 +213,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
       {kind === 'gift-withdraw' && <>
         <div className="profile-modal__recipient"><UserAvatar user={user} /><span title={displayName(user)}>{displayName(user)}</span></div>
         <div className="profile-modal__gift-grid">{gifts.map((gift) => <article className="profile-gifts__card" key={gift.id}>
-          <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} /></div>
+          <div className="profile-gifts__card-art" style={{ position: 'relative' }}><GiftArtwork gift={{ ...gift, price: String(gift.price) }} autoPlay={Boolean(requestedKind && visible)} /></div>
           <div className="profile-gifts__card-info"><strong>{gift.name}</strong><span>Модель&nbsp;&nbsp;{gift.model}</span></div>
           <div className="profile-gifts__card-price"><img src={tonIcon} alt="" />{gift.price.toFixed(3)}</div>
           <button type="button" className="profile-gifts__select" aria-label={`Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} disabled={withdrawalBusy} onClick={() => setSelectedGiftIds((current) => current.includes(gift.id) ? current.filter((id) => id !== gift.id) : [...current, gift.id])}>

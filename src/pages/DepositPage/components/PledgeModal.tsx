@@ -100,9 +100,9 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
     <div className="pledge-dialog__scrim" onClick={dismiss} aria-hidden="true" />
     <section className="pledge-sheet" data-status={pledge?.status} data-underfunded={Boolean(underfunded)} inert={Boolean(payment)}>
       <div className="pledge-sheet__body" inert={confirm}>
-        <header><span /><button autoFocus onClick={dismiss} aria-label="Закрыть"><img src={close} alt="" /></button></header>
+        <header><span /><button onClick={dismiss} aria-label="Закрыть"><img src={close} alt="" /></button></header>
         <div className="pledge-sheet__scroll" ref={scroll}>
-          {gift && <><div className="pledge-preview"><GiftArtwork gift={gift} /><span><img src={ton} alt="" />{gift.price}</span><div className="pledge-preview__caption"><strong>{gift.name}</strong><small>{gift.model}</small></div></div>
+          {gift && <><div className="pledge-preview"><GiftArtwork gift={gift} autoPlay={open && visible && !confirm && !payment} /><span><img src={ton} alt="" />{gift.price}</span><div className="pledge-preview__caption"><strong>{gift.name}</strong><small>{gift.model}</small></div></div>
             <dl className="pledge-attributes">{[['Модель', gift.modelName ?? 'Модель', ''], ['Символ', gift.symbol?.name ?? '—', gift.symbol?.rarity], ['Фон', gift.backdrop?.name ?? '—', gift.backdrop?.rarity]].map(([label, value, rarity]) => <div key={label}><dt>{label}</dt><dd><span>{value}{rarity && <small>{rarity}</small>}</span></dd></div>)}</dl>
             {!pledge && <div className="pledge-terms">{pledgeTerms.map((term) => <button key={term.weeks} aria-pressed={weeks === term.weeks} onClick={() => setWeeks(weeks === term.weeks ? null : term.weeks)} data-weeks={term.weeks}><img src={term.weeks === 1 ? greenBackdrop : blueBackdrop} alt="" /><span>{term.weeks === 1 ? '1 неделя' : '2 недели'}</span><strong>{term.principal.toFixed(3)} TON</strong><small>Возврат {term.repayment.toFixed(3)} TON</small><b>{weeks === term.weeks ? 'Выбран' : 'Выбрать'}</b></button>)}</div>}
             {pledge?.status === 'processing' && <div className="pledge-processing" role="status"><img src={processing} alt="" /><strong>Обработка<span>...</span></strong><p>Займ в настоящее время обрабатывается, и будет осуществлен в ближайшее время.</p></div>}

@@ -61,7 +61,6 @@ a {
 @supports (-webkit-touch-callout: none) {
   :is(.gift-card, .pledge-card, .profile-gifts__card) {
     isolation: isolate;
-    transform: translateZ(0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
   }
@@ -75,5 +74,12 @@ a {
     transform: translate3d(-50%, 0, 0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+  }
+
+  /* Static tint avoids WebKit repaint flashes from nested live backdrop layers. */
+  :is(.gift-card__meta, .pledge-card__caption, .profile-gifts__card-info) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: linear-gradient(0deg, rgba(13, 13, 13, 0.42), rgba(13, 13, 13, 0.08));
   }
 }

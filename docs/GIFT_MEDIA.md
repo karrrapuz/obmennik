@@ -9,23 +9,25 @@ instance IDs. Unknown future models retain their existing image fallback.
 | File | Purpose |
 | --- | --- |
 | `public/gifts/vector/posters/` | Lazy-loaded static SVG images for all normal cards |
-| `public/gifts/vector/animations/` | Original gzip-compressed TGS files, requested only on selection |
+| `public/gifts/vector/animations/` | Original gzip-compressed TGS files, requested for visible selection, hover or modal playback |
 | `src/services/gift-media.json`, `public/gifts/vector/manifest.json` | Same public model/media mapping; no sessions, API keys or private file references |
 | `src/services/giftMedia.ts` | Canonical model lookup and high-quality poster selection |
-| `src/services/giftAnimation.ts` | Bounded decompression, four-entry decoded LRU and one playback lease |
+| `src/services/giftAnimation.ts` | Bounded decompression, four-entry decoded LRU and four concurrent playback leases |
 | `scripts/build-gift-vectors.mjs` | Rebuild posters from approved local TGS inputs and public metadata |
 
 `GiftArtwork` keeps a normal image at rest. The expression-free Lottie light
-player is a separate dynamic chunk, loaded on the first explicit selection.
-One original animation plays once; completion, deselection, navigation offscreen,
-backgrounding or reduced-motion activation destroys the player. Obsolete fetches
+player is a separate dynamic chunk, loaded on the first visible selection, desktop
+hover or opened gift modal. Each animation plays once and retains its final SVG
+frame, avoiding a jump to the poster's different pose. Offscreen navigation or
+backgrounding destroys the player. Explicit selection/modal playback works even
+when reduced motion is set; passive hover respects that preference. Obsolete fetches
 and stream readers are cancelled. The decoded cache holds at most four models;
 player input is cloned so Lottie repeaters cannot mutate cached originals.
-No constant grid-wide animation, per-frame React state or permanent SVG DOM trees
-are used. Failed/unsupported animation loading leaves the static poster visible.
+No constant grid-wide animation or per-frame React state is used. Settled SVGs
+remain only while visible. Failed loading leaves the static poster visible.
 
-On clients without native gzip `DecompressionStream`, selection still works and
-the SVG remains visible, but animation is skipped. Imported animation streams
+On clients without native gzip `DecompressionStream`, a lazy-loaded fflate
+streaming decoder provides the same animation with bounded output. Imported streams
 are limited to 100KB compressed / 4MB decoded and must be local pure-vector models.
 
 Page-entry staggering was removed without changing swipe navigation, footer or

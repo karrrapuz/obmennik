@@ -1,7 +1,8 @@
 type AnimationData = Record<string, unknown>;
 const cache = new Map<string, AnimationData>();
 const MAX_CACHED = 4;
-let stopCurrent: (() => void) | undefined;
+const activePlayback = new Map<symbol, () => void>();
+export const MAX_GIFT_PLAYBACK = 4;
 let player: Promise<typeof import('lottie-web/build/player/lottie_light')> | undefined;
 
 async function boundedBytes(stream: ReadableStream<Uint8Array>, limit: number, signal: AbortSignal) {
@@ -28,6 +29,28 @@ async function boundedBytes(stream: ReadableStream<Uint8Array>, limit: number, s
   return result;
 }
 
+async function decodeAnimation(compressed: Uint8Array<ArrayBuffer>, signal: AbortSignal) {
+  if (typeof DecompressionStream !== 'undefined') {
+    return boundedBytes(new Blob([compressed.buffer]).stream().pipeThrough(new DecompressionStream('gzip')), 4_000_000, signal);
+  }
+  const { Gunzip } = await import('fflate');
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  const decoder = new Gunzip(chunk => {
+    length += chunk.length;
+    if (length > 4_000_000) throw new Error('Animation exceeds size limit');
+    chunks.push(chunk);
+  });
+  for (let offset = 0; offset < compressed.length; offset += 1024) {
+    signal.throwIfAborted();
+    decoder.push(compressed.subarray(offset, offset + 1024), offset + 1024 >= compressed.length);
+  }
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
+  return result;
+}
+
 export async function loadGiftAnimation(url: string, signal: AbortSignal) {
   signal.throwIfAborted();
   const existing = cache.get(url);
@@ -36,11 +59,10 @@ export async function loadGiftAnimation(url: string, signal: AbortSignal) {
     return structuredClone(existing);
   }
   if (!url.startsWith('/gifts/vector/animations/') || !/^[\w/.-]+$/.test(url) || url.includes('..')) throw new Error('Invalid animation URL');
-  if (typeof DecompressionStream === 'undefined') throw new Error('Animation decompression unavailable');
   const response = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });
   if (!response.ok || !response.body) throw new Error('Animation unavailable');
   const compressed = await boundedBytes(response.body, 100000, signal);
-  const decoded = await boundedBytes(new Blob([compressed.buffer]).stream().pipeThrough(new DecompressionStream('gzip')), 4_000_000, signal);
+  const decoded = await decodeAnimation(compressed, signal);
   signal.throwIfAborted();
   const data = JSON.parse(new TextDecoder().decode(decoded)) as AnimationData;
   if (data.w !== 512 || data.h !== 512 || !Array.isArray(data.layers)
@@ -61,7 +83,12 @@ export function loadGiftPlayer() {
 }
 
 export function claimGiftPlayback(stop: () => void) {
-  stopCurrent?.();
-  stopCurrent = stop;
-  return () => { if (stopCurrent === stop) stopCurrent = undefined; };
+  while (activePlayback.size >= MAX_GIFT_PLAYBACK) {
+    const [key, oldest] = activePlayback.entries().next().value!;
+    activePlayback.delete(key);
+    oldest();
+  }
+  const key = Symbol();
+  activePlayback.set(key, stop);
+  return () => { activePlayback.delete(key); };
 }

@@ -17,6 +17,7 @@ jobs:
       - run: node scripts/check-gift-media.mjs
       - run: node scripts/check-gift-animation-cache.mjs
       - run: node scripts/check-input-behavior.mjs
+      - run: node scripts/check-telegram-closing.mjs
       - run: node scripts/check-telegram-catalog.mjs
       - run: node scripts/check-telegram-prices.mjs
       - run: node scripts/check-catalog-filters.mjs

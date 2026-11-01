@@ -23,7 +23,7 @@
 .profile-header {
   position: fixed;
   z-index: 10;
-  top: 86px;
+  top: 116px;
   left: 50%;
   display: flex;
   width: min(calc(100% - 32px), 358px);
