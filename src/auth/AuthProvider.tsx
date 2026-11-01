@@ -14,7 +14,7 @@ type Session = { user: User; accessToken: string | null; mode: 'telegram' | 'dem
 type AuthState = { status: 'loading' } | { status: 'error' } | ({ status: 'ready' } & Session);
 const demoSession: Session = {
   mode: 'demo', accessToken: null,
-  user: { id: 0, first_name: 'Demo', last_name: null, username: 'demo', photo_url: null, referral_code: 'demo' },
+  user: { id: 0, first_name: 'Гость', last_name: null, username: 'demo', photo_url: null, referral_code: 'demo' },
 };
 const apiUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 let initialSession: Promise<Session> | undefined;
@@ -89,5 +89,5 @@ export function useUser() {
 }
 
 export function displayName(user: User) {
-  return [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username || 'User';
+  return [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username || 'Гость';
 }

@@ -1,0 +1,262 @@
+[
+  {
+    "id": 21,
+    "name": "Chill Flame",
+    "collectionId": "5999277561060787166",
+    "model": "#1020",
+    "modelName": "Satis-fire",
+    "image": "/gifts/telegram/media/5280789644802299649.webp",
+    "price": "5.710",
+    "symbol": {
+      "id": "5730976773760352266",
+      "name": "Ram of Amun",
+      "image": "/gifts/telegram/media/5730976773760352266.webp",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "id": 42,
+      "name": "Platinum",
+      "rarity": "1%",
+      "centerColor": "#b2aea7",
+      "edgeColor": "#88847e",
+      "patternColor": "#3d382d",
+      "textColor": "#e9e7e2"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 22,
+    "name": "Vice Cream",
+    "collectionId": "5898012527257715797",
+    "model": "#1021",
+    "modelName": "Tralashark",
+    "image": "/gifts/telegram/media/5273795900446119823.webp",
+    "price": "5.600",
+    "symbol": {
+      "id": "5433613007919800239",
+      "name": "Dice",
+      "image": "/gifts/telegram/media/5433613007919800239.webp",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "id": 45,
+      "name": "Silver Blue",
+      "rarity": "1%",
+      "centerColor": "#80a4b8",
+      "edgeColor": "#607c91",
+      "patternColor": "#15374b",
+      "textColor": "#c9e4f4"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 23,
+    "name": "Liberty Figure",
+    "collectionId": "5999298447486747746",
+    "model": "#1022",
+    "modelName": "Marilyn",
+    "image": "/gifts/telegram/media/5283065152835458743.webp",
+    "price": "7.000",
+    "symbol": {
+      "id": "5434145691238690190",
+      "name": "Birthday Cake",
+      "image": "/gifts/telegram/media/5434145691238690190.webp",
+      "rarity": "0.1%"
+    },
+    "backdrop": {
+      "id": 0,
+      "name": "Black",
+      "rarity": "1%",
+      "centerColor": "#363738",
+      "edgeColor": "#0e0f0f",
+      "patternColor": "#6c6868",
+      "textColor": "#8c8f91"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 24,
+    "name": "Mirage Lamp",
+    "collectionId": "5913351908466098791",
+    "model": "#1023",
+    "modelName": "Warm Pixel",
+    "image": "/gifts/telegram/media/5215476038477328208.webp",
+    "price": "6.270",
+    "symbol": {
+      "id": "5434016365478437472",
+      "name": "Cursor",
+      "image": "/gifts/telegram/media/5434016365478437472.webp",
+      "rarity": "0.3%"
+    },
+    "backdrop": {
+      "id": 46,
+      "name": "Burgundy",
+      "rarity": "1%",
+      "centerColor": "#a35e66",
+      "edgeColor": "#6d414a",
+      "patternColor": "#340307",
+      "textColor": "#e7bcc0"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 25,
+    "name": "Snoop Dogg",
+    "collectionId": "6014591077976114307",
+    "model": "#1024",
+    "modelName": "King Snoop",
+    "image": "/gifts/telegram/media/5413414472511418217.webp",
+    "price": "7.000",
+    "symbol": {
+      "id": "5434029520963265587",
+      "name": "Cone",
+      "image": "/gifts/telegram/media/5434029520963265587.webp",
+      "rarity": "0.1%"
+    },
+    "backdrop": {
+      "id": 0,
+      "name": "Black",
+      "rarity": "1%",
+      "centerColor": "#363738",
+      "edgeColor": "#0e0f0f",
+      "patternColor": "#6c6868",
+      "textColor": "#8c8f91"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 26,
+    "name": "Instant Ramen",
+    "collectionId": "6005564615793050414",
+    "model": "#1025",
+    "modelName": "Pika-Pika!",
+    "image": "/gifts/telegram/media/5350667972434232183.webp",
+    "price": "5.850",
+    "symbol": {
+      "id": "5440862947075185091",
+      "name": "Candle",
+      "image": "/gifts/telegram/media/5440862947075185091.webp",
+      "rarity": "0.1%"
+    },
+    "backdrop": {
+      "id": 22,
+      "name": "Caramel",
+      "rarity": "1%",
+      "centerColor": "#d09932",
+      "edgeColor": "#b77431",
+      "patternColor": "#7d3600",
+      "textColor": "#ffd9b3"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 27,
+    "name": "Lol Pop",
+    "collectionId": "5170594532177215681",
+    "model": "#1026",
+    "modelName": "Satellite",
+    "image": "/gifts/telegram/media/5219947262641207064.webp",
+    "price": "6.070",
+    "symbol": {
+      "id": "5721848477902700557",
+      "name": "Doberman",
+      "image": "/gifts/telegram/media/5721848477902700557.webp",
+      "rarity": "0.1%"
+    },
+    "backdrop": {
+      "id": 35,
+      "name": "Hunter Green",
+      "rarity": "1%",
+      "centerColor": "#8fae78",
+      "edgeColor": "#4b825b",
+      "patternColor": "#1c491f",
+      "textColor": "#d8f5de"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 28,
+    "name": "Ice Cream",
+    "collectionId": "5900177027566142759",
+    "model": "#1027",
+    "modelName": "Cryo Pepe",
+    "image": "/gifts/telegram/media/5332330747002910847.webp",
+    "price": "5.910",
+    "symbol": {
+      "id": "5582495309046480907",
+      "name": "Geisha Fan",
+      "image": "/gifts/telegram/media/5582495309046480907.webp",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "id": 31,
+      "name": "Dark Lilac",
+      "rarity": "1%",
+      "centerColor": "#b17da5",
+      "edgeColor": "#8c577a",
+      "patternColor": "#652852",
+      "textColor": "#f0c4e2"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 29,
+    "name": "Pool Float",
+    "collectionId": "5832644211639321671",
+    "model": "#1028",
+    "modelName": "Luxury Yacht",
+    "image": "/gifts/telegram/media/5278234487153530919.webp",
+    "price": "5.980",
+    "symbol": {
+      "id": "5548862708641693713",
+      "name": "Paw Print",
+      "image": "/gifts/telegram/media/5548862708641693713.webp",
+      "rarity": "0.1%"
+    },
+    "backdrop": {
+      "id": 53,
+      "name": "Cobalt Blue",
+      "rarity": "1%",
+      "centerColor": "#6088cf",
+      "edgeColor": "#5162b8",
+      "patternColor": "#13247c",
+      "textColor": "#c2d3f5"
+    },
+    "priceSource": "sample",
+    "demo": true
+  },
+  {
+    "id": 30,
+    "name": "Mood Pack",
+    "collectionId": "5886756255493523118",
+    "model": "#1029",
+    "modelName": "Proton Pack",
+    "image": "/gifts/telegram/media/5395720255223929058.webp",
+    "price": "6.600",
+    "symbol": {
+      "id": "5434106495367144379",
+      "name": "Piggy Bank",
+      "image": "/gifts/telegram/media/5434106495367144379.webp",
+      "rarity": "0.2%"
+    },
+    "backdrop": {
+      "id": 42,
+      "name": "Platinum",
+      "rarity": "1%",
+      "centerColor": "#b2aea7",
+      "edgeColor": "#88847e",
+      "patternColor": "#3d382d",
+      "textColor": "#e9e7e2"
+    },
+    "priceSource": "sample",
+    "demo": true
+  }
+]

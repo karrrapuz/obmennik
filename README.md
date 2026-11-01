@@ -55,6 +55,7 @@
 | `public/gifts/telegram/prices.json`, `docs/MARKET_PRICES.md` | Публичный снимок цен и правила его обновления |
 | `public/gifts/telegram/`, `backend/data/catalog-telegram.json` | Публичные изображения, атрибуты и серверные карточки Telegram |
 | `src/inventory/` | Общий инвентарь и синхронизация разделов с API |
+| `src/inventory/showcase.ts`, `backend/data/catalog-showcase-extra.json`, `docs/SHOWCASE.md` | Обратимый режим показа: 30 подарков с фиксированными ценами и готовыми изображениями |
 | `src/wallet/` | Сохраняемый тестовый баланс, точные суммы и история |
 | `docs/DEMO_WALLET.md` | API тестового баланса и правила денежного учёта |
 | `render.yaml` | Настройки бесплатного тестового API на Render |

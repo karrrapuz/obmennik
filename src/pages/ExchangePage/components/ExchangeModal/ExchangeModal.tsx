@@ -146,7 +146,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
           <h2>{result === 'success' ? 'Успешно!' : 'Ошибка'}</h2>
           <button className="exchange-modal__close" aria-label="Закрыть" onClick={onClose}><img src={closeIcon} alt="" /></button>
           <div className="exchange-result__icon"><img src={result === 'success' ? successIcon : errorIcon} alt="" /></div>
-          <p role="status">{result === 'success' ? receivedCount === 1 ? 'Тестовый подарок добавлен в инвентарь.' : 'Тестовые подарки добавлены в инвентарь.' : 'Не удалось выполнить обмен. Повторите попытку.'}</p>
+          <p role="status">{result === 'success' ? receivedCount === 1 ? 'Подарок добавлен в инвентарь.' : 'Подарки добавлены в инвентарь.' : 'Не удалось выполнить обмен. Повторите попытку.'}</p>
           <button className="exchange-result__return" onClick={onClose}>{result === 'success' ? 'Вернуться к обмену' : 'Выбрать другой'}</button>
         </div> : <>
         <header className="exchange-modal__header">
@@ -189,7 +189,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
         {hasBlockedGift && <p className="exchange-modal__blocked-notice" role="status">Выбранный вами подарок уже обменяли, пожалуйста выберите другой!</p>}
         {!hasBlockedGift && notice && <p className="exchange-modal__notice" role="status">{offeredGifts.length === 0 ? 'Для обмена добавьте подарок из инвентаря' : 'Стоимость предлагаемых подарков меньше получаемых'}</p>}
         {trade.server && <div className="exchange-modal__quote" role="status">
-          {trade.quote && <span>Тестовые цены · Наценка {trade.quote.markup_bps / 100}%<br />{BigInt(trade.quote.wallet_delta_nano) < 0n ? `Доплата: ${formatNano(-BigInt(trade.quote.wallet_delta_nano))} TON` : BigInt(trade.quote.wallet_delta_nano) > 0n ? `Остаток на баланс: ${formatNano(trade.quote.wallet_delta_nano)} TON` : 'Без доплаты'}<br />Нужно на балансе: {formatNano(trade.quote.required_balance_nano)} · {trade.expired ? 'Котировка истекла' : `До ${new Date(trade.quote.expires_at * 1000).toLocaleTimeString('ru-RU')}`}</span>}
+          {trade.quote && <span>Наценка {trade.quote.markup_bps / 100}%<br />{BigInt(trade.quote.wallet_delta_nano) < 0n ? `Доплата: ${formatNano(-BigInt(trade.quote.wallet_delta_nano))} TON` : BigInt(trade.quote.wallet_delta_nano) > 0n ? `Остаток на баланс: ${formatNano(trade.quote.wallet_delta_nano)} TON` : 'Без доплаты'}<br />Нужно на балансе: {formatNano(trade.quote.required_balance_nano)} · {trade.expired ? 'Котировка истекла' : `До ${new Date(trade.quote.expires_at * 1000).toLocaleTimeString('ru-RU')}`}</span>}
           {trade.loading ? <span>Расчёт котировки…</span> : <span>{trade.error}</span>}
           {!trade.locked && <button type="button" onClick={trade.refresh} disabled={trade.loading}>Обновить котировку</button>}
         </div>}

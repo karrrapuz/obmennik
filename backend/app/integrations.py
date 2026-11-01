@@ -52,6 +52,7 @@ class DisabledPaymentProvider:
 def integration_status(settings):
     return {
         'deployment_mode': settings.deployment_mode,
+        'showcase_mode': getattr(settings, 'showcase_mode', False) is True,
         'financial_asset': 'DEMO_TON' if settings.deployment_mode == 'demo' else None,
         'real_payments': False, 'real_gift_transfers': False, 'real_loans': False,
         'payments': {'ton': 'not_configured', 'cryptobot': 'not_configured'},

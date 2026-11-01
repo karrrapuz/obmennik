@@ -21,8 +21,18 @@ class LoadedCatalog:
     collections: tuple[dict, ...] = ()
 
 
-def load_catalog(sample_path=None, telegram_path=None):
+def load_showcase_extras():
+    extras = json.loads((DATA_PATH / 'catalog-showcase-extra.json').read_text(encoding='utf-8'))
+    if (len(extras) != 10 or {gift['id'] for gift in extras} != set(range(21, 31))
+            or any(gift.get('demo') is not True or gift.get('priceSource') != 'sample' for gift in extras)):
+        raise ValueError('Invalid presentation catalog')
+    return tuple(extras)
+
+
+def load_catalog(sample_path=None, telegram_path=None, *, showcase=False):
     sample = json.loads(Path(sample_path or SAMPLE_CATALOG_PATH).read_text(encoding='utf-8'))
+    if showcase:
+        sample.extend(load_showcase_extras())
     path = Path(telegram_path or TELEGRAM_CATALOG_PATH)
     if not path.exists():
         return LoadedCatalog(tuple(sample), ())

@@ -6,6 +6,7 @@ import { useWallet } from '../wallet/WalletProvider';
 import { displayTon, parseWallet, type WalletSnapshot } from '../wallet/wallet';
 import { pledgeStore, pledgeTerms, type Pledge, type Quote } from '../pages/DepositPage/services/pledgeStore';
 import { createRevisionGate, parseCombinedRevision } from '../services/snapshotRevision';
+import { presentationOwned } from '../inventory/showcase';
 
 type Term = { weeks: 1 | 2; principal: number; repayment: number };
 type Loan = { id: string; gift_id: number; weeks: 1 | 2; principal_nano: string; repayment_nano: string; due_at: number; autopay: boolean; legacy: boolean; status: 'active' | 'repaid' };
@@ -58,7 +59,7 @@ export function LoanProvider({ children }: { children: ReactNode }) {
     if (!alive.current || raw.revision < Math.max(revision.current(), walletRevision(), inventoryRevision())) return false;
     revision.accept(raw.revision);
     applyWallet(nextWallet); applyInventory(nextInventory);
-    pledgeStore.applyServer({ inventory: nextInventory.inventory, pledges: next, balance: displayTon(nextWallet.balance_nano) });
+    pledgeStore.applyServer({ inventory: presentationOwned(nextInventory.inventory), pledges: next, balance: displayTon(nextWallet.balance_nano) });
     setTerms(raw.terms.map((term) => ({ weeks: term.weeks, principal: displayTon(term.principal_nano), repayment: displayTon(term.repayment_nano) })));
     setLoading(false); setError(false);
     return true;

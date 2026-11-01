@@ -18,5 +18,7 @@ services:
         value: https://obmennik-kappa.vercel.app
       - key: DEPLOYMENT_MODE
         value: demo
+      - key: SHOWCASE_MODE
+        value: 'true'
       - key: ADMIN_USER_IDS
         sync: false

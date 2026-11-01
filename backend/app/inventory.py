@@ -62,10 +62,13 @@ def ensure_inventory(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER
 
 def inventory_snapshot(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
     catalog = provider.catalog
+    showcase = getattr(provider, 'showcase_mode', False)
     templates = {gift['id']: gift for gift in catalog}
     result = {'revision': db.get(User, user_id).state_revision, 'inventory': [], 'pledged': [], 'catalog': [
         {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id'] or gift.get('tradeSupported') is False}
-        for gift in catalog]}
+        for gift in catalog if (gift['id'] in provider.showcase_ids if showcase else gift['id'] not in range(21, 31))]}
+    if showcase:
+        result['showcase_mode'] = True
     for row in db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id).order_by(InventoryGift.id)).all():
         gift = {**templates[row.catalog_id], 'id': row.id, 'catalogId': row.catalog_id,
                 'blockTradeGift': templates[row.catalog_id].get('tradeSupported') is False,

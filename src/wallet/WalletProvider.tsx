@@ -55,12 +55,12 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
       else {
         const response = await request('');
         if (response.status === 401) { if (alive.current && version === generation.current) setExpired(true); throw new Error('Сессия истекла. Войдите снова.'); }
-        if (!response.ok) throw new Error('Не удалось обновить тестовый баланс.');
+        if (!response.ok) throw new Error('Не удалось обновить баланс.');
         next = parseWallet(response.body);
       }
       if (alive.current && version === generation.current) applySnapshot(next);
     } catch (cause) {
-      if (alive.current && version === generation.current) setError(cause instanceof Error ? cause.message : 'Не удалось обновить тестовый баланс.');
+      if (alive.current && version === generation.current) setError(cause instanceof Error ? cause.message : 'Не удалось обновить баланс.');
       throw cause;
     }
   }), [applySnapshot, demo, enqueue, request]);
@@ -92,7 +92,7 @@ function WalletSession({ token, demo, children }: { token: string | null; demo: 
         applySnapshot(next);
       } catch (cause) {
         if (alive.current && version === generation.current) {
-          setError('Не удалось подтвердить тестовую операцию.');
+          setError('Не удалось подтвердить операцию.');
           void reload().catch(() => {});
         }
         throw cause;

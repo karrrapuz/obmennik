@@ -40,7 +40,7 @@ class AuthInput(BaseModel):
 
 
 def create_app(settings: Settings):
-    gift_provider = create_gift_provider(settings.gift_provider_mode)
+    gift_provider = create_gift_provider(settings.gift_provider_mode, settings.showcase_mode)
     price_provider = SamplePriceProvider(gift_provider.catalog)
     engine = create_engine(settings.database_url, pool_pre_ping=True,
                            connect_args={'check_same_thread': False} if settings.database_url.startswith('sqlite') else {})

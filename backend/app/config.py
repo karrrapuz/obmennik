@@ -20,6 +20,7 @@ class Settings:
     market_ingest_key: str = ''
     deployment_mode: str = 'demo'
     admin_user_ids: tuple[int, ...] = ()
+    showcase_mode: bool = False
 
     def __post_init__(self):
         if self.deployment_mode not in {'demo', 'production'}:
@@ -28,6 +29,8 @@ class Settings:
             raise ValueError('Production requires disabled gift custody until a live adapter is implemented')
         if any(type(value) is not int or not 0 < value < 2**63 for value in self.admin_user_ids):
             raise ValueError('ADMIN_USER_IDS must contain positive Telegram user IDs')
+        if type(self.showcase_mode) is not bool:
+            raise ValueError('SHOWCASE_MODE must be a boolean')
 
     @classmethod
     def from_env(cls):
@@ -47,6 +50,9 @@ class Settings:
         except ValueError:
             raise RuntimeError('Trade pricing configuration must use integers') from None
         raw_admins = os.getenv('ADMIN_USER_IDS', '').strip()
+        showcase = os.getenv('SHOWCASE_MODE', 'false').strip()
+        if showcase not in {'true', 'false'}:
+            raise RuntimeError('SHOWCASE_MODE must be true or false')
         parts = raw_admins.split(',') if raw_admins else []
         if (len(parts) > 20 or any(not part.strip().isascii() or not part.strip().isdecimal()
                                   or len(part.strip()) > 19 for part in parts)):
@@ -58,4 +64,5 @@ class Settings:
             telegram_bot_username=os.getenv('TELEGRAM_BOT_USERNAME', '').strip().lstrip('@'),
             market_ingest_key=os.getenv('MARKET_INGEST_KEY', '').strip(),
             deployment_mode=os.getenv('DEPLOYMENT_MODE', 'demo').strip(),
-            admin_user_ids=tuple(dict.fromkeys(int(part.strip()) for part in parts)))
+            admin_user_ids=tuple(dict.fromkeys(int(part.strip()) for part in parts)),
+            showcase_mode=showcase == 'true')

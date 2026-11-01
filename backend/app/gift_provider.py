@@ -3,7 +3,7 @@ from typing import Protocol
 
 from fastapi import HTTPException
 
-from .catalog import load_catalog
+from .catalog import load_catalog, load_showcase_extras
 
 
 class GiftProvider(Protocol):
@@ -19,12 +19,15 @@ class GiftProvider(Protocol):
 
 
 class StubGiftProvider:
-    def __init__(self, mode: str):
+    def __init__(self, mode: str, showcase: bool = False):
         if mode not in {'demo', 'disabled'}:
             raise ValueError('GIFT_PROVIDER_MODE must be demo or disabled; live delivery is not implemented')
         self.mode = mode
-        loaded = load_catalog()
-        self.catalog = loaded.cards
+        self.showcase_mode = showcase
+        self.showcase_ids = tuple(range(1, 31)) if showcase else ()
+        loaded = load_catalog(showcase=showcase)
+        # Templates remain resolvable after presentation mode is turned off.
+        self.catalog = loaded.cards if showcase else (*loaded.cards, *load_showcase_extras())
         self.collections = loaded.collections
         self.halloween_catalog_ids = loaded.halloween_catalog_ids
 
@@ -42,12 +45,12 @@ class StubGiftProvider:
         return self.catalog[1]['id']
 
     def seasonal_gifts(self) -> tuple[int, ...]:
-        return self.halloween_catalog_ids if self.mode == 'demo' else ()
+        return self.halloween_catalog_ids if self.mode == 'demo' and not self.showcase_mode else ()
 
     def status(self) -> dict:
         return {'mode': self.mode, 'available': self.mode == 'demo',
                 'simulated': True, 'real_transfers': False}
 
 
-def create_gift_provider(mode: str) -> GiftProvider:
-    return StubGiftProvider(mode)
+def create_gift_provider(mode: str, showcase: bool = False) -> GiftProvider:
+    return StubGiftProvider(mode, showcase)
