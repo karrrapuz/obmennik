@@ -68,7 +68,7 @@ def load_market_listings(index, path=None, now=None):
         return None
 
 
-def valuation(index, collection_id, model_id=None, symbol_id=None, backdrop_id=None, *, path=None, now=None, snapshot=None):
+def valuation(index, collection_id, model_id=None, symbol_id=None, backdrop_id=None, *, path=None, now=None, snapshot=None, candidates=None):
     now = int(time.time()) if now is None else now
     if collection_id not in index.collections:
         raise HTTPException(422, 'Unknown collection ID')
@@ -77,7 +77,8 @@ def valuation(index, collection_id, model_id=None, symbol_id=None, backdrop_id=N
         if value is not None and value not in index.by_collection[collection_id][FIELDS[field]]:
             raise HTTPException(422, 'Unknown attribute for collection')
     feed = snapshot if snapshot is not None else load_market_listings(index, path, now)
-    matches = [] if feed is None else [item for item in feed['listings']
+    listings = () if feed is None else (feed['listings'] if candidates is None else candidates)
+    matches = [item for item in listings
         if item['telegramId'] == collection_id and all(value is None or item.get(field) == value for field, value in filters.items())]
     checked = min((item['checkedAt'] for item in matches), default=None)
     return {'collectionId': collection_id, **filters, 'source': 'telegram-resale',
@@ -155,6 +156,7 @@ def register_market_routes(app, provider, engine=None, ingest_key=''):
                 symbol_id: Annotated[SymbolId | None, Query()] = None,
                 backdrop_id: Annotated[BackdropId | None, Query()] = None):
         response.headers['Cache-Control'] = 'no-store'
-        snapshot = current()
+        snapshot, candidates = cache.get_collection(collection_id) if cache is not None else (None, None)
         return valuation(index, collection_id, model_id, symbol_id, backdrop_id,
-                         snapshot=snapshot['listings'] if snapshot else None)
+                         snapshot=snapshot['listings'] if snapshot else None,
+                         candidates=candidates if snapshot else None)

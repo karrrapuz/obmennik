@@ -141,7 +141,12 @@ class CatalogIndex:
         selected = self.scope(identities)
         needle = query.strip().casefold()
         values = []
-        for key, attribute in self.attributes[kind].items():
+        attributes = self.attributes[kind]
+        # Reuse the membership index for scoped queries; final sorting is unchanged.
+        keys = (attributes if len(selected) == len(self.collections) else
+                set().union(*(self.by_collection[identity][kind] for identity in selected)))
+        for key in keys:
+            attribute = attributes[key]
             matches = self.members[kind][key] & selected
             if not matches:
                 continue

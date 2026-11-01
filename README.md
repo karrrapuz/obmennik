@@ -66,3 +66,4 @@
 | `backend/scripts/market_worker.py`, `backend/Dockerfile.market`, `docs/market-worker.md` | Серверный сборщик цен под отдельный Telegram-аккаунт, запуск после настройки секретов |
 | `docs/AUTH_DEPLOYMENT.md` | Запуск сервера и подключение Neon, Render и Vercel |
 | `docs/BACKEND_PLAN.md` | План бэкенда, критерии этапов и замечания ревьюеров |
+| `docs/BACKEND_OPTIMIZATION.md` | Два прохода оптимизации, измерения SQL и поиска, ограничения и регрессионные проверки |

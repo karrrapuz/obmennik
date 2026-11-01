@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import FileResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, select, true
 from sqlalchemy.orm import Session
 
 from .loan_models import DemoLoan
@@ -67,18 +67,34 @@ def register_admin_routes(app, database, current_session, admin_user_ids: tuple[
 
     @router.get('/overview')
     def overview(db: Session = Depends(database), session=Depends(admin_session)):
-        def count(model, *criteria):
-            return db.scalar(select(func.count()).select_from(model).where(*criteria))
+        def count(name, model, *criteria):
+            return select(func.count()).select_from(model).where(*criteria).scalar_subquery().label(name)
 
-        balances = db.execute(select(WalletAccount.kind, func.sum(WalletAccount.balance)).group_by(WalletAccount.kind)).all()
+        loans = select(
+            func.count().filter(DemoLoan.status == 'active').label('active_loans'),
+            func.count().filter(DemoLoan.status == 'repaid').label('repaid_loans'),
+        ).select_from(DemoLoan).subquery()
+        trades = select(
+            func.count().filter(TradeQuote.status == 'open').label('open_quotes'),
+            func.count().filter(TradeQuote.status == 'executed').label('executed_trades'),
+        ).select_from(TradeQuote).subquery()
+        balances = select(WalletAccount.kind.label('account_kind'),
+            func.sum(WalletAccount.balance).label('balance')).group_by(WalletAccount.kind).subquery()
+        # Only aggregate rows are joined: one loan row, one trade row and <=3
+        # account-kind rows. All metrics share a statement snapshot, without fanout.
+        rows = db.execute(select(
+            count('users', User),
+            loans.c.active_loans, loans.c.repaid_loans,
+            trades.c.open_quotes, trades.c.executed_trades,
+            count('ledger_transactions', WalletTransaction),
+            balances.c.account_kind, balances.c.balance,
+        ).select_from(loans.join(trades, true()).outerjoin(balances, true()))).mappings().all()
+        counts = {key: value for key, value in rows[0].items() if key not in {'account_kind', 'balance'}}
         return {'asset': 'DEMO_TON', 'amount_unit': 'nano_DEMO_TON', 'read_only': True,
                 'admin_user_id': str(session.user_id),
-                'counts': {'users': count(User), 'active_loans': count(DemoLoan, DemoLoan.status == 'active'),
-                           'repaid_loans': count(DemoLoan, DemoLoan.status == 'repaid'),
-                           'open_quotes': count(TradeQuote, TradeQuote.status == 'open'),
-                           'executed_trades': count(TradeQuote, TradeQuote.status == 'executed'),
-                           'ledger_transactions': count(WalletTransaction)},
-                'account_balances_nano': {kind: str(amount) for kind, amount in balances}}
+                'counts': counts,
+                'account_balances_nano': {row['account_kind']: str(row['balance']) for row in rows
+                                          if row['account_kind'] is not None}}
 
     @router.get('/users')
     def users(limit: Limit = 25, offset: Offset = 0, db: Session = Depends(database)):

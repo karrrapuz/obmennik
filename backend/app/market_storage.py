@@ -4,6 +4,7 @@ import re
 import threading
 import time
 from pathlib import Path
+from types import MappingProxyType
 
 from sqlalchemy import select, update
 
@@ -200,14 +201,21 @@ class SnapshotCache:
     """One decoded object per API instance; unchanged versions never fetch large text."""
     def __init__(self, engine, index):
         self.engine, self.index = engine, index
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._next_check = 0.0
         self._version = None
         self._snapshot = None
+        self._by_collection = MappingProxyType({})
 
     def invalidate(self):
         with self._lock:
             self._next_check = 0.0
+
+    def get_collection(self, collection_id):
+        """Return an atomic snapshot/bucket pair, without adding public fields."""
+        with self._lock:
+            snapshot = self.get()
+            return snapshot, self._by_collection.get(collection_id, ())
 
     def get(self):
         with self._lock:
@@ -219,18 +227,28 @@ class SnapshotCache:
                 if version != self._version:
                     row = connection.execute(select(MarketSnapshot.captured_at, MarketSnapshot.prices_json,
                         MarketSnapshot.listings_json).where(MarketSnapshot.id == 1)).first() if version else None
-                    snapshot = None
-                    if row and row.prices_json is not None and row.listings_json is not None:
-                        try:
-                            if len(row.prices_json) + len(row.listings_json) > MAX_BYTES:
-                                _fail()
-                            snapshot = validate_snapshot({'prices': decode_json(row.prices_json),
-                                'listings': decode_json(row.listings_json)}, self.index, fresh=False)
-                            if snapshot['prices']['capturedAt'] != row.captured_at:
-                                _fail()
-                        except InvalidSnapshot:
-                            snapshot = None
-                    self._snapshot = snapshot
-                    self._version = row.captured_at if row else version
+            # Release the connection before CPU work, but keep single-flight publication
+            # under the lock so an ingestion invalidation cannot be overwritten.
+            if version != self._version:
+                snapshot = None
+                if row and row.prices_json is not None and row.listings_json is not None:
+                    try:
+                        if len(row.prices_json) + len(row.listings_json) > MAX_BYTES:
+                            _fail()
+                        snapshot = validate_snapshot({'prices': decode_json(row.prices_json),
+                            'listings': decode_json(row.listings_json)}, self.index, fresh=False)
+                        if snapshot['prices']['capturedAt'] != row.captured_at:
+                            _fail()
+                    except InvalidSnapshot:
+                        snapshot = None
+                by_collection = {}
+                if snapshot is not None:
+                    for item in snapshot['listings']['listings']:
+                        by_collection.setdefault(item['telegramId'], []).append(
+                            MappingProxyType(dict(item)))
+                self._by_collection = MappingProxyType({
+                    key: tuple(items) for key, items in by_collection.items()})
+                self._snapshot = snapshot
+                self._version = row.captured_at if row else version
             self._next_check = time.monotonic() + 30
             return self._snapshot
