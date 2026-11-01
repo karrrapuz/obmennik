@@ -182,19 +182,26 @@ async def run(args):
         await client.disconnect()
 
 
+def validate_push_configuration(origin, key):
+    """Pure validation shared with the cloud worker; never reads local files."""
+    parsed = urlsplit(origin)
+    if (not 32 <= len(key) <= 512 or not key.isascii() or any(c.isspace() for c in key)
+            or not 1 <= len(origin) <= 2048 or any(c.isspace() for c in origin)
+            or not parsed.hostname or parsed.username is not None or parsed.password is not None
+            or '?' in origin or '#' in origin or parsed.path not in ('', '/')
+            or parsed.scheme != 'https'):
+        raise ValueError('Configure MARKET_API_URL HTTPS origin and MARKET_INGEST_KEY (32-512 ASCII characters)')
+    if parsed.port is not None and not 1 <= parsed.port <= 65535:
+        raise ValueError('Invalid market API port')
+    return origin.rstrip('/') + '/api/internal/market/snapshots', key
+
+
 def push_configuration():
     """Only public snapshots leave this machine; secrets never belong in argv."""
     from dotenv import load_dotenv
     load_dotenv(MARKET_ENV, override=False)
-    key = os.environ.get('MARKET_INGEST_KEY', '')
-    origin = os.environ.get('MARKET_API_URL', '')
-    parsed = urlsplit(origin)
-    if (not 32 <= len(key) <= 512 or not key.isascii() or any(c.isspace() for c in key)
-            or not parsed.hostname or parsed.username is not None or parsed.password is not None
-            or parsed.query or parsed.fragment or parsed.path not in ('', '/')
-            or parsed.scheme != 'https'):
-        raise ValueError('Configure MARKET_API_URL HTTPS origin and MARKET_INGEST_KEY (32-512 ASCII characters)')
-    return origin.rstrip('/') + '/api/internal/market/snapshots', key
+    return validate_push_configuration(os.environ.get('MARKET_API_URL', ''),
+                                       os.environ.get('MARKET_INGEST_KEY', ''))
 
 
 async def push_snapshot(feed, configuration, *, client_factory=None):

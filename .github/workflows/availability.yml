@@ -1,0 +1,22 @@
+name: Public API smoke
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: public-api-smoke
+  cancel-in-progress: false
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install 'httpx>=0.27,<1'
+      - name: Read-only health and price endpoint smoke
+        run: python backend/scripts/smoke_api.py --url https://giftmoney-api.onrender.com --iterations 2 --concurrency 1 --require-fresh

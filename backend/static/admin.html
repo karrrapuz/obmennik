@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiftMoney Admin</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="/admin/admin.js" defer></script>
+</head>
+<body>
+  <header><h1>GiftMoney Admin</h1><span>Read-only &middot; DEMO_TON</span></header>
+  <main>
+    <form id="login" autocomplete="off">
+      <label for="token">Telegram session bearer token</label>
+      <div class="credentials"><input id="token" type="password" required maxlength="4096" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="submit">Connect</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite">Disconnected</p>
+    <section id="workspace" hidden>
+      <div class="toolbar"><strong id="identity"></strong><button id="disconnect" type="button">Disconnect</button></div>
+      <h2>Overview</h2><dl id="overview"></dl>
+      <div class="toolbar">
+        <label>Records <select id="resource"><option value="users">Users</option><option value="loans">Loans</option><option value="trades">Quotes / Trades</option><option value="accounts">Wallet Accounts</option><option value="ledger">Wallet Ledger</option></select></label>
+        <label>Rows <select id="limit"><option>25</option><option>50</option><option>100</option></select></label>
+        <button id="refresh" type="button">Refresh</button>
+      </div>
+      <p class="units">Amounts: nano_DEMO_TON (1 DEMO_TON = 1,000,000,000 nano_DEMO_TON)</p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Admin records"><table><thead id="columns"></thead><tbody id="records"></tbody></table></div>
+      <nav aria-label="Pagination"><button id="previous" type="button" aria-label="Previous page">&larr;</button><span id="page"></span><button id="next" type="button" aria-label="Next page">&rarr;</button></nav>
+    </section>
+    <noscript>JavaScript is required.</noscript>
+  </main>
+</body>
+</html>

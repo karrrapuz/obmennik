@@ -33,6 +33,7 @@ import giftCollapseIcon from './assets/gift-collapse.svg';
 import inviteBackdrop from './assets/referal_invite_backdrop.svg';
 import earnedBackdrop from './assets/referal_zarabotano_backdrop.svg';
 import './ProfilePage.css';
+import AdminAccess from '../../admin/AdminAccess';
 
 export type ProfileGift = Omit<Gift, 'price'> & { price: number };
 
@@ -156,6 +157,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
       </section>
       <div className="profile-referral-link"><div><img src={referralIcon} alt="" /><span>Реферальная ссылка</span></div><button type="button" disabled={!referralLink} aria-label="Скопировать реферальную ссылку" onClick={() => referralLink && copyText(referralLink, setReferralCopied)}><img src={referralCopied ? copiedIcon : copyIcon} alt="" /></button></div>
       <details className="demo-wallet-history"><summary>История тестовых операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Демо-пополнение', withdraw: 'Демо-вывод', referral: 'Демо-награда', referral_credit: 'Реферальное начисление', loan_credit: 'Выдача займа', loan_repay: 'Погашение займа', loan_interest: 'Проценты по займу', loan_extend: 'Продление займа', trade_credit: 'Остаток от обмена', trade_debit: 'Доплата за обмен' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} TON</strong></li>)}</ul></details>
+      <AdminAccess />
     </main>
 
     <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>

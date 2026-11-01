@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: python -m pip install --upgrade 'pip>=26.2.2,<27' && python -m pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:application --factory --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
@@ -16,3 +16,7 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: https://obmennik-kappa.vercel.app
+      - key: DEPLOYMENT_MODE
+        value: demo
+      - key: ADMIN_USER_IDS
+        sync: false

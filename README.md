@@ -58,5 +58,10 @@
 | `src/wallet/` | Сохраняемый тестовый баланс, точные суммы и история |
 | `docs/DEMO_WALLET.md` | API тестового баланса и правила денежного учёта |
 | `render.yaml` | Настройки бесплатного тестового API на Render |
+| `src/admin/`, `backend/app/admin.py`, `backend/static/admin.*` | Закрытая админка: пользователи, займы, обмены и проводки, только просмотр |
+| `backend/app/operations.py`, `backend/scripts/smoke_api.py`, `.github/workflows/availability.yml` | Диагностика схемы и цен, ограниченная проверка доступности API |
+| `backend/scripts/backup_database.py`, `docs/operations.md` | Подготовка резервных копий и инструкция восстановления, ограничения перед запуском |
+| `backend/app/integrations.py`, `docs/INTEGRATION_HANDOFF.md` | Отключённые реальные интеграции и требования к подключению платежей, подарков и займов |
+| `backend/scripts/market_worker.py`, `backend/Dockerfile.market`, `docs/market-worker.md` | Серверный сборщик цен под отдельный Telegram-аккаунт, запуск после настройки секретов |
 | `docs/AUTH_DEPLOYMENT.md` | Запуск сервера и подключение Neon, Render и Vercel |
 | `docs/BACKEND_PLAN.md` | План бэкенда, критерии этапов и замечания ревьюеров |

@@ -1,3 +1,5 @@
+# Keep legacy hosting build commands from retaining a vulnerable installer.
+pip>=26.2.2,<27
 fastapi>=0.115,<1
 uvicorn>=0.30,<1
 sqlalchemy>=2.0,<3

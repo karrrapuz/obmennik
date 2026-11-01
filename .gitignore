@@ -20,6 +20,9 @@ __pycache__/
 .pytest_cache/
 *.db
 *.sqlite3
+*.dump
+*.pgdump
+*.backup
 *.session*
 backend/.local/
 backend/data/catalog-telegram.json.tmp

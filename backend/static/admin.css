@@ -1,0 +1,35 @@
+:root { color-scheme: light; font: 14px/1.5 system-ui, sans-serif; color: #202524; background: #f5f7f6; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { padding: 18px 24px; border-bottom: 1px solid #ccd4cf; background: white; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+h1 { font-size: 21px; margin: 0; }
+h2 { font-size: 17px; margin: 22px 0 10px; }
+main { max-width: 1440px; margin: auto; padding: 24px; }
+button, input, select { font: inherit; border: 1px solid #a8b8af; border-radius: 4px; min-height: 36px; background: white; color: inherit; }
+button { padding: 5px 13px; cursor: pointer; }
+button:hover:not(:disabled) { background: #e2efe8; }
+button:disabled { opacity: .45; cursor: default; }
+input, select { padding: 5px 8px; }
+input { width: min(100%, 480px); min-width: 0; }
+label { display: block; }
+.credentials, .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.credentials { margin-top: 6px; }
+.toolbar { justify-content: flex-start; }
+.toolbar label { display: flex; gap: 8px; align-items: center; }
+#disconnect { margin-left: auto; }
+#status { min-height: 22px; color: #345c48; overflow-wrap: anywhere; }
+#status[data-error="true"] { color: #a22936; }
+dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 20px; margin: 0 0 24px; }
+dl div { padding: 7px 0; border-bottom: 1px solid #dce2df; }
+dt { color: #5b665f; font-size: 12px; }
+dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.units { font-size: 12px; color: #5b665f; }
+.table-wrap { max-width: 100%; overflow: auto; border-top: 1px solid #ccd4cf; background: white; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; text-align: left; }
+th, td { padding: 9px 12px; border-bottom: 1px solid #dce2df; vertical-align: top; max-width: 360px; overflow-wrap: anywhere; }
+th { background: #edf2ef; white-space: nowrap; }
+td { font-variant-numeric: tabular-nums; }
+nav { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 16px; }
+:focus-visible { outline: 2px solid #187b55; outline-offset: 2px; }
+[hidden] { display: none !important; }
+@media (max-width: 600px) { main, header { padding: 16px; } .credentials input { flex: 1; } .toolbar { gap: 10px; } }

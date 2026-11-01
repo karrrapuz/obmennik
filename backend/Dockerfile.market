@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 MARKET_WORK_DIR=/tmp/giftmoney-market-worker
+WORKDIR /app
+COPY requirements.txt requirements-telegram.txt ./
+RUN python -m pip install --no-cache-dir --upgrade 'pip>=26.2.2,<27' \
+    && python -m pip install --no-cache-dir -r requirements-telegram.txt \
+    && groupadd --gid 10001 market \
+    && useradd --uid 10001 --gid 10001 --create-home market
+COPY app ./app
+COPY scripts/telegram_prices.py scripts/telegram_catalog.py scripts/telegram_import.py scripts/market_worker.py ./scripts/
+COPY data/catalog-telegram.json ./data/catalog-telegram.json
+USER 10001:10001
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["python", "-m", "scripts.market_worker"]

@@ -29,6 +29,10 @@ from .trades import register_trade_routes
 from .catalog_index import register_catalog_routes
 from .referrals import bind_first_launch, register_referral_routes
 from .market_valuation import register_market_routes
+from .integrations import demo_route, register_integration_routes
+from .request_limits import RequestBodyLimit
+from .admin import register_admin_routes
+from .operations import register_operations_routes
 
 
 class AuthInput(BaseModel):
@@ -59,17 +63,19 @@ def create_app(settings: Settings):
                     except Exception:
                         logging.getLogger('giftmoney').error('Autopay tick failed; next tick remains scheduled')
 
-        task = asyncio.create_task(autopay_loop())
+        task = asyncio.create_task(autopay_loop()) if settings.deployment_mode == 'demo' else None
         try:
             yield
         finally:
             stop.set()
-            await task
+            if task is not None:
+                await task
             engine.dispose()
 
     app = FastAPI(title='GiftMoney API', lifespan=lifespan)
     app.state.engine = engine
     app.state.price_provider = price_provider
+    app.add_middleware(RequestBodyLimit)
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
                        allow_methods=['GET', 'POST'], allow_headers=['Authorization', 'Content-Type', 'Idempotency-Key'])
     bearer = HTTPBearer(auto_error=False)
@@ -82,14 +88,24 @@ def create_app(settings: Settings):
     async def request_id(request, call_next):
         rid = uuid4().hex
         try:
-            response = await call_next(request)
+            if settings.deployment_mode == 'production' and demo_route(request.url.path):
+                response = JSONResponse({'detail': 'Live financial integrations are not configured'}, status_code=503)
+            else:
+                response = await call_next(request)
         except Exception:
             # Do not log request bodies, headers, DB parameters or secrets.
             logging.getLogger('giftmoney').error('Unhandled request error id=%s', rid)
-            from starlette.responses import JSONResponse
             response = JSONResponse({'detail': 'Internal server error'}, status_code=500)
         response.headers['X-Request-ID'] = rid
         response.headers['Cache-Control'] = 'no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        if request.url.path.startswith('/admin'):
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; script-src 'self'; style-src 'self'; "
+                "connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+            )
         return response
 
     def database():
@@ -166,6 +182,9 @@ def create_app(settings: Settings):
     register_inventory_routes(app, database, current_session, gift_provider)
     register_catalog_routes(app, gift_provider)
     register_market_routes(app, gift_provider, engine, settings.market_ingest_key)
+    register_integration_routes(app, settings, current_session)
+    register_admin_routes(app, database, current_session, settings.admin_user_ids)
+    register_operations_routes(app, database, current_session, settings.admin_user_ids, settings)
     register_referral_routes(app, database, current_session, settings.referral_rate_bps, settings.telegram_bot_username)
     register_wallet_routes(app, database, current_session)
     register_loan_routes(app, database, current_session, gift_provider)
