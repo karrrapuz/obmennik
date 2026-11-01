@@ -41,7 +41,7 @@
   min-width: 0;
   gap: 10px;
   justify-content: flex-start;
-  padding: 6px 14px 6px 6px;
+  padding: 6px 7px 6px 6px;
   border: 0;
   color: inherit;
   font: inherit;
@@ -75,7 +75,7 @@
 
 .exchange-balance {
   position: relative;
-  min-width: 160px;
+  min-width: 140px;
   width: max-content;
   gap: 7px;
   justify-content: flex-start;
@@ -90,7 +90,7 @@
   min-width: 27px;
   width: auto;
   height: 18px;
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
@@ -136,8 +136,8 @@
 }
 
 .exchange-balance__add img {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 .exchange-balance__demo-label {
   position: absolute;
