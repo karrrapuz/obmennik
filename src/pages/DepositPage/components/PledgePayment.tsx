@@ -57,8 +57,8 @@ export default function PledgePayment({ ids, onClose, onTopUp }: { ids: number[]
   const dates = [...new Set(items.map((item) => new Date(item.dueAt).toLocaleDateString('ru-RU')))];
   return createPortal(<dialog ref={dialog} className="pledge-pay-dialog" data-visible={visible} onCancel={(event) => { event.preventDefault(); dismiss(); }} onClick={(event) => { if (event.target === event.currentTarget) dismiss(); }} aria-label="Продлить займ">
     <div className="pledge-pay-dialog__scrim" aria-hidden="true" onClick={dismiss} />
-    <section className="pledge-pay" data-stage={stage}>
-      <span className="pledge-pay__handle" /><button autoFocus className="pledge-pay__close" onClick={dismiss} disabled={stage === 'pending'} aria-label="Закрыть"><img src={close} alt="" /></button>
+    <section key={stage} className="pledge-pay" data-stage={stage}>
+      <span className="pledge-pay__handle" /><button className="pledge-pay__close" onClick={dismiss} disabled={stage === 'pending'} aria-label="Закрыть"><img src={close} alt="" /></button>
       <h2>{stage === 'review' ? 'Продлить займ' : stage === 'pending' ? 'Обработка...' : stage === 'success' ? 'Успешно!' : 'Ошибка'}</h2>
       {stage === 'review' ? <>
         <p className="pledge-pay__subtitle">Оплачивайте проценты по займу, чтобы продолжить использование заемных средств</p>

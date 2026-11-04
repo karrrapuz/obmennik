@@ -89,4 +89,5 @@
 @keyframes pledge-spin { to { transform: rotate(360deg); } }
 @keyframes pledge-dots { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -33% 0 0); } }
 @keyframes pledge-confirm-in { from { opacity: 0; } to { opacity: 1; } }
+.pledge-feedback { animation: modal-feedback-content-in 400ms cubic-bezier(.22,1,.36,1); }
 @media (max-width: 360px) { .pledge-attributes dd { padding-left: 12px; } .pledge-payment { padding: 8px; } .pledge-payment button { padding: 0 12px; } }

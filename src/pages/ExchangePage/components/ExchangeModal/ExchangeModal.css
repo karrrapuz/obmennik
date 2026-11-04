@@ -51,6 +51,7 @@
 }
 
 .exchange-modal[data-result] { height: min(352px, calc(100dvh - 24px)); }
+.exchange-modal-layer[data-visible='true'] .exchange-modal[data-result] { animation: modal-feedback-sheet-in 400ms cubic-bezier(.22,1,.36,1); }
 .exchange-modal[data-result]::before {
   mask-size: 100% 728px;
   -webkit-mask-size: 100% 728px;

@@ -57,8 +57,8 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
     return () => { cancelAnimationFrame(frame); cancelAnimationFrame(next); clearTimeout(timer); };
   }, [open, gift?.id]);
   useEffect(() => {
-    if (confirm || payment?.phase === 'confirm') confirmButton.current?.focus();
-    else if (payment) feedback.current?.focus();
+    if (confirm || payment?.phase === 'confirm') confirmButton.current?.focus({ preventScroll: true });
+    else if (payment) feedback.current?.focus({ preventScroll: true });
   }, [confirm, payment]);
   useEffect(() => () => { generation.current++; clearTimeout(noticeTimer.current); }, []);
   const notify = (message: string) => { setNotice(message); clearTimeout(noticeTimer.current); noticeTimer.current = setTimeout(() => setNotice(''), 2500); };
@@ -125,7 +125,7 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
         {payment.phase === 'confirm' ? <section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label={payment.action === 'repay' ? 'Подтверждение возврата подарка' : 'Подтверждение оплаты процентов'}>
           <p>{payment.action === 'repay' ? payment.legacy ? `Вернуть ${payment.giftName} в инвентарь бесплатно? Средства списаны не будут.` : `Погасить займ за ${payment.amount.toFixed(3)} GRAM и вернуть ${payment.giftName} в инвентарь?` : `Оплатить проценты ${payment.amount.toFixed(3)} GRAM и продлить займ по ${payment.giftName}?`}</p>
           <div><button ref={confirmButton} aria-label="Отменить" onClick={() => setPayment(null)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={() => void submitPayment(payment)}><img src={yes} alt="" /></button></div>
-        </section> : <section ref={feedback} tabIndex={-1} className="pledge-feedback" data-phase={payment.phase} role="dialog" aria-modal="true" aria-labelledby="pledge-feedback-title" aria-describedby="pledge-feedback-message" aria-busy={payment.phase === 'pending'}>
+        </section> : <section key={payment.phase} ref={feedback} tabIndex={-1} className="pledge-feedback" data-phase={payment.phase} role="dialog" aria-modal="true" aria-labelledby="pledge-feedback-title" aria-describedby="pledge-feedback-message" aria-busy={payment.phase === 'pending'}>
           <h2 id="pledge-feedback-title">{payment.phase === 'pending' ? 'Обработка...' : payment.phase === 'success' ? 'Успешно!' : 'Ошибка'}</h2>
           <div className="pledge-feedback__icon"><img className={payment.phase === 'pending' ? 'pledge-feedback__spinner' : ''} src={payment.phase === 'pending' ? processing : payment.phase === 'success' ? success : failure} alt="" /></div>
           <p id="pledge-feedback-message" role={payment.phase === 'error' ? 'alert' : 'status'}>{payment.phase === 'pending' ? 'Пожалуйста, подождите...' : payment.phase === 'error' ? payment.message : payment.action === 'repay' ? payment.legacy ? `${payment.giftName} возвращен в инвентарь без списания средств.` : `Займ погашен. ${payment.giftName} возвращен в инвентарь.` : 'Проценты оплачены. Срок займа продлен.'}</p>

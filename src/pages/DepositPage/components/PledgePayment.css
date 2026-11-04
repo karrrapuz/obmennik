@@ -5,6 +5,7 @@
 .pledge-pay { position: absolute; bottom: 0; left: 50%; width: min(390px,100%); height: min(724px,calc(100dvh - 24px)); padding: 0 16px 30px; display: flex; flex-direction: column; isolation: isolate; overflow: hidden; transform: translate3d(-50%,calc(100% + 24px),0); backface-visibility: hidden; will-change: transform; transition: transform 400ms cubic-bezier(.22,1,.36,1),height 300ms ease; }
 .pledge-pay::before { content: ''; position: absolute; z-index: -1; inset: 0; background: #131313; mask: url('../../ExchangePage/components/GiftDetailsModal/assets/sheet-mask.svg') top center / 100% 728px no-repeat; pointer-events: none; }
 .pledge-pay-dialog[data-visible='true'] .pledge-pay { transform: translate3d(-50%,0,0); }
+.pledge-pay-dialog[data-visible='true'] .pledge-pay { --feedback-sheet-x: -50%; animation: modal-feedback-sheet-in 400ms cubic-bezier(.22,1,.36,1); }
 .pledge-pay[data-stage]:not([data-stage='review']) { height: min(328px,calc(100dvh - 24px)); }
 .pledge-pay button { border: 0; color: #fff; cursor: pointer; }
 .pledge-pay button:disabled { cursor: default; opacity: .35; }

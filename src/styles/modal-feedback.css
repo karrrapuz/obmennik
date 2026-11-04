@@ -1,0 +1,9 @@
+@keyframes modal-feedback-sheet-in {
+  from { transform: translate3d(var(--feedback-sheet-x, 0px), calc(100% + 24px), 0); }
+  to { transform: translate3d(var(--feedback-sheet-x, 0px), 0, 0); }
+}
+
+@keyframes modal-feedback-content-in {
+  from { translate: 0 24px; }
+  to { translate: 0 0; }
+}
