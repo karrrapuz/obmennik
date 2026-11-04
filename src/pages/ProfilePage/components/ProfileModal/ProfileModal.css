@@ -46,7 +46,7 @@
 .profile-modal[data-kind='gift-deposit'],
 .profile-modal[data-kind='gift-result-error'],
 .profile-modal[data-kind='gift-empty'] { height: min(352px, calc(100dvh - 24px)); }
-.profile-modal[data-kind='crypto-amount'] { height: min(246px, calc(100dvh - 24px)); }
+.profile-modal[data-kind='crypto-amount'] { height: min(288px, calc(100dvh - 24px)); }
 .profile-modal[data-kind='crypto-amount'] .balance-withdraw__input { top: 0; }
 .profile-modal__gift-deposit { position: absolute; top: 130px; left: 50%; width: 208px; transform: translateX(-50%); text-align: center; }
 .profile-modal__gift-deposit p { margin: 0 0 12px; font: 500 14px/18px 'Onest', Arial, sans-serif; }
@@ -490,7 +490,7 @@
   scrollbar-width: none;
   isolation: isolate;
 }
-.profile-modal::before { z-index: -1; position: fixed; mask-size: 100% 100%; -webkit-mask-size: 100% 100%; }
+.profile-modal::before { z-index: -1; position: absolute; mask-size: 100% 100%; -webkit-mask-size: 100% 100%; }
 .profile-modal__header { flex: none; min-height: 84px; height: auto; padding: 40px 16px 16px; }
 .profile-modal__header h2 { position: static; margin: 0; }
 .profile-modal__choices { flex: none; }
@@ -533,3 +533,10 @@
   margin: 0 16px 16px; overflow: visible;
 }
 .profile-modal button { white-space: normal; overflow-wrap: anywhere; }
+.profile-modal { overflow: clip; padding-bottom: 0; }
+.profile-modal__content { position: relative; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+.profile-modal__content::-webkit-scrollbar { display: none; }
+.profile-modal[data-kind='deposit-choice'] .profile-modal__content, .profile-modal[data-kind='withdraw-choice'] .profile-modal__content { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.profile-modal__choices small, .balance-withdraw__available, .balance-withdraw small { color: rgba(255,255,255,.5); }
+.balance-withdraw input::placeholder { color: rgba(255,255,255,.5); -webkit-text-fill-color: rgba(255,255,255,.5); }
+.profile-modal__choices button::after { border-color: rgba(255,255,255,.5); }

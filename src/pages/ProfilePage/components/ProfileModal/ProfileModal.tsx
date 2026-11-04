@@ -4,10 +4,11 @@ import { formatNano, MAX_ACTION, MAX_BALANCE, parseTon } from '../../../../walle
 import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import type { ProfileGift } from '../../ProfilePage';
-import tonIcon from '../../../../assets/ton.svg';
+import tonIcon from '../../../../assets/gram.svg';
 import { displayName, useUser } from '../../../../auth/AuthProvider';
 import UserAvatar from '../../../../components/layout/UserAvatar';
-import { useInventory } from '../../../../inventory/InventoryProvider';
+import { openGiftRelayer } from '../../../../services/giftRelayer';
+import { telegramHaptic } from '../../../../services/telegram';
 import selectActive from '../../assets/profile-use-gift-active.svg';
 import selectInactive from '../../assets/profile-use-gift-inactive.svg';
 import selectCheck from '../../../ExchangePage/assets/galochka.svg';
@@ -43,7 +44,6 @@ type ProfileModalProps = {
 function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, withdrawalBusy, onWithdraw, giftResultText }: ProfileModalProps) {
   const { wallet: walletSnapshot, operate, pending: walletPending, error: walletError, available: walletAvailable, reload } = useWallet();
   const balanceNano = BigInt(walletSnapshot.balance_nano);
-  const { mutate } = useInventory();
   const user = useUser();
   const [lastKind, setLastKind] = useState(requestedKind);
   const kind = requestedKind ?? lastKind;
@@ -57,6 +57,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const [resultReturn, setResultReturn] = useState<ProfileModalKind | null>(null);
   const pendingRef = useRef(false);
   const currentKind = useRef(requestedKind);
+  const contentRef = useRef<HTMLDivElement>(null);
   currentKind.current = requestedKind;
   const alive = useRef(false);
   useEffect(() => {
@@ -74,7 +75,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
       setLastKind(requestedKind);
       setMounted(true);
       firstFrame = requestAnimationFrame(() => {
-        secondFrame = requestAnimationFrame(() => setVisible(true));
+        secondFrame = requestAnimationFrame(() => { contentRef.current?.scrollTo(0, 0); setVisible(true); });
       });
     } else {
       setVisible(false);
@@ -109,6 +110,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   };
 
   const complete = (message: string, success: boolean, withdrawal = false) => {
+    telegramHaptic(success ? 'success' : 'error');
     setResultReturn(withdrawal ? 'withdraw-amount' : kind === 'deposit-amount' || kind === 'crypto-amount' ? kind : null);
     setResultText(message);
     setKind(success ? 'result-success' : 'result-error');
@@ -125,7 +127,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     pendingRef.current = true; setPending(true);
     try {
       await operate(withdrawal ? 'withdraw' : 'topup', withdrawal ? { amount_nano: amountNano.toString(), destination: wallet } : { amount_nano: amountNano.toString(), source: kind === 'crypto-amount' ? 'cryptobot' : 'wallet' });
-      if (alive.current && currentKind.current === submittedKind) complete(`${withdrawal ? 'Вывод' : 'Пополнение'}: ${formatNano(amountNano)} TON`, true, withdrawal);
+      if (alive.current && currentKind.current === submittedKind) complete(`${withdrawal ? 'Вывод' : 'Пополнение'}: ${formatNano(amountNano)} GRAM`, true, withdrawal);
     } catch {
       if (alive.current && currentKind.current === submittedKind) complete('Не удалось подтвердить операцию. Повторите попытку.', false, withdrawal);
     } finally {
@@ -169,6 +171,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
         {kind !== 'deposit-choice' && kind !== 'withdraw-choice' && !kind?.includes('result-') && <button className="profile-modal__back" type="button" aria-label="Назад" onClick={back}>‹</button>}
       </header>
 
+      <div ref={contentRef} className="profile-modal__content">
       {kind === 'deposit-choice' && <div className="profile-modal__choices">
         <button type="button" onClick={() => chooseWalletFlow('deposit-amount')}><i className="profile-modal__choice-icon"><i><img src={withdrawBalanceIcon} alt="" /></i></i><span>Кошелёк</span><small>Пополнение</small></button>
         <button type="button" onClick={() => { setAmount(''); setKind('crypto-amount'); }}><i className="profile-modal__choice-icon profile-modal__choice-icon--crypto"><i><img src={cryptoIcon} alt="" /></i></i><span>CryptoBot</span><small>Пополнение</small></button>
@@ -184,18 +187,18 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
 
       {kind === 'wallet-connect' && <div className="profile-modal__form"><label>Адрес кошелька<input value={walletInput} onChange={(event) => setWalletInput(event.target.value.trim())} placeholder="Адрес кошелька" autoComplete="off" maxLength={256} /></label><button type="button" disabled={walletInput.length < 10} onClick={() => { setWallet(walletInput); setKind(walletReturn); }}>Сохранить адрес</button></div>}
 
-      {kind === 'gift-deposit' && <><div className="profile-modal__gift-deposit"><p>Подарки</p><button type="button" disabled={pending} onClick={async () => { if (pendingRef.current) return; pendingRef.current = true; setPending(true); try { await mutate('deposit'); complete('Подарки добавлены', true); } catch { complete('Не удалось добавить подарки', false); } finally { pendingRef.current = false; setPending(false); } }}>{pending ? 'Ожидание...' : 'Добавить'}</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind(null)}>Закрыть</button></>}
+      {kind === 'gift-deposit' && <><div className="profile-modal__gift-deposit"><p>Подарки</p><button type="button" onClick={openGiftRelayer}>GiftRelayer</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind(null)}>Закрыть</button></>}
 
-      {kind === 'gift-empty' && <><div className="profile-modal__empty-gifts"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button type="button" onClick={() => setKind('gift-deposit')}>GiftRelayer</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind('withdraw-choice')}>Вернуться назад</button></>}
+      {kind === 'gift-empty' && <><div className="profile-modal__empty-gifts"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button type="button" onClick={openGiftRelayer}>GiftRelayer</button></div><button className="profile-modal__bottom profile-modal__bottom--glass" type="button" onClick={() => setKind('withdraw-choice')}>Вернуться назад</button></>}
 
       {kind === 'withdraw-amount' && <form className="balance-withdraw" onSubmit={(event) => { event.preventDefault(); submitAmount(); }} aria-busy={pending}>
         <div className="balance-withdraw__wallet"><span><img src={walletIcon} alt="" /></span><span>{wallet.slice(0, 5)}...{wallet.slice(-6)}</span></div>
         <label className="balance-withdraw__input">
           <span className="balance-withdraw__coin"><i><img src={tonIcon} alt="" /></i></span>
-          <input aria-label="Сумма вывода TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
-          {amountNano !== null && amountNano > 0n && <small>{amountNano > balanceNano ? 'Недостаточно TON' : amountNano > MAX_ACTION ? 'Максимум 10000 TON' : `Останется: ${formatNano(balanceNano - amountNano)} TON`}</small>}
+          <input aria-label="Сумма вывода GRAM" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
+          {amountNano !== null && amountNano > 0n && <small>{amountNano > balanceNano ? 'Недостаточно GRAM' : amountNano > MAX_ACTION ? 'Максимум 10000 GRAM' : `Останется: ${formatNano(balanceNano - amountNano)} GRAM`}</small>}
         </label>
-        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} TON</>}</p>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} GRAM</>}</p>
         <button type="submit" disabled={pending || walletPending || !walletAvailable || !canWithdraw}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Вывести'}</button>
       </form>}
 
@@ -203,10 +206,10 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
         {kind === 'deposit-amount' && <div className="balance-withdraw__wallet"><span><img src={walletIcon} alt="" /></span><span>{wallet.slice(0, 5)}...{wallet.slice(-6)}</span></div>}
         <label className="balance-withdraw__input">
           <span className="balance-withdraw__coin"><i><img src={tonIcon} alt="" /></i></span>
-          <input aria-label="Сумма пополнения TON" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
-          {amountNano !== null && amountNano > 0n && <small>{amountNano > MAX_ACTION ? 'Максимум 10000 TON' : balanceNano + amountNano > MAX_BALANCE ? 'Лимит баланса 100000 TON' : `Будет: ${formatNano(balanceNano + amountNano)} TON`}</small>}
+          <input aria-label="Сумма пополнения GRAM" inputMode="decimal" value={amount} placeholder="0.00" disabled={pending} onChange={(event) => { const value = event.target.value.replace(',', '.'); if (/^\d*(\.\d{0,9})?$/.test(value)) setAmount(value); }} />
+          {amountNano !== null && amountNano > 0n && <small>{amountNano > MAX_ACTION ? 'Максимум 10000 GRAM' : balanceNano + amountNano > MAX_BALANCE ? 'Лимит баланса 100000 GRAM' : `Будет: ${formatNano(balanceNano + amountNano)} GRAM`}</small>}
         </label>
-        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} TON</>}</p>
+        <p className="balance-withdraw__available">{walletError ? <><span role="alert">Нет связи. </span><button type="button" onClick={() => void reload().catch(() => {})}>Обновить</button></> : <>Доступно: {formatNano(balanceNano)} GRAM</>}</p>
         <button type="submit" disabled={pending || walletPending || !walletAvailable || !canTopUp}>{pending ? <>Ожидание<span className="balance-withdraw__dots">...</span></> : 'Пополнить'}</button>
       </form>}
 
@@ -227,6 +230,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
 
 
       {(kind === 'result-success' || kind === 'result-error') && <div className="profile-modal__result"><span className="profile-modal__result-icon"><img src={kind === 'result-success' ? successIcon : errorIcon} alt="" /></span><p>{resultText}</p><button type="button" onClick={() => { if (kind === 'result-success') setAmount(''); setKind(resultReturn); }}>{resultReturn ? kind === 'result-error' ? 'Попробовать снова' : 'Вернуться назад' : 'Готово'}</button></div>}
+      </div>
     </section>
   </div>, document.body);
 }

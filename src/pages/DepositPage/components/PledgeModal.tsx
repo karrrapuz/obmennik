@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import SlideNotice from '../../../components/feedback/SlideNotice/SlideNotice';
 import type { Gift } from '../../ExchangePage/data/gifts';
 import GiftArtwork from '../../../components/gifts/GiftArtwork/GiftArtwork';
-import ton from '../../../assets/ton.svg';
+import ton from '../../../assets/gram.svg';
 import close from '../../ExchangePage/components/FilterModal/assets/Union.svg';
 import yes from '../../ProfilePage/assets/vivod_yes.svg';
 import no from '../../ProfilePage/assets/vivod_no.svg';
@@ -16,6 +16,7 @@ import { useModalScrollLock } from '../../../hooks/useModalScrollLock';
 import { pledgeStore, type Pledge } from '../services/pledgeStore';
 import './PledgeModal.css';
 import { useLoanTerms } from '../../../loans/LoanProvider';
+import { telegramHaptic } from '../../../services/telegram';
 
 type Payment = { action: 'repay' | 'interest'; phase: 'confirm' | 'pending' | 'success' | 'error'; giftId: number; giftName: string; amount: number; legacy: boolean; message?: string };
 
@@ -82,6 +83,7 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
     try {
       const ok = operation.action === 'repay' ? await pledgeStore.repay(operation.giftId) : await pledgeStore.payInterest(operation.giftId);
       if (version !== generation.current) return;
+      telegramHaptic(ok ? 'success' : 'error');
       if (!ok) notify('Баланса недостаточно!');
       setPayment({ ...operation, phase: ok ? 'success' : 'error', message: ok ? undefined : 'Баланса недостаточно!' });
     } catch {
@@ -104,24 +106,24 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
         <div className="pledge-sheet__scroll" ref={scroll}>
           {gift && <><div className="pledge-preview"><GiftArtwork gift={gift} autoPlay={open && visible && !confirm && !payment} /><span><img src={ton} alt="" />{gift.price}</span><div className="pledge-preview__caption"><strong>{gift.name}</strong><small>{gift.model}</small></div></div>
             <dl className="pledge-attributes">{[['Модель', gift.modelName ?? 'Модель', ''], ['Символ', gift.symbol?.name ?? '—', gift.symbol?.rarity], ['Фон', gift.backdrop?.name ?? '—', gift.backdrop?.rarity]].map(([label, value, rarity]) => <div key={label}><dt>{label}</dt><dd><span>{value}{rarity && <small>{rarity}</small>}</span></dd></div>)}</dl>
-            {!pledge && <div className="pledge-terms">{pledgeTerms.map((term) => <button key={term.weeks} aria-pressed={weeks === term.weeks} onClick={() => setWeeks(weeks === term.weeks ? null : term.weeks)} data-weeks={term.weeks}><img src={term.weeks === 1 ? greenBackdrop : blueBackdrop} alt="" /><span>{term.weeks === 1 ? '1 неделя' : '2 недели'}</span><strong>{term.principal.toFixed(3)} TON</strong><small>Возврат {term.repayment.toFixed(3)} TON</small><b>{weeks === term.weeks ? 'Выбран' : 'Выбрать'}</b></button>)}</div>}
+            {!pledge && <div className="pledge-terms">{pledgeTerms.map((term) => <button key={term.weeks} aria-pressed={weeks === term.weeks} onClick={() => setWeeks(weeks === term.weeks ? null : term.weeks)} data-weeks={term.weeks}><img src={term.weeks === 1 ? greenBackdrop : blueBackdrop} alt="" /><span>{term.weeks === 1 ? '1 неделя' : '2 недели'}</span><strong>{term.principal.toFixed(3)} GRAM</strong><small>Возврат {term.repayment.toFixed(3)} GRAM</small><b>{weeks === term.weeks ? 'Выбран' : 'Выбрать'}</b></button>)}</div>}
             {pledge?.status === 'processing' && <div className="pledge-processing" role="status"><img src={processing} alt="" /><strong>Обработка<span>...</span></strong><p>Займ в настоящее время обрабатывается, и будет осуществлен в ближайшее время.</p></div>}
-            {pledge?.legacy && <p className="pledge-legacy-note">TON под этот резерв не выдавались. Долга нет — подарок можно вернуть бесплатно.</p>}
+            {pledge?.legacy && <p className="pledge-legacy-note">GRAM под этот резерв не выдавались. Долга нет — подарок можно вернуть бесплатно.</p>}
             {pledge?.status === 'active' && !pledge.legacy && <div className="pledge-details">
-              <section className="pledge-details__summary"><h3>{pledge.weeks * 7} дней</h3><strong>{pledge.principal.toFixed(3)} TON</strong><p>Для погашения {pledge.repayment.toFixed(3)} TON</p></section>
-              <section><h3>Предстоящий платеж</h3><p>Не забывайте регулярно платить проценты по займу, чтобы продолжать использовать заемные средства. Вы можете сделать это в любое время до наступления срока погашения.</p><div className="pledge-payment"><div><strong>{new Date(pledge.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ({new Date(pledge.dueAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })})</strong><small>К оплате — {(pledge.interest ?? (pledge.repayment - pledge.principal)).toFixed(3)} TON</small></div><button onClick={() => beginPayment('interest')}>Оплатить</button></div></section>
+              <section className="pledge-details__summary"><h3>{pledge.weeks * 7} дней</h3><strong>{pledge.principal.toFixed(3)} GRAM</strong><p>Для погашения {pledge.repayment.toFixed(3)} GRAM</p></section>
+              <section><h3>Предстоящий платеж</h3><p>Не забывайте регулярно платить проценты по займу, чтобы продолжать использовать заемные средства. Вы можете сделать это в любое время до наступления срока погашения.</p><div className="pledge-payment"><div><strong>{new Date(pledge.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ({new Date(pledge.dueAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })})</strong><small>К оплате — {(pledge.interest ?? (pledge.repayment - pledge.principal)).toFixed(3)} GRAM</small></div><button onClick={() => beginPayment('interest')}>Оплатить</button></div></section>
               <section><h3>Автоплатеж</h3><p>Автоплатёж спишет сумму погашения с баланса после наступления срока, если средств достаточно. Если средств не хватит, пополните баланс. Просроченные подарки не изымаются.</p><button className="pledge-autopay" data-active={pledge.autopay} onClick={async () => { if (pending.current) return; pending.current = true; try { await pledgeStore.toggleAutopay(gift.id); } catch { notify('Не удалось изменить автоплатеж'); } finally { pending.current = false; } }}>{pledge.autopay ? 'Отключить' : 'Включить'}</button></section>
             </div>}
           </>}
         </div>
-        {pledge?.status !== 'processing' && <footer><button disabled={!pledge && !weeks} onClick={() => pledge ? beginPayment('repay') : setConfirm(true)}>{pledge ? pledge.legacy ? 'Вернуть подарок бесплатно' : `Закрыть займ за ${pledge.repayment.toFixed(3)} TON` : weeks ? `Получить ${pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} TON` : 'Выберите срок'}</button></footer>}
+        {pledge?.status !== 'processing' && <footer><button disabled={!pledge && !weeks} onClick={() => pledge ? beginPayment('repay') : setConfirm(true)}>{pledge ? pledge.legacy ? 'Вернуть подарок бесплатно' : `Закрыть займ за ${pledge.repayment.toFixed(3)} GRAM` : weeks ? `Получить ${pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} GRAM` : 'Выберите срок'}</button></footer>}
       </div>
       <SlideNotice show={Boolean(displayedNotice)}><div className="pledge-notice" data-error={displayedNotice === 'Баланса недостаточно!'} role="status">{displayedNotice}</div></SlideNotice>
     </section>
-      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить {pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} TON, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={create}><img src={yes} alt="" /></button></div></section></div>}
+      {confirm && gift && <div className="pledge-confirm-backdrop"><section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label="Подтверждение залога"><p>Вы уверены, что хотите получить {pledgeTerms.find((term) => term.weeks === weeks)?.principal.toFixed(3)} GRAM, передав ваш {gift.name} в залог на {weeks === 1 ? '1 неделю' : '2 недели'}?</p><div><button ref={confirmButton} aria-label="Отменить" onClick={() => setConfirm(false)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={create}><img src={yes} alt="" /></button></div></section></div>}
       {payment && <div className="pledge-confirm-backdrop" onClick={(event) => { if (event.target === event.currentTarget) dismiss(); }}>
         {payment.phase === 'confirm' ? <section className="pledge-confirm" role="alertdialog" aria-modal="true" aria-label={payment.action === 'repay' ? 'Подтверждение возврата подарка' : 'Подтверждение оплаты процентов'}>
-          <p>{payment.action === 'repay' ? payment.legacy ? `Вернуть ${payment.giftName} в инвентарь бесплатно? Средства списаны не будут.` : `Погасить займ за ${payment.amount.toFixed(3)} TON и вернуть ${payment.giftName} в инвентарь?` : `Оплатить проценты ${payment.amount.toFixed(3)} TON и продлить займ по ${payment.giftName}?`}</p>
+          <p>{payment.action === 'repay' ? payment.legacy ? `Вернуть ${payment.giftName} в инвентарь бесплатно? Средства списаны не будут.` : `Погасить займ за ${payment.amount.toFixed(3)} GRAM и вернуть ${payment.giftName} в инвентарь?` : `Оплатить проценты ${payment.amount.toFixed(3)} GRAM и продлить займ по ${payment.giftName}?`}</p>
           <div><button ref={confirmButton} aria-label="Отменить" onClick={() => setPayment(null)}><img src={no} alt="" /></button><button aria-label="Подтвердить" onClick={() => void submitPayment(payment)}><img src={yes} alt="" /></button></div>
         </section> : <section ref={feedback} tabIndex={-1} className="pledge-feedback" data-phase={payment.phase} role="dialog" aria-modal="true" aria-labelledby="pledge-feedback-title" aria-describedby="pledge-feedback-message" aria-busy={payment.phase === 'pending'}>
           <h2 id="pledge-feedback-title">{payment.phase === 'pending' ? 'Обработка...' : payment.phase === 'success' ? 'Успешно!' : 'Ошибка'}</h2>

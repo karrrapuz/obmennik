@@ -1,9 +1,10 @@
 .profile-page {
   position: relative;
+  display: flow-root;
   width: min(100%, 390px);
   min-height: max(844px, 100svh);
   margin: 0 auto;
-  overflow: hidden;
+  overflow: visible;
   background: #0d0d0d;
   color: #fff;
   font-family: 'Onest', Arial, sans-serif;
@@ -11,14 +12,14 @@
 
 .profile-page__glow {
   position: absolute;
-  top: -209px;
-  left: 227px;
-  width: 325px;
-  height: 325px;
-  background: rgba(6, 215, 160, 0.5);
-  filter: blur(150px);
+  top: -359px;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  height: 625px;
+  overflow: hidden;
   pointer-events: none;
 }
+.profile-page__glow::before { content: ''; position: absolute; top: 150px; left: calc(50% + 32px); width: 325px; height: 325px; background: rgba(6,215,160,.5); filter: blur(150px); }
 
 .profile-header {
   position: fixed;

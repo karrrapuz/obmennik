@@ -43,7 +43,7 @@ export default function GiftWithdrawal({ gifts, onClose, onSuccess, onBusy, onRe
   };
   return createPortal(<>
     <dialog ref={dialog} className="gift-withdraw-confirm" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} aria-label="Подтверждение вывода">
-      <section><p>Вы уверены что хотите вывести<br />{gifts.map((gift) => gift.name).join(', ')} стоимостью {gifts.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} TON?</p>
+      <section><p>Вы уверены что хотите вывести<br />{gifts.map((gift) => gift.name).join(', ')} стоимостью {gifts.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} GRAM?</p>
         <div><button autoFocus type="button" aria-label="Отменить вывод" onClick={onClose}><img src={no} alt="" /></button><button type="button" aria-label="Подтвердить вывод" onClick={confirm}><img src={yes} alt="" /></button></div>
       </section>
     </dialog>

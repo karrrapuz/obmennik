@@ -19,8 +19,8 @@ const labels: Record<string, string> = {
   users: 'Пользователи', active_loans: 'Активные займы', repaid_loans: 'Погашенные',
   open_quotes: 'Котировки', executed_trades: 'Обмены', ledger_transactions: 'Операции',
   id: 'ID', user_id: 'Пользователь', revision: 'Версия', gift_id: 'Подарок', status: 'Статус',
-  principal_nano: 'Выдано, TON', repayment_nano: 'Возврат, TON', balance_nano: 'Баланс, TON',
-  amount_nano: 'Сумма, TON', created_at: 'Создан', due_at: 'Срок', expires_at: 'Истекает',
+  principal_nano: 'Выдано, GRAM', repayment_nano: 'Возврат, GRAM', balance_nano: 'Баланс, GRAM',
+  amount_nano: 'Сумма, GRAM', created_at: 'Создан', due_at: 'Срок', expires_at: 'Истекает',
   autopay: 'Автоплатёж', kind: 'Тип', created_at_ns: 'Время', postings: 'Проводки',
 };
 

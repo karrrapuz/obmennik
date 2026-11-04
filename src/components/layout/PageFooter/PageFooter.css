@@ -31,7 +31,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
   font: 600 10px/18px 'Onest', Arial, sans-serif;
   cursor: pointer;
   transition: color 320ms ease;

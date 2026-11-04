@@ -31,9 +31,10 @@ import giftAddonIcon from './assets/gift-addon.svg';
 import selectedGiftIcon from './assets/galochka.svg';
 import searchIcon from './assets/lupa_poisk.svg';
 import plusIcon from '../../assets/plus.svg';
-import tonIcon from '../../assets/ton.svg';
+import tonIcon from '../../assets/gram.svg';
 import subtractObmenIcon from './assets/Subtract_obmen.svg';
 import unavailablePriceIcon from '../DepositPage/assets/block-zalog-gift.svg';
+import { openGiftRelayer } from '../../services/giftRelayer';
 
 
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
@@ -215,7 +216,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
             <div className="exchange-empty exchange-empty--inventory">
               <strong>В вашем инвентаре пусто!</strong>
               <p>Отправьте подарок нам что бы это исправить!</p>
-              <span className="exchange-empty__action">GiftRelayer</span>
+              <button className="exchange-empty__action" type="button" onClick={openGiftRelayer}>GiftRelayer</button>
             </div>
           ) : visibleGifts.length === 0 ? (
             <div className="exchange-empty exchange-empty--results">

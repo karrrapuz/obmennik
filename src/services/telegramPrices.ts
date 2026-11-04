@@ -42,10 +42,10 @@ export function hasMarketPrice(gift: Pick<Gift, 'marketPrice'>, now: number): bo
 }
 
 export function marketPriceLabel(gift: Pick<Gift, 'marketPrice' | 'marketStatus'>, now: number): string {
-  if (hasMarketPrice(gift, now)) return `от ${formatNano(gift.marketPrice!.floorNano)} TON`;
+  if (hasMarketPrice(gift, now)) return `от ${formatNano(gift.marketPrice!.floorNano)} GRAM`;
   const price = gift.marketPrice;
   if (validMarketPrice(gift, now) && price && now >= price.validUntil) return 'Цена устарела';
-  return gift.marketStatus === 'not_collectible' || gift.marketStatus === 'no_ton_listings' ? 'Нет предложений в TON' : 'Нет TON-цены';
+  return gift.marketStatus === 'not_collectible' || gift.marketStatus === 'no_ton_listings' ? 'Нет предложений в GRAM' : 'Нет GRAM-цены';
 }
 
 export function mergeMarketPrices<T extends Pick<Gift, 'collectionId' | 'marketPrice' | 'marketStatus'>>(gifts: T[], feed: TelegramPrices | null, manifest: { collections: readonly { telegramId: string; catalogId: number }[] } | null): T[] {

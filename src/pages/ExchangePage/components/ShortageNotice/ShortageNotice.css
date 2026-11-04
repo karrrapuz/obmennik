@@ -47,7 +47,5 @@
   width: 9px;
   height: 9px;
   flex: none;
-  background: #06d7a0;
-  -webkit-mask: url('../../../../assets/ton.svg') center / contain no-repeat;
-  mask: url('../../../../assets/ton.svg') center / contain no-repeat;
+  background: url('../../../../assets/gram.svg') center / contain no-repeat;
 }

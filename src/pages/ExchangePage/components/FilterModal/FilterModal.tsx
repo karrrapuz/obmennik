@@ -9,7 +9,7 @@ import chevronIcon from './assets/zasrit.svg';
 import closeIcon from './assets/Union.svg';
 import checkIcon from './assets/galochka.svg';
 import plusIcon from './assets/plus.svg';
-import tonModalIcon from './assets/ton_modal.svg';
+import tonModalIcon from '../../../../assets/gram.svg';
 import searchIcon from './assets/poisk_modal.svg';
 import './FilterModal.css';
 import { upgradeGiftImage } from '../../../../services/giftMedia';
@@ -225,7 +225,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
                               <span className="filter-modal__option-check" aria-hidden="true"><span><img src={checked ? checkIcon : plusIcon} alt="" /></span></span>
                               <span className="filter-modal__option-image" aria-hidden="true" style={option.color ? { background: option.color } : undefined}>{option.image && <img src={upgradeGiftImage(option.image)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</span>
                               <span className="filter-modal__option-title"><span className="filter-modal__option-name">{option.name}</span>{option.description && <small className="filter-modal__option-description">{option.description}</small>}{option.rarity && <em>{option.rarity}</em>}</span>
-                              {option.price && <span className="filter-modal__option-price">{option.price}<img src={tonModalIcon} alt="TON" /></span>}
+                              {option.price && <span className="filter-modal__option-price">{option.price}<img src={tonModalIcon} alt="GRAM" /></span>}
                             </button>;
                           })}
                           {options.length > shown && <button type="button" className="catalog-load-more" onClick={() => setLimits(current => ({ ...current, [row.id]: shown + 60 }))}>Показать ещё ({options.length - shown})</button>}

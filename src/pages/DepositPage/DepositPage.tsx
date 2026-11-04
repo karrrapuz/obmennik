@@ -7,7 +7,7 @@ import { giftPoster } from '../../services/giftMedia';
 import giftBlur from './assets/gift-blur.svg';
 import giftExpandIcon from '../ProfilePage/assets/gift-expand.svg';
 import giftExpandActiveIcon from './assets/gift-expand-active.svg';
-import ton from '../../assets/ton.svg';
+import ton from '../../assets/gram.svg';
 import '../../styles/press-feedback.css';
 import bannerExchange from './assets/banner-exchange.svg';
 import PledgeModal from './components/PledgeModal';
@@ -22,6 +22,7 @@ import timeIcon from './assets/zalog-gift-time.svg';
 import check from '../ExchangePage/assets/galochka.svg';
 import { pledgeStore } from './services/pledgeStore';
 import './DepositPage.css';
+import { openGiftRelayer } from '../../services/giftRelayer';
 
 const supportedGifts = [
   { name: 'Plush Pepes', amount: '1800', collectionId: '5936013938331222567', modelName: 'Gucci Leap', image: '/gifts/telegram/media/5422606814921386856.webp' },
@@ -52,7 +53,7 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
         <i className="pledge-banner__ton pledge-banner__ton--bottom"><img src={ton} alt="" /></i>
         <span className="pledge-banner__exchange"><img src={bannerExchange} alt="" /></span>
       </div>
-      <h1>Нужны тоны?</h1><p>Возьми их у нас под залог своих подарков!</p>
+      <h1>Нужны GRAM?</h1><p>Возьми их у нас под залог своих подарков!</p>
     </section>
     <div className="pledge-tabs" role="tablist" aria-label="Подарки" data-active={tab}><span aria-hidden="true" /><button role="tab" aria-selected={tab === 'inventory'} onClick={() => setTab('inventory')}>Инвентарь</button><button role="tab" aria-selected={tab === 'pledges'} onClick={() => setTab('pledges')}>Залог{state.pledges.length > 0 && <small className="pledge-tab-count">{state.pledges.length}</small>}</button></div>
     <section className="pledge-catalog" role="tabpanel" aria-label={tab === 'inventory' ? 'Инвентарь' : 'Залоги'}>
@@ -68,9 +69,9 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
             <div className="pledge-card__due"><span><img src={timeIcon} alt="" /></span><div><small>{loan?.status === 'processing' ? 'Обработка...' : 'Дата выкупа до'}</small><strong>{loan && new Date(loan.dueAt).toLocaleDateString('ru-RU')} ({loan && new Date(loan.dueAt).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})})</strong></div></div>
           </>}
         </article>;
-      })}</div> : tab === 'inventory' ? <div className="pledge-empty pledge-empty--inventory"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button onClick={onNavigateProfile}>GiftRelayer</button></div> : <div className="pledge-empty-loans"><img className="pledge-empty-loans__cards" src={giftBlur} alt="" /><p>У вас нет подарков в залоге</p></div>}
+      })}</div> : tab === 'inventory' ? <div className="pledge-empty pledge-empty--inventory"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button onClick={openGiftRelayer}>GiftRelayer</button></div> : <div className="pledge-empty-loans"><img className="pledge-empty-loans__cards" src={giftBlur} alt="" /><p>У вас нет подарков в залоге</p></div>}
       </div></div>
-      {tab === 'pledges' && <section className="pledge-supported"><h2>Поддерживаемые подарки</h2>{supportedGifts.map((item) => <button key={item.collectionId} onClick={() => setTab('inventory')}><span className="pledge-supported__icon"><img src={giftPoster(item)} alt="" /></span><span className="pledge-supported__text"><strong>{item.name}</strong><small>Получите: <span>{item.amount} TON</span> / 14 дней</small></span></button>)}</section>}
+      {tab === 'pledges' && <section className="pledge-supported"><h2>Поддерживаемые подарки</h2>{supportedGifts.map((item) => <button key={item.collectionId} onClick={() => setTab('inventory')}><span className="pledge-supported__icon"><img src={giftPoster(item)} alt="" /></span><span className="pledge-supported__text"><strong>{item.name}</strong><small>Получите: <span>{item.amount} GRAM</span> / 14 дней</small></span></button>)}</section>}
     </section>
     <SlideNotice show={tab === 'pledges' && selected.some((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy))}><button className="pledge-extend-button" onClick={() => setPaymentIds(selected.filter((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy)))}>Продлить</button></SlideNotice>
     {paymentIds && <PledgePayment ids={paymentIds} onClose={() => { setPaymentIds(null); setSelected([]); }} onTopUp={onNavigateProfile} />}

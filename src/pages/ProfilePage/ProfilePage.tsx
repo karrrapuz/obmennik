@@ -13,7 +13,7 @@ import GiftWithdrawal from './components/GiftWithdrawal/GiftWithdrawal';
 import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/ProfileModal';
 import { displayName, useUser } from '../../auth/AuthProvider';
 import UserAvatar from '../../components/layout/UserAvatar';
-import tonIcon from '../../assets/ton.svg';
+import tonIcon from '../../assets/gram.svg';
 import giftSelectedIcon from './assets/profile-use-gift-active.svg';
 import giftInactiveIcon from './assets/profile-use-gift-inactive.svg';
 import referralIcon from './assets/ref-ssilka.svg';
@@ -155,16 +155,16 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
         <p>Приглашайте друзей и получайте <em>{(referrals.summary?.rate_bps ?? 200) / 100}% оборота</em> от их обменов!</p>
         <div className="profile-referral__stats">
           <div className="profile-referral__stat"><img src={inviteBackdrop} alt="" /><span>Приглашено</span><strong>{referrals.summary?.invited_count ?? 0} чел.</strong><button type="button" disabled={!referralLink} onClick={() => referralLink && copyText(referralLink, setReferralCopied)}>{referralCopied ? 'Скопировано' : 'Пригласить'}</button></div>
-          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Заработано</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} TON</strong><button type="button" disabled={referralReward <= 0 || referralPending || !walletAvailable} onClick={claimReferral}>{referralPending ? 'Ожидание...' : 'Забрать'}</button></div>
+          <div className="profile-referral__stat"><img src={earnedBackdrop} alt="" /><span>Заработано</span><strong>{referralReward === 0 ? '0' : referralReward.toFixed(3)} GRAM</strong><button type="button" disabled={referralReward <= 0 || referralPending || !walletAvailable} onClick={claimReferral}>{referralPending ? 'Ожидание...' : 'Забрать'}</button></div>
         </div>
       </section>
       <div className="profile-referral-link"><div><img src={referralIcon} alt="" /><span>Реферальная ссылка</span></div><button type="button" disabled={!referralLink} aria-label="Скопировать реферальную ссылку" onClick={() => referralLink && copyText(referralLink, setReferralCopied)}><img src={referralCopied ? copiedIcon : copyIcon} alt="" /></button></div>
-      <details className="demo-wallet-history"><summary>История операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Пополнение', withdraw: 'Вывод', referral: 'Награда', referral_credit: 'Реферальное начисление', loan_credit: 'Выдача займа', loan_repay: 'Погашение займа', loan_interest: 'Проценты по займу', loan_extend: 'Продление займа', trade_credit: 'Остаток от обмена', trade_debit: 'Доплата за обмен' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} TON</strong></li>)}</ul></details>
+      <details className="demo-wallet-history"><summary>История операций</summary><ul>{walletSnapshot.transactions.slice(0, 10).map((transaction) => <li key={transaction.id}><span>{({ seed: 'Начальный баланс', topup: 'Пополнение', withdraw: 'Вывод', referral: 'Награда', referral_credit: 'Реферальное начисление', loan_credit: 'Выдача займа', loan_repay: 'Погашение займа', loan_interest: 'Проценты по займу', loan_extend: 'Продление займа', trade_credit: 'Остаток от обмена', trade_debit: 'Доплата за обмен' })[transaction.kind]}<small>{new Date(transaction.created_at * 1000).toLocaleString('ru-RU')}</small></span><strong>{BigInt(transaction.amount_nano) > 0n ? '+' : ''}{formatNano(transaction.amount_nano)} GRAM</strong></li>)}</ul></details>
       <AdminAccess />
     </main>
 
     <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>
-    <GiftWithdrawal gifts={withdrawalGifts} onClose={() => setWithdrawalGifts([])} onBusy={setWithdrawalBusy} onResult={withdrawalFromModal ? (success, withdrawn) => { setGiftResultText(success ? `Вы успешно вывели ${withdrawn.map((gift) => gift.name).join(', ')} стоимостью ${withdrawn.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} TON` : 'Вывод подарков не удался...'); setModal(success ? 'gift-result-success' : 'gift-result-error'); } : undefined} onSuccess={(ids) => {
+    <GiftWithdrawal gifts={withdrawalGifts} onClose={() => setWithdrawalGifts([])} onBusy={setWithdrawalBusy} onResult={withdrawalFromModal ? (success, withdrawn) => { setGiftResultText(success ? `Вы успешно вывели ${withdrawn.map((gift) => gift.name).join(', ')} стоимостью ${withdrawn.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} GRAM` : 'Вывод подарков не удался...'); setModal(success ? 'gift-result-success' : 'gift-result-error'); } : undefined} onSuccess={(ids) => {
       return mutate('withdraw', { ids }).then(() => {
       setSelectedGiftIds((current) => current.filter((id) => !ids.includes(id)));
       });

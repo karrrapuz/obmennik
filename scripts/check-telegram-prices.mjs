@@ -49,14 +49,14 @@ const merged = mergeMarketPrices([imported], parseTelegramPrices(fixture(), now)
 test('owned ID, media, original attributes and financial flags preserved', () => { const { marketPrice, ...original } = merged; assert.deepEqual(original, imported); assert.equal(imported.marketPrice, undefined); assert.equal(marketPrice.floorNano, '5140000000'); assert.equal(isUnpricedGift(merged), true); });
 test('exact manifest pair required; owned ID not used for lookup', () => { assert.ok(merged.marketPrice); assert.equal(mergeMarketPrices([imported], fixture(), { collections: [{ ...identities.collections[0], catalogId: 100002 }] })[0].marketPrice, undefined); assert.equal(mergeMarketPrices([imported], fixture(), null)[0].marketPrice, undefined); assert.equal(mergeMarketPrices([{ ...imported, collectionId: '123' }], fixture(), identities)[0].marketPrice, undefined); });
 test('unavailable or missing feed clears previous metadata', () => { assert.equal(mergeMarketPrices([merged], null, identities)[0].marketPrice, undefined); const f = fixture(); Object.assign(f.collections[0], { status: 'no_ton_listings', floorNano: null, sampleCount: 0 }); assert.equal(mergeMarketPrices([merged], f, identities)[0].marketPrice, undefined); });
-test('5.14 and single nano labels never round to zero', () => { assert.equal(marketPriceLabel(merged, now), 'от 5.14 TON'); assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, floorNano: '1' } }, now), 'от 0.000000001 TON'); });
-test('expiry exact boundary and stale labels', () => { const end = merged.marketPrice.validUntil; assert.equal(hasMarketPrice(merged, end - 1), true); assert.equal(hasMarketPrice(merged, end), false); assert.equal(marketPriceLabel(merged, end), 'Цена устарела'); assert.equal(marketPriceLabel({}, now), 'Нет TON-цены'); assert.equal(browsingPriceNano(merged, end), null); });
+test('5.14 and single nano labels never round to zero', () => { assert.equal(marketPriceLabel(merged, now), 'от 5.14 GRAM'); assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, floorNano: '1' } }, now), 'от 0.000000001 GRAM'); });
+test('expiry exact boundary and stale labels', () => { const end = merged.marketPrice.validUntil; assert.equal(hasMarketPrice(merged, end - 1), true); assert.equal(hasMarketPrice(merged, end), false); assert.equal(marketPriceLabel(merged, end), 'Цена устарела'); assert.equal(marketPriceLabel({}, now), 'Нет GRAM-цены'); assert.equal(browsingPriceNano(merged, end), null); });
 test('stale feed parses for honest outdated reference display', () => { const old = fixture(); const end = old.validUntil; parseTelegramPrices(old, end + 100); });
-test('unknown or malformed metadata does not produce fake zero/stale price', () => { assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, source: 'fake' } }, now + 90000), 'Нет TON-цены'); assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, floorNano: '0' } }, now), 'Нет TON-цены'); });
+test('unknown or malformed metadata does not produce fake zero/stale price', () => { assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, source: 'fake' } }, now + 90000), 'Нет GRAM-цены'); assert.equal(marketPriceLabel({ marketPrice: { ...merged.marketPrice, floorNano: '0' } }, now), 'Нет GRAM-цены'); });
 test('sample transaction prices stay unchanged despite market reference', () => { const sample = { ...merged, telegramCatalog: false, tradeSupported: true, priceSource: 'sample', price: '2.750' }; assert.equal(browsingPriceNano(sample, now), 2750000000n); assert.equal(sample.price, '2.750'); });
 test('fresh reference range uses exact nanos; unknown and stale excluded', () => { assert.equal(matchesBrowsingPrice(merged, '5.14', '5.14', now), true); assert.equal(matchesBrowsingPrice(merged, '5.140000001', '', now), false); assert.equal(matchesBrowsingPrice(imported, '', '100', now), false); assert.equal(matchesBrowsingPrice(merged, '', '100', merged.marketPrice.validUntil), false); const tiny = { ...merged, marketPrice: { ...merged.marketPrice, floorNano: '1' } }; assert.equal(matchesBrowsingPrice(tiny, '.000000001', '.000000001', now), true); });
 test('unknown prices sort last in both directions', () => { for (const direction of ['asc', 'desc']) assert.equal(compareBrowsingPrices(imported, merged, direction, now), 1); const cheaper = { ...merged, marketPrice: { ...merged.marketPrice, floorNano: '1' } }; assert.equal(compareBrowsingPrices(cheaper, merged, 'asc', now), -1); assert.equal(compareBrowsingPrices(cheaper, merged, 'desc', now), 1); });
-test('default catalog puts known TON prices before unpriced entries without reshuffling peers', () => {
+test('default catalog puts known GRAM prices before unpriced entries without reshuffling peers', () => {
   assert.equal(comparePriceAvailability(imported, merged, now), 1);
   assert.equal(comparePriceAvailability(merged, imported, now), -1);
   assert.equal(comparePriceAvailability(merged, { ...merged, id: 42 }, now), 0);
@@ -66,10 +66,10 @@ test('unavailable source status is honest and cleared when a price appears', () 
   const feed = fixture(); Object.assign(feed.collections[0], { status: 'not_collectible', floorNano: null, sampleCount: 0 });
   const missing = mergeMarketPrices([merged], feed, identities)[0];
   assert.equal(missing.marketPrice, undefined);
-  assert.equal(marketPriceLabel(missing, now), 'Нет предложений в TON');
+  assert.equal(marketPriceLabel(missing, now), 'Нет предложений в GRAM');
   const recovered = mergeMarketPrices([missing], fixture(), identities)[0];
   assert.equal(recovered.marketStatus, undefined);
-  assert.equal(marketPriceLabel(recovered, now), 'от 5.14 TON');
+  assert.equal(marketPriceLabel(recovered, now), 'от 5.14 GRAM');
   assert.equal(mergeMarketPrices([missing], null, identities)[0].marketStatus, undefined);
 });
 const realFile = path.join(root, 'public/gifts/telegram/prices.json');

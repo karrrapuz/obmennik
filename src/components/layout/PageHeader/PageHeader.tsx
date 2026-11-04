@@ -1,7 +1,7 @@
 import { useAnimatedBalance } from '../../../hooks/useAnimatedBalance';
 import { displayName, useUser } from '../../../auth/AuthProvider';
 import UserAvatar from '../UserAvatar';
-import tonIcon from '../../../assets/ton.svg';
+import tonIcon from '../../../assets/gram.svg';
 import plusIcon from '../../../assets/plus.svg';
 import './PageHeader.css';
 
@@ -19,7 +19,7 @@ export default function PageHeader({ balance, onNavigateProfile, onTopUp }: Page
     <button className="exchange-user" type="button" aria-label="Открыть профиль" onClick={onNavigateProfile}>
       <UserAvatar user={user} /><span title={name}>{name}</span>
     </button>
-    <div className="exchange-balance-group" aria-label={`Баланс ${balance.toFixed(2)} TON`}>
+    <div className="exchange-balance-group" aria-label={`Баланс ${balance.toFixed(2)} GRAM`}>
       <div className="exchange-balance">
         <span className="exchange-ton-icon" aria-hidden="true"><img src={tonIcon} alt="" /></span>
         <span className="exchange-balance__amount">{displayedBalance.toFixed(2)}</span>

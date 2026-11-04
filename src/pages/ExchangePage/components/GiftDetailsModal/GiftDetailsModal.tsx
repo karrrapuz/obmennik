@@ -10,7 +10,7 @@ import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegr
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import { giftPoster } from '../../../../services/giftMedia';
-import tonIcon from '../../../../assets/ton.svg';
+import tonIcon from '../../../../assets/gram.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import viewIcon from './assets/modal-gift-posmotret.svg';
 import shareIcon from './assets/modal-gift-share.svg';
@@ -105,7 +105,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
 
   const share = async () => {
     if (!gift) return;
-    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)}` : `${gift.name} ${gift.model} — ${gift.price} TON`;
+    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)}` : `${gift.name} ${gift.model} — ${gift.price} GRAM`;
     try {
       if (navigator.share) await navigator.share({ title: gift.name, text });
       else {
@@ -135,7 +135,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
             <GiftArtwork gift={gift} autoPlay={open && visible && !preview} />
-            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? <GiftPrice gift={gift} referenceOnly /> : <><span><img src={tonIcon} alt="TON" /></span>{gift.price}</>}</span>
+            <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? <GiftPrice gift={gift} referenceOnly /> : <><span><img src={tonIcon} alt="GRAM" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>
           <dl className="gift-details__traits">
@@ -156,7 +156,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
             <button type="button" disabled={unpriced} onClick={onSelect}>{unpriced ? 'Обмен недоступен' : selected ? 'Убрать' : 'В Обмен'}</button>
           </section>
           {source === 'inventory' && <section className="gift-details__offer">
-            <h3>Нужны тоны?</h3>
+            <h3>Нужны GRAM?</h3>
             <p>Возьми их у нас под залог своего подарка!</p>
             <button type="button" disabled={unpriced || gift.pledgeSupported === false} onClick={() => setNotice('Залог пока недоступен')}>{unpriced ? 'Залог недоступен' : 'В Залог'}</button>
           </section>}

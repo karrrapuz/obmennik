@@ -6,7 +6,7 @@ import gift from '../../ExchangePage/assets/obmen_gift_active.svg';
 import GiftArtwork from '../../../components/gifts/GiftArtwork/GiftArtwork';
 import arrow from '../assets/gift-expand-active.svg';
 import time from '../assets/zalog-gift-time.svg';
-import ton from '../../../assets/ton.svg';
+import ton from '../../../assets/gram.svg';
 import close from '../../ExchangePage/components/FilterModal/assets/Union.svg';
 import success from '../../ProfilePage/assets/yspeh_galoshka.svg';
 import error from '../../ProfilePage/assets/oshibka_krestik.svg';
@@ -67,14 +67,14 @@ export default function PledgePayment({ ids, onClose, onTopUp }: { ids: number[]
         <div className="pledge-pay__content"><div className="pledge-pay__list" data-collapsed={collapsed} inert={collapsed}>{items.map((item) => <article key={item.gift.id} data-expanded={expandedGifts.includes(item.gift.id)}>
           <div className="pledge-pay__art"><GiftArtwork gift={item.gift} /></div>
           <strong className="pledge-pay__name">{item.gift.name}</strong><div className="pledge-pay__model"><span>{item.gift.modelName ?? 'Модель'}</span><span>{item.gift.model}</span></div>
-          <div className="pledge-pay__loan"><i><img src={time} alt="" /></i><div><span>Занято {item.principal.toFixed(3)} TON</span><span>до {new Date(item.dueAt).toLocaleDateString('ru-RU')}</span></div></div>
+          <div className="pledge-pay__loan"><i><img src={time} alt="" /></i><div><span>Занято {item.principal.toFixed(3)} GRAM</span><span>до {new Date(item.dueAt).toLocaleDateString('ru-RU')}</span></div></div>
           <button className="pledge-pay__expand" aria-label={`Платеж по ${item.gift.name}`} aria-expanded={expandedGifts.includes(item.gift.id)} onClick={() => setExpandedGifts((current) => current.includes(item.gift.id) ? current.filter((id) => id !== item.gift.id) : [...current, item.gift.id])}><img src={arrow} alt="" /></button>
-          <div className="pledge-pay__gift-details"><p><span>Следующий платеж</span><span>{new Date(item.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span></p><p><span>Проценты по займу</span><strong>{(item.interest ?? (item.repayment - item.principal)).toFixed(3)} TON</strong></p></div>
+          <div className="pledge-pay__gift-details"><p><span>Следующий платеж</span><span>{new Date(item.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span></p><p><span>Проценты по займу</span><strong>{(item.interest ?? (item.repayment - item.principal)).toFixed(3)} GRAM</strong></p></div>
         </article>)}
           {!items.length && <p>Подарки не выбраны</p>}
         </div><div className="pledge-pay__explanation"><strong>Вы совершаете регулярный платеж</strong><p>Ваши займы будут продлены, а следующий платеж будет запланирован в течение следующих 14 дней</p></div>
         </div>
-        <footer>{!quote ? <div role={quoteError ? "alert" : "status"}>{quoteError ? <>Не удалось получить расчет. <button onClick={() => setQuoteAttempt((value) => value + 1)}>Повторить</button></> : <img className="pledge-pay__spinner" src={spinner} width={32} height={32} alt="Расчет платежа" />}</div> : <div className="pledge-pay__total" data-expanded={expanded}><button aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}><span>Итого к оплате</span><strong>{quote.total.toFixed(3)} TON</strong><img src={arrow} alt="" /></button><div><p><span>Проценты по займу</span><span>{quote.interest.toFixed(3)} TON</span></p><p><span>Комиссия сети</span><span>{quote.fee.toFixed(2)} TON</span></p></div></div>}<button className="pledge-pay__action" disabled={!items.length || !quote || quoteError} onClick={pay}>Оплатить</button></footer>
+        <footer>{!quote ? <div role={quoteError ? "alert" : "status"}>{quoteError ? <>Не удалось получить расчет. <button onClick={() => setQuoteAttempt((value) => value + 1)}>Повторить</button></> : <img className="pledge-pay__spinner" src={spinner} width={32} height={32} alt="Расчет платежа" />}</div> : <div className="pledge-pay__total" data-expanded={expanded}><button aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}><span>Итого к оплате</span><strong>{quote.total.toFixed(3)} GRAM</strong><img src={arrow} alt="" /></button><div><p><span>Проценты по займу</span><span>{quote.interest.toFixed(3)} GRAM</span></p><p><span>Комиссия сети</span><span>{quote.fee.toFixed(2)} GRAM</span></p></div></div>}<button className="pledge-pay__action" disabled={!items.length || !quote || quoteError} onClick={pay}>Оплатить</button></footer>
       </> : <div className="pledge-pay__result"><div className="pledge-pay__result-icon"><img className={stage === 'pending' ? 'pledge-pay__spinner' : ''} src={stage === 'pending' ? spinner : stage === 'success' ? success : error} alt="" /></div><p role="status">{stage === 'pending' ? 'Пожалуйста подождите...' : stage === 'success' ? `Вы успешно продлили займ до ${dates.join(', ')}!` : 'Не удалось подтвердить платеж. Проверьте баланс и повторите попытку.'}</p>{stage !== 'pending' && <button className="pledge-pay__action" onClick={() => stage === 'error' ? (setQuoteAttempt((value) => value + 1), setStage('review')) : dismiss()}>{stage === 'success' ? 'Вернуться назад' : 'Попробовать снова'}</button>}</div>}
     </section>
   </dialog>, document.body);

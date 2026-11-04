@@ -2,11 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import activeGiftIcon from '../../assets/obmen_gift_active.svg';
-import tonIcon from '../../../../assets/ton.svg';
+import tonIcon from '../../../../assets/gram.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import deleteGiftIcon from './deleta-gift.svg';
 import ShortageNotice from '../ShortageNotice/ShortageNotice';
 import './ExchangeModal.css';
+import { telegramHaptic } from '../../../../services/telegram';
 import successIcon from '../../../ProfilePage/assets/yspeh_galoshka.svg';
 import errorIcon from '../../../ProfilePage/assets/oshibka_krestik.svg';
 import type { useTradeQuote } from '../../hooks/useTradeQuote';
@@ -139,7 +140,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
     submitted.current = true;
     setReceivedCount(gifts.length);
     setPending(true);
-    try { await onSuccess(); setResult('success'); } catch { if (!trade.server) setResult('error'); else setNotice(true); }
+    try { await onSuccess(); setResult('success'); telegramHaptic('success'); } catch { telegramHaptic('error'); if (!trade.server) setResult('error'); else setNotice(true); }
     finally { setPending(false); submitted.current = false; }
   };
 
