@@ -541,3 +541,8 @@
 .profile-modal__choices small, .balance-withdraw__available, .balance-withdraw small { color: rgba(255,255,255,.5); }
 .balance-withdraw input::placeholder { color: rgba(255,255,255,.5); -webkit-text-fill-color: rgba(255,255,255,.5); }
 .profile-modal__choices button::after { border-color: rgba(255,255,255,.5); }
+.profile-modal[data-kind='wallet-connect'],
+.profile-modal[data-kind='wallet-warning'] { height: auto; max-height: calc(100dvh - 24px); }
+.profile-modal[data-kind='wallet-connect'] .profile-modal__content,
+.profile-modal[data-kind='wallet-warning'] .profile-modal__content { flex: 0 1 auto; }
+.profile-modal[data-kind='wallet-warning'] .profile-modal__wallet-warning { flex: none; min-height: 120px; }
