@@ -10,7 +10,7 @@ import { previewTelegramGift } from '../../services/telegramCatalog';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftPrice from '../../components/gifts/GiftPrice';
 import { useTelegramPrices } from '../../hooks/useTelegramPrices';
-import { compareBrowsingPrices, comparePriceAvailability, matchesBrowsingPrice } from '../../services/telegramPrices';
+import { compareBrowsingPrices, comparePriceAvailability, hasMarketPrice, matchesBrowsingPrice } from '../../services/telegramPrices';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
 import { tradeDisplayTotals } from './services/tradeDisplay';
@@ -33,6 +33,7 @@ import searchIcon from './assets/lupa_poisk.svg';
 import plusIcon from '../../assets/plus.svg';
 import tonIcon from '../../assets/ton.svg';
 import subtractObmenIcon from './assets/Subtract_obmen.svg';
+import unavailablePriceIcon from '../DepositPage/assets/block-zalog-gift.svg';
 
 
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
@@ -233,6 +234,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
                   <div className="gift-card__meta">
                     <div><strong>{gift.name}</strong><span>{gift.modelName ?? 'Модель'}&nbsp;&nbsp;{gift.model}</span></div>
                   </div>
+                  {isUnpricedGift(gift) && !hasMarketPrice(gift, priceNow) && <div className="gift-card__price-lock" role="status"><img src={unavailablePriceIcon} alt="" /><span>Цена недоступна</span></div>}
                     <button className="gift-card__select" type="button" disabled={trade.locked || isUnpricedGift(gift)} title={isUnpricedGift(gift) ? 'Только просмотр: обмен и залог недоступны' : undefined} aria-label={isUnpricedGift(gift) ? `${gift.name}: только просмотр, обмен недоступен` : `Выбрать ${gift.name}`} aria-pressed={selectedGiftIds.includes(gift.id)} onClick={() => toggleGift(gift.id)}>
                       <img src={selectedGiftIds.includes(gift.id) ? giftAddonIcon : giftIcon} alt="" />
                       <span className="gift-card__status"><img src={selectedGiftIds.includes(gift.id) ? selectedGiftIcon : plusIcon} alt="" /></span>
