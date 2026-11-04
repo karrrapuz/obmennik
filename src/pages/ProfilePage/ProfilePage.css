@@ -221,14 +221,10 @@
 }
 
 .profile-actions__arrow {
-  display: grid;
-  width: 16px;
-  height: 16px;
-  place-items: center;
-  border-radius: 50%;
-  background: #06d7a0;
-  color: #0d0d0d;
-  font: 600 13px/16px Arial, sans-serif;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  object-fit: contain;
 }
 
 .profile-actions__gift {

@@ -14,6 +14,8 @@ import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/P
 import { displayName, useUser } from '../../auth/AuthProvider';
 import UserAvatar from '../../components/layout/UserAvatar';
 import tonIcon from '../../assets/gram.svg';
+import depositActionIcon from './assets/profile-deposit.svg';
+import withdrawActionIcon from './assets/profile-withdraw.svg';
 import giftSelectedIcon from './assets/profile-use-gift-active.svg';
 import giftInactiveIcon from './assets/profile-use-gift-inactive.svg';
 import referralIcon from './assets/ref-ssilka.svg';
@@ -118,8 +120,8 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
     </section>
 
     <div className="profile-actions">
-      <button type="button" onClick={() => setModal('deposit-choice')}><span className="profile-actions__arrow" aria-hidden="true">↙</span>Пополнить</button>
-      <button type="button" onClick={() => setModal('withdraw-choice')}><span className="profile-actions__arrow" aria-hidden="true">↗</span>Вывести</button>
+      <button type="button" onClick={() => setModal('deposit-choice')}><img className="profile-actions__arrow" src={depositActionIcon} alt="" />Пополнить</button>
+      <button type="button" onClick={() => setModal('withdraw-choice')}><img className="profile-actions__arrow" src={withdrawActionIcon} alt="" />Вывести</button>
       <button className="profile-actions__gift" type="button" aria-label="Пополнить подарки" onClick={() => setModal('gift-deposit')}><img src={giftLargeIcon} alt="" /><span aria-hidden="true">+</span></button>
     </div>
 
