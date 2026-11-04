@@ -26,9 +26,7 @@ export default function PageFooter({ active, onNavigate }: {
   onNavigate: (page: PageSection) => void;
 }) {
   const scale = useSyncExternalStore(subscribeViewport, footerScale, () => 1);
-  const lightX = active === 'deposit' ? 76 : active === 'profile' ? 283 : 179;
   return <nav className="page-footer" style={{ scale }} aria-label="Разделы">
-    <i className="page-footer__light" data-centered={active === 'exchange'} style={{ '--light-x': `${lightX - 75}px`, '--light-y': active === 'exchange' ? '12px' : '46px' } as CSSProperties} aria-hidden="true" />
     {items.map((item, index) => <button
       key={item.id}
       className={`page-footer__item page-footer__item--${item.id}`}
@@ -36,6 +34,7 @@ export default function PageFooter({ active, onNavigate }: {
       aria-current={active === item.id ? 'page' : undefined}
       onClick={() => onNavigate(item.id)}
     >
+      <i className="page-footer__light" aria-hidden="true" />
       <i className="page-footer__icon" style={{ '--icon': masks[index] } as CSSProperties} aria-hidden="true" />
       <span>{item.label}</span>
     </button>)}
