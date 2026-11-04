@@ -99,7 +99,8 @@
 }
 
 .exchange-summary__value--total {
-  width: 45px;
+  width: max-content;
+  min-width: 49px;
   height: 10px;
   justify-content: flex-start;
   gap: 3px;
@@ -107,8 +108,8 @@
 
 .exchange-summary__value img {
   flex: none;
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
 }
 
 .exchange-summary__value > span {
@@ -135,12 +136,12 @@
 }
 
 .exchange-summary__offer-state--amount {
-  width: 51px;
+  width: max-content;
 }
 
 .exchange-summary__offer-state--amount > span {
-  width: 38px;
-  text-align: center;
+  min-width: 38px;
+  text-align: left;
 }
 
 .exchange-summary__offer-state--minimum {
@@ -163,7 +164,7 @@
 }
 
 .exchange-summary__value--total > span {
-  width: 32px;
+  min-width: 32px;
   justify-content: center;
   text-align: center;
 }

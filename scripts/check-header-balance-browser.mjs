@@ -9,6 +9,9 @@ try {
     await page.route('https://fonts.googleapis.com/**', route => route.abort());
     await page.goto(process.env.HEADER_TEST_URL || 'http://127.0.0.1:5185', { waitUntil: 'domcontentloaded' });
     await page.locator('.exchange-header').waitFor({ timeout: 30000 });
+    assert.equal(await page.locator('.exchange-ton-icon').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(48, 48, 48)');
+    assert.equal(await page.locator('.exchange-ton-icon img').evaluate(node => getComputedStyle(node).width), '18px');
+    assert.equal(await page.locator('.gift-card__price img').first().evaluate(node => getComputedStyle(node).width), '14px');
     const measurements = await page.locator('.exchange-header').evaluate(header => {
       const amount = header.querySelector('.exchange-balance__amount');
       const original = amount.textContent;

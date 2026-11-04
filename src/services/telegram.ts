@@ -9,14 +9,17 @@ type TelegramWebApp = {
   setBackgroundColor: (color: string) => void;
   setBottomBarColor: (color: string) => void;
   enableClosingConfirmation?: () => void;
-  HapticFeedback?: { selectionChanged: () => void; notificationOccurred: (type: 'success' | 'error') => void };
+  HapticFeedback?: { selectionChanged: () => void; impactOccurred?: (style: 'light') => void; notificationOccurred: (type: 'success' | 'error') => void };
 };
 
 let hapticsBound = false;
 export function telegramHaptic(type: 'selection' | 'success' | 'error' = 'selection') {
   const feedback = (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp?.HapticFeedback;
   try {
-    if (type === 'selection') feedback?.selectionChanged();
+    if (type === 'selection') {
+      if (feedback?.impactOccurred) feedback.impactOccurred('light');
+      else feedback?.selectionChanged();
+    }
     else feedback?.notificationOccurred(type);
   } catch { /* Unsupported clients must not interrupt the action. */ }
 }

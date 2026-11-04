@@ -47,7 +47,7 @@
 .pledge-card strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .pledge-card small { display: block; font-size: 10px; color: #fff3; }
 .pledge-card__price { display: flex; align-items: center; justify-content: center; gap: 5px; height: 30px; }
-.pledge-card__price img { width: 10px; height: 10px; }
+.pledge-card__price img { width: 14px; height: 14px; }
 .pledge-card__status { position: absolute; right: 8px; top: 8px; border-radius: 10px; padding: 4px 7px; background: #0d0d0d99; color: #06d7a0; font-size: 10px; }
 .pledge-empty--inventory { padding-top: 126px; text-align: center; }
 .pledge-empty--inventory strong { display: block; font-size: 14px; line-height: 18px; font-weight: 600; }

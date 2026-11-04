@@ -466,8 +466,8 @@
   gap: 10px; height: 66px; padding: 8px 16px 8px 8px; border-radius: 20px; background: #0d0d0d;
 }
 .balance-withdraw__coin { display: grid; place-items: center; flex: none; width: 50px; height: 50px; border-radius: 17px; background: #131313; }
-.balance-withdraw__coin i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #587ffe; }
-.balance-withdraw__coin img { width: 13.85px; height: 13.85px; transform: translateY(1.15px); }
+.balance-withdraw__coin i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #303030; }
+.balance-withdraw__coin img { width: 20px; height: 20px; }
 .balance-withdraw input { width: 0; flex: 1; min-width: 0; border: 0; padding: 0; outline: none; background: transparent; color: #fff; font: 600 16px/18px 'Onest', Arial, sans-serif; }
 .balance-withdraw input::placeholder, .balance-withdraw input:disabled { color: rgba(255,255,255,0.2); -webkit-text-fill-color: rgba(255,255,255,0.2); opacity: 1; }
 .balance-withdraw small { flex: none; max-width: 46%; color: rgba(255,255,255,0.2); text-align: right; font: 500 12px/18px 'Onest', Arial, sans-serif; }

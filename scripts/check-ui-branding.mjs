@@ -20,6 +20,9 @@ globalThis.window = { Telegram: { WebApp: { HapticFeedback: {
 } } } };
 telegramHaptic(); telegramHaptic('success'); telegramHaptic('error');
 assert.deepEqual(calls.slice(2), ['selection', 'success', 'error']);
+globalThis.window.Telegram.WebApp.HapticFeedback.impactOccurred = style => calls.push(style);
+telegramHaptic();
+assert.equal(calls.at(-1), 'light', 'Button presses prefer a perceptible light impact');
 globalThis.window = {};
 assert.doesNotThrow(() => telegramHaptic());
 const modal = fs.readFileSync('src/pages/ProfilePage/components/ProfileModal/ProfileModal.tsx', 'utf8');

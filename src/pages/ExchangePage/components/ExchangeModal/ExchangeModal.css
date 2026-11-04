@@ -171,8 +171,8 @@
 }
 
 .exchange-modal__total strong img {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   opacity: 0.2;
 }
 
@@ -344,14 +344,13 @@
   height: 24px;
   place-items: center;
   border-radius: 50%;
-  background: #587ffe;
+  background: #303030;
 }
 
 .exchange-modal__ton img {
   display: block;
-  width: 11.08px;
-  height: 11.08px;
-  transform: translateY(0.92px);
+  width: 16px;
+  height: 16px;
 }
 
 .exchange-modal__price-value {

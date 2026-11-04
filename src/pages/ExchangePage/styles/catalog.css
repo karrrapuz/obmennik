@@ -348,9 +348,11 @@
 .gift-card__price {
   position: absolute;
   top: 183px;
-  left: 60px;
+  left: 12px;
+  right: 12px;
   display: flex;
-  width: 53px;
+  width: auto;
+  justify-content: center;
   height: 10px;
   align-items: center;
   gap: 5px;
@@ -360,8 +362,8 @@
 }
 
 .gift-card__price img {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   flex: none;
 }
 .gift-card__price[data-unpriced='true'] { left: 8px; right: 8px; width: auto; justify-content: center; font-size: 11px; color: #a8a8a8; }
