@@ -9,7 +9,7 @@ import chevronIcon from './assets/zasrit.svg';
 import closeIcon from './assets/Union.svg';
 import checkIcon from './assets/galochka.svg';
 import plusIcon from './assets/plus.svg';
-import tonModalIcon from '../../../../assets/gram.svg';
+import tonModalIcon from '../../../../assets/gram-outline.svg';
 import searchIcon from './assets/poisk_modal.svg';
 import './FilterModal.css';
 import { upgradeGiftImage } from '../../../../services/giftMedia';

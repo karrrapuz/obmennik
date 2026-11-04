@@ -31,7 +31,7 @@ import giftAddonIcon from './assets/gift-addon.svg';
 import selectedGiftIcon from './assets/galochka.svg';
 import searchIcon from './assets/lupa_poisk.svg';
 import plusIcon from '../../assets/plus.svg';
-import tonIcon from '../../assets/gram.svg';
+import tonIcon from '../../assets/gram-outline.svg';
 import subtractObmenIcon from './assets/Subtract_obmen.svg';
 import unavailablePriceIcon from '../DepositPage/assets/block-zalog-gift.svg';
 import { openGiftRelayer } from '../../services/giftRelayer';

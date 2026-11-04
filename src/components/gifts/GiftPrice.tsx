@@ -3,7 +3,7 @@ import { isUnpricedGift } from '../../pages/ExchangePage/data/gifts';
 import { hasMarketPrice, marketPriceLabel } from '../../services/telegramPrices';
 import { formatNano } from '../../wallet/wallet';
 import { useTelegramPrices } from '../../hooks/useTelegramPrices';
-import tonIcon from '../../assets/gram.svg';
+import tonIcon from '../../assets/gram-outline.svg';
 import './GiftPrice.css';
 
 type PriceGift = Omit<Gift, 'price'> & { price: string | number };

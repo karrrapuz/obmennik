@@ -10,7 +10,7 @@ import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegr
 import giftIcon from '../../assets/gift.svg';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import { giftPoster } from '../../../../services/giftMedia';
-import tonIcon from '../../../../assets/gram.svg';
+import tonIcon from '../../../../assets/gram-outline.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import viewIcon from './assets/modal-gift-posmotret.svg';
 import shareIcon from './assets/modal-gift-share.svg';

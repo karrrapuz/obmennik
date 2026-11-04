@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import activeGiftIcon from '../../assets/obmen_gift_active.svg';
-import tonIcon from '../../../../assets/gram.svg';
+import tonIcon from '../../../../assets/gram-outline.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import deleteGiftIcon from './deleta-gift.svg';
 import ShortageNotice from '../ShortageNotice/ShortageNotice';

@@ -606,6 +606,8 @@
 
 .profile-referral__stat {
   position: relative;
+  isolation: isolate;
+  clip-path: inset(0 round 20px);
   height: 153px;
   overflow: hidden;
   border-radius: 20px;
@@ -615,7 +617,7 @@
 .profile-referral__stat > img {
   position: absolute;
   top: -7px;
-  left: 31px;
+  left: calc(50% - 45.5px);
   width: 91px;
   height: 91px;
   mix-blend-mode: overlay;

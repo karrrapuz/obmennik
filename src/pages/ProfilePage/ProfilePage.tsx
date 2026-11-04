@@ -13,7 +13,7 @@ import GiftWithdrawal from './components/GiftWithdrawal/GiftWithdrawal';
 import ProfileModal, { type ProfileModalKind } from './components/ProfileModal/ProfileModal';
 import { displayName, useUser } from '../../auth/AuthProvider';
 import UserAvatar from '../../components/layout/UserAvatar';
-import tonIcon from '../../assets/gram.svg';
+import tonIcon from '../../assets/gram-outline.svg';
 import depositActionIcon from './assets/profile-deposit.svg';
 import withdrawActionIcon from './assets/profile-withdraw.svg';
 import giftSelectedIcon from './assets/profile-use-gift-active.svg';
@@ -33,7 +33,7 @@ import giftLargeIcon from './assets/gift-large.svg';
 import giftExpandIcon from './assets/gift-expand.svg';
 import giftCollapseIcon from './assets/gift-collapse.svg';
 import inviteBackdrop from './assets/referal_invite_backdrop.svg';
-import earnedBackdrop from './assets/referal_zarabotano_backdrop.svg';
+import earnedBackdrop from '../../assets/gram-outline-blue.svg';
 import './ProfilePage.css';
 import AdminAccess from '../../admin/AdminAccess';
 

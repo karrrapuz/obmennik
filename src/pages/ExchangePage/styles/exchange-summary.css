@@ -108,6 +108,9 @@
 
 .exchange-summary__value img {
   flex: none;
+  display: block;
+  object-fit: contain;
+  transform: translateY(-1px);
   width: 14px;
   height: 14px;
 }
