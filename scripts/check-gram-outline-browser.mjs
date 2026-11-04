@@ -14,6 +14,11 @@ try {
   const nav = page.getByRole('navigation', { name: 'Разделы' });
   await nav.getByRole('button', { name: 'Залог', exact: true }).click();
   await page.getByRole('button', { name: 'Открыть Artisan Brick', exact: true }).click();
+  const close = page.locator('.pledge-sheet header button');
+  assert.equal(await close.evaluate(e => getComputedStyle(e).outlineStyle), 'none', 'No automatic focus ring on close');
+  await page.keyboard.press('Tab');
+  assert.equal(await close.evaluate(e => e === document.activeElement), true, 'Keyboard navigation still reaches close');
+  assert.equal(await close.evaluate(e => getComputedStyle(e).outlineStyle), 'solid', 'Keyboard focus stays visible');
   const terms = page.locator('.pledge-terms > button');
   for (const term of await terms.all()) {
     assert.equal(await term.evaluate(e => getComputedStyle(e).clipPath), 'inset(0px round 20px)');

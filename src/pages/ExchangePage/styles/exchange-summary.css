@@ -175,6 +175,7 @@
 .exchange-summary__value .exchange-summary__muted-mark {
   width: 7px;
   height: 7px;
+  transform: translateY(1px);
   opacity: 0.2;
 }
 

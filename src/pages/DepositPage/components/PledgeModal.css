@@ -10,6 +10,7 @@
 .pledge-sheet header { position: relative; flex: none; height: 56px; }
 .pledge-sheet header > span { position: absolute; width: 98px; height: 4px; top: 0; left: calc(50% - 49px); background: #fff3; border-radius: 2px; }
 .pledge-sheet button { cursor: pointer; border: 0; color: white; }
+.pledge-dialog:focus { outline: none; }
 .pledge-sheet button:focus-visible { outline: 2px solid #06d7a0; outline-offset: 2px; }
 .pledge-sheet header button { position: absolute; right: 16px; top: 16px; width: 40px; height: 24px; padding: 0; display: grid; place-items: center; background: #0d0d0d; border-radius: 11px; }
 .pledge-sheet header img { width: 8px; height: 8px; }

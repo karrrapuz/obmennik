@@ -45,6 +45,7 @@ export default function PledgeModal({ gift, open, onClose, pledge, onCreated }: 
     if (open) {
       setMountedOpen(true);
       if (!dialog.current?.open) dialog.current?.showModal();
+      dialog.current?.focus({ preventScroll: true });
       if (dialog.current) dialog.current.scrollTop = 0;
       setWeeks(null); setConfirm(false); setNotice(''); setPayment(null);
       if (scroll.current) scroll.current.scrollTop = 0;
