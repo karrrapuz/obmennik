@@ -12,6 +12,11 @@ try {
     await nav.waitFor({ timeout: 30000 });
     for (const name of ['Профиль', 'Залог', 'Обмен', 'Профиль']) {
       await nav.getByRole('button', { name, exact: true }).click();
+      await page.waitForTimeout(80);
+      const exchangeColor = await nav.locator('.page-footer__item--exchange .page-footer__icon').evaluate(e => getComputedStyle(e).backgroundColor);
+      const channels = exchangeColor.match(/[\d.]+/g).map(Number);
+      assert.equal(channels[0], channels[1], 'Exchange icon must not pass through green');
+      assert.equal(channels[1], channels[2], 'Exchange icon stays neutral during transitions');
       await page.waitForTimeout(400);
       assert.equal(await nav.locator('[aria-current="page"]').count(), 1);
       const active = nav.locator('[aria-current="page"]');
