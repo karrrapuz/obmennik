@@ -6,18 +6,16 @@ const Context = createContext<(key: string, entry: Entry) => void>(() => {});
 const Ready = createContext(false);
 export function BootProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<Record<string, Entry>>({});
-  const [minimum, setMinimum] = useState(false);
   const [completed, setCompleted] = useState(false);
-  useEffect(() => { const timer = setTimeout(() => setMinimum(true), 5000); return () => clearTimeout(timer); }, []);
   const [report] = useState(() => (key: string, entry: Entry) => setEntries((current) => ({ ...current, [key]: entry })));
-  const initialReady = minimum && ['auth', 'inventory', 'wallet', 'loans'].every((key) => entries[key] && !entries[key].loading && !entries[key].error);
+  const initialReady = ['auth', 'inventory', 'wallet', 'loans'].every((key) => entries[key] && !entries[key].loading && !entries[key].error);
   useEffect(() => { if (initialReady) setCompleted(true); }, [initialReady]);
   const ready = completed || initialReady;
-  return <Context.Provider value={report}><Ready.Provider value={ready}>{children}</Ready.Provider>{!ready && <BootScreen entries={entries} minimum={minimum} />}</Context.Provider>;
+  return <Context.Provider value={report}><Ready.Provider value={ready}>{children}</Ready.Provider>{!ready && <BootScreen entries={entries} />}</Context.Provider>;
 }
-function BootScreen({ entries, minimum }: { entries: Record<string, Entry>; minimum: boolean }) {
+function BootScreen({ entries }: { entries: Record<string, Entry> }) {
   const failed = Object.values(entries).filter((entry) => entry.error);
-  if (!minimum || (!failed.length && ['auth', 'inventory', 'wallet', 'loans'].some((key) => !entries[key] || entries[key].loading))) return <LoadingPage />;
+  if (!failed.length && ['auth', 'inventory', 'wallet', 'loans'].some((key) => !entries[key] || entries[key].loading)) return <LoadingPage />;
   if (failed.length) return <main className="auth-error"><p role="alert">{entries.auth?.error ? 'Не удалось войти через Telegram.' : 'Не удалось загрузить данные. Повторите попытку.'}</p><button onClick={() => failed.forEach((entry) => entry.retry())}>Повторить</button></main>;
   return null;
 }

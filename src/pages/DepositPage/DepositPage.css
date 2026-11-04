@@ -21,14 +21,14 @@
 .pledge-banner__art { position: absolute; top: 0; right: 0; width: 358px; height: 110px; pointer-events: none; }
 .pledge-banner__art::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 190px 155px at 100% 118%, rgba(6,215,160,.62), rgba(6,215,160,.12) 65%, transparent 100%); }
 .pledge-banner h1 { position: absolute; left: 28px; top: 28px; height: 14px; display: flex; align-items: center; margin: 0; font-size: 20px; line-height: 18px; }
-.pledge-banner p { position: absolute; left: 28px; top: 58px; width: 184px; height: 26px; display: flex; align-items: center; margin: 0; font-size: 12px; line-height: 18px; color: #fff3; }
+.pledge-banner p { position: absolute; left: 28px; top: 58px; width: 184px; height: 26px; display: flex; align-items: center; margin: 0; font-size: 12px; line-height: 18px; color: #ffffff99; }
 .pledge-banner__gift { position: absolute; left: 183px; top: 20px; width: 87.29px; height: 87.29px; border-radius: 20px; transform: rotate(-8deg); display: grid; place-items: center; background: linear-gradient(160deg,#0d0d0d 20%,#0d1e19 100%); }
 .pledge-banner__gift > span { width: 43.85px; height: 43.85px; background: linear-gradient(180deg,#1e3435,#102b24); mask: url('../ExchangePage/assets/obmen_gift_active.svg') center / contain no-repeat; }
 .pledge-banner__exchange { position: absolute; left: 256.5px; top: 36.51px; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#0c211b,#153e34); }
 .pledge-banner__exchange img { position: absolute; width: 38px; height: 38px; left: -2px; top: -2px; }
-.pledge-banner__ton { position: absolute; display: grid; place-items: center; border-radius: 50%; background: #303030; }
+.pledge-banner__ton { position: absolute; display: grid; place-items: center; border-radius: 50%; background: rgba(44,91,78,.1); }
 .pledge-banner__ton img { width: 64%; height: 64%; }
-.pledge-banner__ton--back { left: 289.55px; top: 30.55px; width: 31px; height: 31px; transform: rotate(10deg); background: linear-gradient(114.22deg,#3a3a3a 44.81%,#242424 118.57%); }
+.pledge-banner__ton--back { left: 289.55px; top: 30.55px; width: 31px; height: 31px; transform: rotate(10deg); }
 .pledge-banner__ton--front { left: 312px; top: 38px; width: 38.55px; height: 38.55px; transform: rotate(-16deg); }
 .pledge-banner__ton--bottom { left: 289px; top: 65px; width: 26.59px; height: 26.59px; transform: rotate(18deg); }
 @media (max-width: 370px) { .pledge-banner__art { transform: scale(.82); transform-origin: right center; } .pledge-banner h1,.pledge-banner p { left: 16px; } .pledge-banner p { width: 170px; } }

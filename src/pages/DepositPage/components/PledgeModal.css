@@ -25,7 +25,7 @@
 .pledge-attributes { margin: 12px 0; display: grid; gap: 8px; }
 .pledge-attributes > div { display: grid; grid-template-columns: 38% minmax(0,1fr); gap: 8px; min-height: 46px; }
 .pledge-attributes dt,.pledge-attributes dd { display: flex; align-items: center; margin: 0; padding: 10px 20px; background: #0d0d0d; }
-.pledge-attributes dt { color: #fff3; border-radius: 20px 0 0 20px; }
+.pledge-attributes dt { color: #ffffff99; border-radius: 20px 0 0 20px; }
 .pledge-attributes dd { min-width: 0; padding-left: 22px; border-radius: 0 20px 20px 0; font-size: 14px; line-height: 18px; }
 .pledge-attributes dd > span { overflow-wrap: anywhere; }
 .pledge-attributes small { margin-left: 4px; color: #06d7a0; font-size: 10px; line-height: 18px; font-weight: 600; vertical-align: baseline; white-space: nowrap; }
@@ -38,7 +38,7 @@
 .pledge-terms span,.pledge-terms strong,.pledge-terms small { position: absolute; left: 0; width: 100%; text-align: center; }
 .pledge-terms span { top: 47px; font-size: 12px; }
 .pledge-terms strong { top: 69px; font-size: 20px; line-height: 24px; color: var(--term-color); }
-.pledge-terms small { top: 94px; font-size: 12px; color: #fff3; }
+.pledge-terms small { top: 94px; font-size: 12px; color: #ffffffb3; }
 .pledge-terms b { position: absolute; bottom: 12px; left: 12px; right: 12px; height: 42px; display: grid; place-items: center; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 15px; font-size: 14px; font-weight: 600; transition: background-color 320ms ease; }
 .pledge-terms [aria-pressed='true'] b { background: var(--term-color); }
 .pledge-sheet footer { flex: none; padding: 12px 16px 30px; }
@@ -52,7 +52,7 @@
 .pledge-legacy-note { margin: 16px 0 0; color: #aaa; font-size: 12px; line-height: 18px; }
 .pledge-details section { padding: 16px 16px 20px; border-radius: 20px; background: #0d0d0d; }
 .pledge-details h3 { font-size: 14px; line-height: 18px; margin: 0 0 8px; }
-.pledge-details p { margin: 0; color: #fff3; font-size: 12px; line-height: 18px; font-weight: 600; }
+.pledge-details p { margin: 0; color: #ffffff99; font-size: 12px; line-height: 18px; font-weight: 600; }
 .pledge-details .pledge-details__summary { position: relative; height: 104px; overflow: hidden; isolation: isolate; padding: 16px; border-radius: 20px; clip-path: inset(0 round 20px); }
 .pledge-details__summary::before { content: ''; position: absolute; z-index: -1; width: 133px; height: 133px; right: -58px; top: 76px; background: #06d7a0; filter: blur(60px); pointer-events: none; }
 .pledge-details__summary > strong { display: block; margin-top: 8px; color: #06d7a0; font-size: 20px; line-height: 24px; }
@@ -60,7 +60,7 @@
 .pledge-payment { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; min-height: 66px; padding: 12px 12px 12px 16px; background: rgba(47,47,47,.2); border-radius: 20px; }
 .pledge-payment > div { min-width: 0; }
 .pledge-payment strong { display: block; font-size: 14px; line-height: 18px; }
-.pledge-payment small { display: block; color: #fff3; font-size: 12px; line-height: 18px; margin-top: 2px; }
+.pledge-payment small { display: block; color: #ffffff99; font-size: 12px; line-height: 18px; margin-top: 2px; }
 .pledge-payment button { flex: none; width: 120px; height: 42px; padding: 0; border-radius: 15px; background: #06d7a0; font-size: 14px; }
 .pledge-autopay { width: 100%; height: 42px; margin-top: 10px; background: rgba(47,47,47,.2); backdrop-filter: blur(15px); border-radius: 20px; font-size: 12px; display: flex; justify-content: center; align-items: center; gap: 10px; transition: background-color 320ms ease; }
 .pledge-autopay[data-active='false'] { background: #06d7a0; }

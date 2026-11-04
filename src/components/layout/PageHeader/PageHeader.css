@@ -109,7 +109,7 @@
   height: 26px;
   flex: none;
   place-items: center;
-  background: #303030;
+  background: rgba(44, 91, 78, 0.1);
   border-radius: 50%;
 }
 
