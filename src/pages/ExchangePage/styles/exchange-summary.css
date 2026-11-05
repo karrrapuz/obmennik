@@ -99,10 +99,10 @@
 }
 
 .exchange-summary__value--total {
-  width: max-content;
-  min-width: 49px;
+  width: 100%;
+  min-width: 0;
   height: 10px;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 3px;
 }
 
@@ -139,11 +139,11 @@
 }
 
 .exchange-summary__offer-state--amount {
-  width: max-content;
+  width: 100%;
 }
 
 .exchange-summary__offer-state--amount > span {
-  min-width: 38px;
+  min-width: 0;
   text-align: left;
 }
 
@@ -167,7 +167,7 @@
 }
 
 .exchange-summary__value--total > span {
-  min-width: 32px;
+  min-width: 0;
   justify-content: center;
   text-align: center;
 }
@@ -247,13 +247,6 @@
   opacity: 0.7;
 }
 
-.exchange-summary[data-active='true'] .exchange-summary__value--total {
-  width: 51px;
-}
-
-.exchange-summary[data-active='true'] .exchange-summary__value--total > span {
-  width: 38px;
-}
 
 /* Разные кегли внутри строки, как на визуальном макете */
 .exchange-summary__offer-text span + span {

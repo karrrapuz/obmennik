@@ -1,0 +1,6 @@
+.amount-digits {
+  min-width: 0;
+  white-space: nowrap;
+  font-size: clamp(10px, calc(var(--amount-budget, 112px) / var(--amount-digits)), var(--amount-max, 14px));
+  line-height: 18px;
+}

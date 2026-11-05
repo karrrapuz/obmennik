@@ -139,7 +139,7 @@
   border: 0;
   border-radius: 20px;
   background: rgba(13, 13, 13, 0.2);
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
   font-family: 'Onest', Arial, sans-serif;
   cursor: pointer;
   transition: background 180ms ease;
@@ -156,25 +156,29 @@
 
 .exchange-modal__total > span {
   height: 8px;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 10px;
   font-weight: 600;
 }
 
 .exchange-modal__total strong {
+  max-width: 100%;
+  min-width: 0;
+  --amount-budget: 138px;
   display: flex;
   align-items: center;
   gap: 3px;
   font-size: 14px;
   font-weight: 600;
   line-height: 18px;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .exchange-modal__total strong img {
+  flex: none;
   width: 14px;
   height: 14px;
-  opacity: 0.2;
+  opacity: 0.8;
 }
 
 .exchange-modal__total[data-active='true'] {
@@ -310,7 +314,8 @@
 .exchange-modal__model {
   top: 43px;
   display: flex;
-  width: 101px;
+  width: auto;
+  right: 12px;
   height: 10px;
   align-items: center;
   gap: 8px;
@@ -361,6 +366,26 @@
   align-items: center;
   color: #fff;
   font-variant-numeric: tabular-nums;
+}
+
+.exchange-modal__price-value .amount-digits { --amount-max: 16px; --amount-budget: 100px; }
+
+@media (max-width: 389px) {
+  .exchange-modal__gift {
+    width: 100%; height: auto; min-height: 125px;
+    display: grid; grid-template-columns: 100px minmax(0, 1fr) 40px;
+    grid-template-rows: minmax(18px, auto) minmax(18px, auto) 40px;
+    gap: 6px 12px; padding: 12px 12px 12px 0;
+  }
+  .exchange-modal__visual { grid-column: 1; grid-row: 1 / 4; width: 100px; height: 100px; align-self: center; }
+  .exchange-modal__gift > strong { position: static; grid-column: 2 / 4; grid-row: 1; height: auto; min-width: 0; font-size: 14px; white-space: normal; overflow-wrap: anywhere; }
+  .exchange-modal__model { position: static; grid-column: 2 / 4; grid-row: 2; width: auto; height: auto; min-width: 0; flex-wrap: wrap; white-space: normal; }
+  .exchange-modal__price { position: static; grid-column: 2; grid-row: 3; min-width: 0; width: 100%; padding: 6px; gap: 4px; }
+  .exchange-modal__ton { width: 18px; height: 18px; }
+  .exchange-modal__ton img { width: 14px; height: 14px; }
+  .exchange-modal__price-value { min-width: 0; flex: 1; }
+  .exchange-modal__price-value .amount-digits { --amount-max: 14px; --amount-budget: 80px; }
+  .exchange-modal__gift .exchange-modal__remove { position: static; grid-column: 3; grid-row: 3; }
 }
 
 .exchange-modal__remove {

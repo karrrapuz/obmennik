@@ -1,0 +1,21 @@
+:root .profile-modal-layer,
+:root .exchange-modal-layer,
+:root .filter-modal-layer,
+:root .sort-modal-layer,
+:root .gift-details,
+:root .pledge-dialog,
+:root .pledge-pay-dialog {
+  top: var(--visible-top, 0px);
+  bottom: auto;
+  height: var(--visible-height, 100dvh);
+}
+
+:root .profile-modal,
+:root .exchange-modal,
+:root .filter-modal,
+:root .sort-modal,
+:root .gift-details__sheet,
+:root .pledge-sheet,
+:root .pledge-pay {
+  max-height: calc(var(--visible-height, 100dvh) - 24px);
+}

@@ -14,7 +14,7 @@
 .pledge-pay__close { position: absolute; right: 16px; top: 16px; width: 40px; height: 24px; border-radius: 11px; background: #0d0d0d; display: grid; place-items: center; }
 .pledge-pay__close img { width: 8px; height: 8px; }
 .pledge-pay h2 { flex: none; margin: 35px 0 0; height: 28px; text-align: center; font-size: 24px; line-height: 28px; }
-.pledge-pay__subtitle { flex: none; margin: 6px auto 16px; width: min(325px,100%); height: 34px; text-align: center; color: #fff3; font-size: 12px; font-weight: 500; line-height: 18px; }
+.pledge-pay__subtitle { flex: none; margin: 6px auto 16px; width: min(325px,100%); min-height: 34px; text-align: center; color: #ffffff99; font-size: 12px; font-weight: 500; line-height: 18px; }
 .pledge-pay__balance { display: flex; flex: none; align-items: center; gap: 10px; height: 66px; padding: 8px; border-radius: 20px; background: #0d0d0d; }
 .pledge-pay__balance i { display: grid; place-items: center; flex: none; width: 50px; height: 50px; background: #131313; border-radius: 17px; }
 .pledge-pay__balance i span { display: grid; place-items: center; width: 30px; height: 30px; background: #587ffe; border-radius: 50%; }
@@ -79,3 +79,21 @@
 @keyframes pledge-pay-spin { to { transform: rotate(360deg); } }
 @media (max-width: 370px) { .pledge-pay__art { width: 100px; height: 125px; } .pledge-pay__name,.pledge-pay__model,.pledge-pay__loan { left: 110px; } .pledge-pay__loan { gap: 4px; padding: 6px; } .pledge-pay__balance button { width: 100px; } }
 @media (max-height: 650px) { .pledge-pay__content { overflow-y: auto; } .pledge-pay__list { flex: none; max-height: 201px; } }
+.pledge-pay-dialog:focus { outline: none; }
+.pledge-pay__balance small,
+.pledge-pay__model,
+.pledge-pay__loan > div,
+.pledge-pay__gift-details p > span:first-child,
+.pledge-pay__explanation p,
+.pledge-pay__total p,
+.pledge-pay__result p { color: #ffffff99; }
+.pledge-pay__result p { overflow-wrap: anywhere; }
+.pledge-pay__content { overscroll-behavior: contain; }
+/* Keep the list and explanation reachable when the keyboard reduces the viewport. */
+@media (max-height: 650px) {
+  .pledge-pay[data-stage='review'] { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .pledge-pay[data-stage='review']::before { height: max(100%, 724px); mask-size: 100% 100%; }
+  .pledge-pay[data-stage='review'] .pledge-pay__content { flex: none; overflow: visible; }
+  .pledge-pay[data-stage='review'] .pledge-pay__list { flex-basis: auto; }
+  .pledge-pay[data-stage='review'] .pledge-pay__list[data-collapsed='true'] { max-height: 0; }
+}

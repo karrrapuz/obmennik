@@ -1,0 +1,56 @@
+/* Secondary copy stays subordinate without disappearing on dark surfaces. */
+:root .profile-balance > span,
+:root .profile-gifts__card-info span,
+:root .profile-referral-link > div,
+:root .gift-card__meta div > span,
+:root .pledge-card small,
+:root .pledge-empty-loans > p,
+:root .pledge-supported small,
+:root .loading-page__caption,
+:root .exchange-modal__empty,
+:root .exchange-modal__model,
+:root .exchange-result p,
+:root .filter-modal__empty,
+:root .gift-details__traits dt,
+:root .profile-modal__choices small,
+:root .profile-modal__gift small,
+:root .profile-modal__result p,
+:root .balance-withdraw small,
+:root .balance-withdraw__available,
+:root .pledge-processing p,
+:root .pledge-pay__subtitle,
+:root .pledge-pay__balance small,
+:root .pledge-pay__model,
+:root .pledge-pay__loan > div,
+:root .pledge-pay__gift-details p > span:first-child,
+:root .pledge-pay__explanation p,
+:root .pledge-pay__total p {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:root .exchange-search input::placeholder,
+:root .pledge-search input::placeholder,
+:root .filter-modal__price-range input::placeholder,
+:root .filter-modal__search input::placeholder,
+:root .profile-modal__form input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 1;
+}
+
+:root .exchange-section-switcher button[aria-selected='false']:not(:disabled),
+:root .pledge-tabs button[aria-selected='false']:not(:disabled),
+:root .profile-footer button:not(:disabled) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Disabled instructions remain muted; enabled accent styles are untouched. */
+:root .pledge-sheet footer button:disabled,
+:root .profile-referral__stat > button:disabled,
+:root .profile-modal__form > button:disabled,
+:root .profile-modal__bottom:disabled,
+:root .balance-withdraw > button:disabled,
+:root .exchange-modal__submit:disabled,
+:root .exchange-modal__tools button:disabled,
+:root .sort-modal__actions button:disabled {
+  color: rgba(255, 255, 255, 0.45);
+}

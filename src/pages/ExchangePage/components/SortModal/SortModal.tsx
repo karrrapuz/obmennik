@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useModalFocus } from '../../../../hooks/useModalFocus';
 import { createPortal } from 'react-dom';
 import checkIcon from '../FilterModal/assets/galochka.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
@@ -27,6 +28,8 @@ function SortModal({ open, value, onApply, onClose }: SortModalProps) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const [draft, setDraft] = useState<SortOption[]>(value);
+  const panelRef = useRef<HTMLElement>(null);
+  useModalFocus(panelRef, mounted);
 
   const toggleOption = (option: SortOption) => {
     setDraft((current) => current.includes(option)
@@ -65,7 +68,7 @@ function SortModal({ open, value, onApply, onClose }: SortModalProps) {
       if (event.target === event.currentTarget && !open) setMounted(false);
     }}>
       <button className="sort-modal-scrim" type="button" aria-label="Закрыть сортировку" onClick={onClose} />
-      <section className="sort-modal" role="dialog" aria-modal="true" aria-label="Сортировка">
+      <section ref={panelRef} tabIndex={-1} className="sort-modal" role="dialog" aria-modal="true" aria-label="Сортировка">
         <div className="sort-modal__handle" aria-hidden="true" />
         <header className="sort-modal__header">
           <h2>Сортировка</h2>

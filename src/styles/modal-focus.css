@@ -1,0 +1,4 @@
+.exchange-modal:focus,
+.profile-modal:focus,
+.filter-modal:focus,
+.sort-modal:focus { outline: none; }

@@ -546,3 +546,14 @@
 .profile-modal[data-kind='wallet-connect'] .profile-modal__content,
 .profile-modal[data-kind='wallet-warning'] .profile-modal__content { flex: 0 1 auto; }
 .profile-modal[data-kind='wallet-warning'] .profile-modal__wallet-warning { flex: none; min-height: 120px; }
+.profile-modal__content { scroll-padding-block: 8px; }
+.profile-modal button:focus-visible { outline: 2px solid #06d7a0; outline-offset: -3px; }
+.profile-modal__form label:focus-within,
+.balance-withdraw__input:focus-within { box-shadow: inset 0 0 0 2px #06d7a0; }
+.profile-modal__result p,
+.profile-modal__gift small,
+.profile-modal__available { color: rgba(255,255,255,.6); }
+.profile-modal__form input::placeholder { color: rgba(255,255,255,.5); }
+.profile-modal__gift { grid-template-columns: 125px minmax(0, 1fr); }
+.profile-modal__gift strong,
+.profile-modal__gift small { min-width: 0; overflow-wrap: anywhere; }

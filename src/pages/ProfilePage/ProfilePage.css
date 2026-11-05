@@ -22,6 +22,7 @@
 }
 
 .profile-header {
+  gap: 12px;
   position: fixed;
   z-index: 10;
   top: 116px;
@@ -49,20 +50,30 @@
 }
 
 .profile-header__user {
-  flex: none;
+  flex: 0 1 140px;
+  min-width: 0;
   width: 140px;
   gap: 10px;
   padding: 6px 7px 6px 6px;
 }
 
 .profile-header__user img {
+  flex: none;
   width: 34px;
   height: 34px;
   border-radius: 16px;
   object-fit: cover;
 }
 
+.profile-header__user > span:not(.user-avatar) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .profile-header__wallet-wrap {
+  flex: none;
   position: relative;
   isolation: isolate;
 }
@@ -168,8 +179,15 @@
 }
 
 .profile-balance strong {
+  max-width: calc(100% - 32px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  white-space: nowrap;
   display: flex;
-  height: 26px;
+  height: 36px;
+  margin-block: -5px;
   align-items: center;
   gap: 8px;
   font-size: 36px;
@@ -177,7 +195,10 @@
   line-height: 36px;
 }
 
+.profile-balance strong::-webkit-scrollbar { display: none; }
+
 .profile-balance img {
+  flex: none;
   width: 26px;
   height: 26px;
 }
@@ -195,7 +216,7 @@
 .profile-actions > button:not(.profile-actions__gift) {
   position: relative;
   display: flex;
-  width: 142.6px;
+  width: min(142.6px, calc((100% - 78px) / 2));
   height: 66px;
   align-items: center;
   justify-content: center;
@@ -584,7 +605,7 @@
   z-index: 1;
   top: 20px;
   left: 20px;
-  width: 258px;
+  width: min(258px, calc(100% - 40px));
   height: 28px;
   margin: 0;
   font-size: 14px;
@@ -748,6 +769,7 @@
 }
 
 .profile-referral-link > div img {
+  flex: none;
   width: 14px;
   height: 14px;
   opacity: 1;
@@ -872,3 +894,19 @@
 .demo-wallet-history small { display: block; color: #aaa; font-size: 10px; }
 .demo-wallet-history strong { max-width: 50%; text-align: right; overflow-wrap: anywhere; font-size: 12px; }
 .profile-gifts__card-price[data-unpriced='true'] { font-size: 10px; white-space: normal; }
+
+.profile-referral-link > div > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 370px) {
+  .profile-actions > button:not(.profile-actions__gift) {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .profile-referral__stats { top: 86px; }
+  .profile-referral { height: 262px; }
+}

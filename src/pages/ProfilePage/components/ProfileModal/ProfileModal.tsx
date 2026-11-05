@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWallet } from '../../../../wallet/WalletProvider';
+import { useModalFocus } from '../../../../hooks/useModalFocus';
 import { formatNano, MAX_ACTION, MAX_BALANCE, parseTon } from '../../../../wallet/wallet';
 import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
@@ -58,6 +59,8 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const pendingRef = useRef(false);
   const currentKind = useRef(requestedKind);
   const contentRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  useModalFocus(panelRef, mounted);
   currentKind.current = requestedKind;
   const alive = useRef(false);
   useEffect(() => {
@@ -163,7 +166,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     if (event.target === event.currentTarget && !requestedKind && event.propertyName === 'background-color') setMounted(false);
   }}>
     <button className="profile-modal-scrim" type="button" aria-label="Закрыть окно" onClick={() => setKind(null)} />
-    <section className="profile-modal" data-short={short} data-kind={kind} role="dialog" aria-modal="true" aria-label={title}>
+    <section ref={panelRef} tabIndex={-1} className="profile-modal" data-short={short} data-kind={kind} role="dialog" aria-modal="true" aria-label={title}>
       <div className="profile-modal__handle" aria-hidden="true" />
       <header className="profile-modal__header">
         <h2>{title}</h2>

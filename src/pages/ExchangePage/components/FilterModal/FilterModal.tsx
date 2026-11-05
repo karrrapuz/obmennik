@@ -13,6 +13,7 @@ import tonModalIcon from '../../../../assets/gram-outline.svg';
 import searchIcon from './assets/poisk_modal.svg';
 import './FilterModal.css';
 import { upgradeGiftImage } from '../../../../services/giftMedia';
+import { useModalFocus } from '../../../../hooks/useModalFocus';
 import type { Gift } from '../../data/gifts';
 import { telegramFilterOptions, type TelegramManifest } from '../../../../services/telegramCatalog';
 
@@ -49,6 +50,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
   const [toPrice, setToPrice] = useState('');
   const [limits, setLimits] = useState<Record<string, number>>({});
   const panel = useRef<HTMLElement>(null);
+  useModalFocus(panel, mounted);
   const content = useRef<HTMLDivElement>(null);
   const filterOptions = useMemo(() => telegramFilterOptions(catalog, manifest, selected.collection ?? []), [catalog, manifest, selected.collection]);
   const selectedCount = Object.values(selected).reduce((total, values) => total + values.length, 0)
@@ -171,7 +173,7 @@ function FilterModal({ open, onClose, onApply, resetVersion, catalog, manifest }
       }}
     >
       <button className="filter-modal-scrim" type="button" aria-label="Закрыть фильтры" onClick={onClose} />
-      <section ref={panel} className="filter-modal" role="dialog" aria-modal="true" aria-label="Фильтры">
+      <section ref={panel} tabIndex={-1} className="filter-modal" role="dialog" aria-modal="true" aria-label="Фильтры">
         <div className="filter-modal__handle" aria-hidden="true" />
         <header className="filter-modal__header">
           <h2>Фильтры</h2>

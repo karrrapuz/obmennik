@@ -9,6 +9,7 @@ import { type Gift, isUnpricedGift, matchesGiftAttributes } from './data/gifts';
 import { previewTelegramGift } from '../../services/telegramCatalog';
 import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftPrice from '../../components/gifts/GiftPrice';
+import AmountDigits from '../../components/gifts/AmountDigits';
 import { useTelegramPrices } from '../../hooks/useTelegramPrices';
 import { compareBrowsingPrices, comparePriceAvailability, hasMarketPrice, matchesBrowsingPrice } from '../../services/telegramPrices';
 import { useGiftLists } from './hooks/useGiftLists';
@@ -201,7 +202,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
               <span className="exchange-summary__offer-stage">
                 <span className="exchange-summary__offer-state exchange-summary__offer-state--amount" style={{ opacity: exchangeAnimation.offerActivation }}>
                   <img src={tonIcon} alt="" />
-                  <span>{formatAmount(exchangeAnimation.offered)}</span>
+                  <AmountDigits text={formatAmount(exchangeAnimation.offered)} />
                 </span>
                 <span className="exchange-summary__offer-state exchange-summary__offer-state--minimum" style={{ opacity: 1 - exchangeAnimation.offerActivation }}>
                   <img src={tonIcon} alt="" />
@@ -215,7 +216,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
             <span className="exchange-summary__label">Получаете</span>
             <strong className="exchange-summary__value exchange-summary__value--total">
               <img src={tonIcon} alt="" />
-              <span>{selectedGifts.length > 0 || displayedReceivedAmount > 0 ? formatAmount(displayedReceivedAmount) : '0.00'}</span>
+              <AmountDigits text={selectedGifts.length > 0 || displayedReceivedAmount > 0 ? formatAmount(displayedReceivedAmount) : '0.00'} />
             </strong>
           </div>
           <button

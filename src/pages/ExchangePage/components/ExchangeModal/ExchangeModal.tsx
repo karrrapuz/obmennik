@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import activeGiftIcon from '../../assets/obmen_gift_active.svg';
 import tonIcon from '../../../../assets/gram-outline.svg';
+import AmountDigits from '../../../../components/gifts/AmountDigits';
+import { useModalFocus } from '../../../../hooks/useModalFocus';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import deleteGiftIcon from './deleta-gift.svg';
 import ShortageNotice from '../ShortageNotice/ShortageNotice';
@@ -55,6 +57,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
   const submitted = useRef(false);
   const [activeSide, setActiveSide] = useState<'offer' | 'receive'>('receive');
   const modalRef = useRef<HTMLElement>(null);
+  useModalFocus(modalRef, mounted);
   const [noticeOverGifts, setNoticeOverGifts] = useState(false);
   const wasOpen = useRef(false);
   useEffect(() => {
@@ -149,7 +152,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
       if (event.target === event.currentTarget && !open) setMounted(false);
     }}>
       <button className="exchange-modal-scrim" type="button" aria-label="Закрыть обмен" onClick={onClose} />
-      <section ref={modalRef} className="exchange-modal" data-server={trade.server} data-result={result ?? undefined} role="dialog" aria-modal="true" aria-label={result === 'success' ? 'Успешно!' : result === 'error' ? 'Ошибка' : 'Обмен'}>
+      <section ref={modalRef} tabIndex={-1} className="exchange-modal" data-server={trade.server} data-result={result ?? undefined} role="dialog" aria-modal="true" aria-label={result === 'success' ? 'Успешно!' : result === 'error' ? 'Ошибка' : 'Обмен'}>
         <div className="exchange-modal__handle" aria-hidden="true" />
         {result ? <div className="exchange-result">
           <h2>{result === 'success' ? 'Успешно!' : 'Ошибка'}</h2>
@@ -163,10 +166,10 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
           <button className="exchange-modal__close" type="button" aria-label="Закрыть обмен" onClick={onClose}><img src={closeIcon} alt="" /></button>
           <div className="exchange-modal__totals">
             <button className="exchange-modal__total" type="button" data-active={activeSide === 'offer'} data-muted={offeredAmount < receivedAmount} aria-pressed={activeSide === 'offer'} onClick={() => setActiveSide('offer')}>
-              <span>Предлагаете</span><strong><img src={tonIcon} alt="" />{formatAmount(offeredAmount)}</strong>
+              <span>Предлагаете</span><strong><img src={tonIcon} alt="" /><AmountDigits text={formatAmount(offeredAmount)} /></strong>
             </button>
             <button className="exchange-modal__total exchange-modal__total--receive" type="button" data-active={activeSide === 'receive'} data-muted={gifts.length === 0} aria-pressed={activeSide === 'receive'} onClick={() => setActiveSide('receive')}>
-              <span>Получаете</span><strong><img src={tonIcon} alt="" />{formatAmount(receivedAmount)}</strong>
+              <span>Получаете</span><strong><img src={tonIcon} alt="" /><AmountDigits text={formatAmount(receivedAmount)} /></strong>
             </button>
           </div>
           <div className="exchange-modal__tools">
@@ -182,7 +185,7 @@ function ExchangeModal({ trade, open, gifts, offeredGifts, offeredAmount, receiv
               <span className="exchange-modal__model"><span>Модель</span><span>{gift.model}</span></span>
               <span className="exchange-modal__price">
                 <span className="exchange-modal__ton"><img src={tonIcon} alt="" /></span>
-                <span className="exchange-modal__price-value">{trade.server ? (() => { const unit = activeSide === 'offer' ? trade.quote?.offered.find(item => item.gift_id === gift.id)?.unit_nano : trade.quote?.received.find(item => item.catalog_id === gift.id)?.unit_nano; return unit ? formatNano(unit) : gift.price; })() : gift.price}</span>
+                <span className="exchange-modal__price-value"><AmountDigits text={trade.server ? (() => { const unit = activeSide === 'offer' ? trade.quote?.offered.find(item => item.gift_id === gift.id)?.unit_nano : trade.quote?.received.find(item => item.catalog_id === gift.id)?.unit_nano; return unit ? formatNano(unit) : gift.price; })() : gift.price} /></span>
               </span>
               <button className="exchange-modal__remove" type="button" disabled={pending || trade.locked} aria-label={`Удалить ${gift.name}`} onClick={() => onRemove(gift.id, activeSide)}><img src={deleteGiftIcon} alt="" /></button>
             </article>)}
