@@ -41,10 +41,10 @@ try {
     await result.getByRole('button', { name: error ? 'Выбрать другой' : 'Вернуться к обмену', exact: true }).click();
     await result.waitFor({ state: 'detached' });
     await page.getByRole('navigation', { name: 'Разделы' }).getByRole('button', { name: 'Залог', exact: true }).click();
-    assert.equal(await page.locator('.pledge-banner__ton--front').evaluate(node => getComputedStyle(node).backgroundColor), 'rgba(44, 91, 78, 0.1)');
+    assert.equal(await page.locator('.pledge-banner__ton--front').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(88, 127, 254)');
     const back = await page.locator('.pledge-banner__ton--back').evaluate(node => getComputedStyle(node).backgroundImage);
-    assert.equal(back, 'none');
+    assert(back.includes('rgb(88, 127, 254)') && back.includes('rgb(44, 69, 151)'));
     await page.close();
   }
-  console.log('Success/error sheets animate automatically through intermediate positions and close cleanly; pledge banner circles use green tint: OK');
+  console.log('Success/error sheets animate automatically through intermediate positions and close cleanly; pledge banner circles are blue: OK');
 } finally { await browser.close(); }

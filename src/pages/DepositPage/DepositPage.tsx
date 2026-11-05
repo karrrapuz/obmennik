@@ -7,7 +7,7 @@ import { giftPoster } from '../../services/giftMedia';
 import giftBlur from './assets/gift-blur.svg';
 import giftExpandIcon from '../ProfilePage/assets/gift-expand.svg';
 import giftExpandActiveIcon from './assets/gift-expand-active.svg';
-import ton from '../../assets/gram.svg';
+import ton from '../../assets/gram-outline.svg';
 import '../../styles/press-feedback.css';
 import bannerExchange from './assets/banner-exchange.svg';
 import PledgeModal from './components/PledgeModal';

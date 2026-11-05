@@ -20,13 +20,15 @@ try {
     await summary.screenshot({ path: `backend/.local/summary-readable-${width}.png` });
   }
   const header = page.locator('.exchange-ton-icon');
-  const plus = page.locator('.exchange-balance__add');
-  assert.equal(await header.evaluate(e => getComputedStyle(e).backgroundColor), await plus.evaluate(e => getComputedStyle(e).backgroundColor));
+  assert.equal(await header.evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(88, 127, 254)');
   await page.getByRole('navigation', { name: 'Разделы' }).getByRole('button', { name: 'Залог', exact: true }).click();
   for (const badge of await page.locator('.pledge-banner__ton').all()) {
-    assert.equal(await badge.evaluate(e => getComputedStyle(e).backgroundColor), 'rgba(44, 91, 78, 0.1)');
+    assert(await badge.evaluate(e => {
+      const style = getComputedStyle(e);
+      return style.backgroundColor === 'rgb(88, 127, 254)' || style.backgroundImage.includes('rgb(88, 127, 254)');
+    }));
   }
-  await page.locator('.pledge-banner').screenshot({ path: 'backend/.local/banner-green-badges.png' });
+  await page.locator('.pledge-banner').screenshot({ path: 'backend/.local/banner-blue-badges.png' });
   // Exercise the real boot gate independently of network timings.
   await page.evaluate(async () => {
     const reactModule = await import('/node_modules/.vite/deps/react.js');
@@ -52,5 +54,5 @@ try {
   await page.evaluate(() => window.renderBootTest(false, true, 'error'));
   await page.locator('#boot-test-host [role=alert]').waitFor({ timeout: 1000 });
   await page.evaluate(() => { window.bootTestRoot.unmount(); document.querySelector('#boot-test-host').remove(); });
-  console.log('Ready data opens immediately, loading/error gates preserved; summary fits 320/360/390/1280; GRAM badges green: OK');
+  console.log('Ready data opens immediately, loading/error gates preserved; summary fits 320/360/390/1280; GRAM badges blue: OK');
 } finally { await browser.close(); }

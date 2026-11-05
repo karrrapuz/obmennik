@@ -1,7 +1,7 @@
 import { useAnimatedBalance } from '../../../hooks/useAnimatedBalance';
 import { displayName, useUser } from '../../../auth/AuthProvider';
 import UserAvatar from '../UserAvatar';
-import tonIcon from '../../../assets/gram.svg';
+import tonIcon from '../../../assets/gram-outline.svg';
 import plusIcon from '../../../assets/plus.svg';
 import './PageHeader.css';
 
