@@ -35,6 +35,7 @@ import tonIcon from '../../assets/gram-outline.svg';
 import subtractObmenIcon from './assets/Subtract_obmen.svg';
 import unavailablePriceIcon from '../DepositPage/assets/block-zalog-gift.svg';
 import { openGiftRelayer } from '../../services/giftRelayer';
+import { sharedGiftId } from '../../services/giftLinks';
 
 
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
@@ -50,6 +51,16 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
   const selectedGiftIds = activeSection === 'inventory' ? offeredIds : receivedIds;
   const [giftDetails, setGiftDetails] = useState<{ gift: Gift; source: 'inventory' | 'exchange' } | null>(null);
   const [giftDetailsOpen, setGiftDetailsOpen] = useState(false);
+  const sharedOpened = useRef(false);
+  useEffect(() => {
+    if (sharedOpened.current || loading) return;
+    const id = sharedGiftId();
+    const gift = gifts.find(item => item.id === id);
+    if (!gift) return;
+    sharedOpened.current = true;
+    setGiftDetails({ gift, source: 'exchange' });
+    setGiftDetailsOpen(true);
+  }, [gifts, loading]);
   const [artworkReplay, setArtworkReplay] = useState<Record<string, number>>({});
   const replaySequence = useRef(0);
   const toggleGift = (id: number, source = activeSection) => {
@@ -98,6 +109,10 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       return matchesGiftAttributes(gift, appliedFilters.selected);
     })
     .sort((first, second) => {
+      if (activeSection === 'exchange' && first.telegramSlug !== second.telegramSlug) {
+        if (first.telegramSlug) return -1;
+        if (second.telegramSlug) return 1;
+      }
       for (const option of sortOptions) {
         let difference = 0;
         if (option === 'newest') difference = second.id - first.id;

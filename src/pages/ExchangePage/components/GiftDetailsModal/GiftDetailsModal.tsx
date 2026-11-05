@@ -6,10 +6,9 @@ import TelegramAttributes from './TelegramAttributes';
 import GiftPrice from '../../../../components/gifts/GiftPrice';
 import { useTelegramPrices } from '../../../../hooks/useTelegramPrices';
 import { applyMarketValuation, marketValuationQuery, useMarketValuation } from '../../../../hooks/useMarketValuation';
-import { marketPriceLabel, mergeMarketPrices } from '../../../../services/telegramPrices';
-import giftIcon from '../../assets/gift.svg';
+import { mergeMarketPrices } from '../../../../services/telegramPrices';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
-import { giftPoster } from '../../../../services/giftMedia';
+import { shareGift, viewNativeGift } from '../../../../services/giftLinks';
 import tonIcon from '../../../../assets/gram-outline.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import viewIcon from './assets/modal-gift-posmotret.svg';
@@ -28,10 +27,10 @@ type Props = {
 
 export default function GiftDetailsModal({ gift: originalGift, collection, source, open, selected, onClose, onSelect }: Props) {
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
-  const { feed: marketPrices, now: priceNow } = useTelegramPrices();
+  const { feed: marketPrices } = useTelegramPrices();
   const currentGift = originalGift ? mergeMarketPrices([originalGift], marketPrices, { collections: collection ? [collection] : [] })[0] : null;
   const previewGift = currentGift ? previewTelegramGift(currentGift, collection, attributes, source) ?? currentGift : null;
-  const valuationEnabled = Boolean(open && originalGift?.collectionId && isUnpricedGift(originalGift) && collection);
+  const valuationEnabled = Boolean(open && originalGift?.collectionId && !originalGift.telegramSlug && isUnpricedGift(originalGift) && collection);
   const valuationQuery = valuationEnabled && originalGift && collection
     ? marketValuationQuery(originalGift, collection, source === 'exchange' ? attributes : {}) : null;
   const valuation = useMarketValuation(valuationQuery);
@@ -44,7 +43,6 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
   const scrollArea = useRef<HTMLDivElement>(null);
   const scrollBody = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const [preview, setPreview] = useState(false);
   const [notice, setNotice] = useState('');
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
 
@@ -65,7 +63,6 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
       element.scrollTop = 0;
       setNotice('');
       setAttributes({});
-      setPreview(false);
       setScrolledToEnd(false);
       firstFrame = requestAnimationFrame(() => {
         secondFrame = requestAnimationFrame(() => {
@@ -105,13 +102,8 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
 
   const share = async () => {
     if (!gift) return;
-    const text = unpriced ? `${gift.name} — ${marketPriceLabel(gift, priceNow)}` : `${gift.name} ${gift.model} — ${gift.price} GRAM`;
     try {
-      if (navigator.share) await navigator.share({ title: gift.name, text });
-      else {
-        await navigator.clipboard.writeText(text);
-        setNotice('Информация о подарке скопирована');
-      }
+      shareGift(gift, source);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setNotice('Не удалось поделиться подарком');
@@ -122,8 +114,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
   return createPortal(
     <dialog ref={dialog} className="gift-details" data-visible={visible} aria-label={gift ? `Подарок ${gift.name}` : 'Подарок'} onCancel={(event) => {
       event.preventDefault();
-      if (preview) setPreview(false);
-      else onClose();
+      onClose();
     }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <button className="gift-details__scrim" type="button" aria-label="Закрыть подарок" onClick={onClose} />
       <section className="gift-details__sheet">
@@ -134,12 +125,12 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
         {gift && <div ref={scrollArea} className="gift-details__scroll" onScroll={updateScrollState}>
           <div ref={scrollBody} className="gift-details__body">
           <div className="gift-details__art">
-            <GiftArtwork gift={gift} autoPlay={open && visible && !preview} />
+            <GiftArtwork gift={gift} autoPlay={open && visible} />
             <span className="gift-details__price" data-unpriced={unpriced}>{unpriced ? <GiftPrice gift={gift} referenceOnly /> : <><span><img src={tonIcon} alt="GRAM" /></span>{gift.price}</>}</span>
             <div className="gift-details__caption"><h2>{gift.name}</h2><span>{gift.model}</span></div>
           </div>
           <dl className="gift-details__traits">
-            <div><dt>Модель</dt><dd>{gift.modelName ?? 'Модель'}</dd></div>
+            <div><dt>Модель</dt><dd>{gift.modelName ?? 'Модель'} <small>{gift.modelRarity}</small></dd></div>
             <div><dt>Символ</dt><dd>{gift.symbol?.name ?? '—'} <small>{gift.symbol?.rarity}</small></dd></div>
             <div><dt>Фон</dt><dd>{gift.backdrop?.name ?? '—'} <small>{gift.backdrop?.rarity}</small></dd></div>
           </dl>
@@ -147,7 +138,7 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
             {source === 'exchange' && <TelegramAttributes key={collection.telegramId} collection={collection} selected={attributes} onChange={setAttributes} />}
           </>}
           <div className="gift-details__actions">
-            <button type="button" onClick={() => setPreview(true)}><img src={viewIcon} alt="" /><span>Посмотреть</span></button>
+            <button type="button" onClick={() => viewNativeGift(gift)}><img src={viewIcon} alt="" /><span>Посмотреть</span></button>
             <button type="button" onClick={share}><img src={shareIcon} alt="" /><span>Поделиться</span></button>
           </div>
           <section className="gift-details__offer">
@@ -168,11 +159,6 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
             {source === 'exchange' && !unpriced ? (selected ? 'Убрать из обмена' : 'В обмен!') : 'Закрыть'}
           </button>
         </footer>
-        {preview && <div className="gift-details__preview">
-          <button className="gift-details__close" type="button" aria-label="Закрыть просмотр" onClick={() => setPreview(false)}><img src={closeIcon} alt="" /></button>
-          <img src={gift ? giftPoster(gift) || giftIcon : giftIcon} alt={gift?.name} />
-          <strong>{gift?.name} {gift?.model}</strong>
-        </div>}
       </section>
     </dialog>, document.body,
   );

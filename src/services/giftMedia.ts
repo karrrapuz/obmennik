@@ -1,9 +1,11 @@
 import manifest from './gift-media.json';
+import relayerMedia from './relayer-media.json';
 import type { Gift } from '../pages/ExchangePage/data/gifts';
 
 const normalize = (name: string) => name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-const media = new Map(manifest.entries.map(entry => [`${entry.collectionId}:${normalize(entry.modelName)}`, entry]));
-const posters = new Map(manifest.entries.map(entry => [entry.originalImage, entry.poster]));
+const entries = [...manifest.entries, relayerMedia];
+const media = new Map(entries.map(entry => [`${entry.collectionId}:${normalize(entry.modelName)}`, entry]));
+const posters = new Map(entries.map(entry => [entry.originalImage, entry.poster]));
 
 export function upgradeGiftImage(image: string) {
   return posters.get(image) ?? image;
