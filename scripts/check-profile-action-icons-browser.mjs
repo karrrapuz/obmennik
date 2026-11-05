@@ -14,8 +14,9 @@ try {
     await page.getByRole('navigation', { name: 'Разделы' }).getByRole('button', { name: 'Профиль', exact: true }).click();
     const glow = await page.locator('.profile-page__glow').boundingBox();
     const profile = await page.locator('.profile-page').boundingBox();
-    assert.equal(glow.width, profile.width, 'Profile glow stays within the page, not the desktop viewport');
-    assert.equal(glow.x, profile.x);
+    assert.equal(glow.width, 325, 'Original fixed-size profile glow');
+    assert.equal(glow.x, profile.x + 227);
+    assert.equal(await page.locator('.profile-page__glow').evaluate(e => getComputedStyle(e).maskImage), 'none');
     const actions = page.locator('.profile-actions');
     const icons = actions.locator('.profile-actions__arrow');
     assert.equal(await icons.count(), 2);

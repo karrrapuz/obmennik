@@ -4,7 +4,7 @@
   width: min(100%, 390px);
   min-height: max(844px, 100svh);
   margin: 0 auto;
-  overflow: visible;
+  overflow: hidden;
   background: #0d0d0d;
   color: #fff;
   font-family: 'Onest', Arial, sans-serif;
@@ -12,16 +12,14 @@
 
 .profile-page__glow {
   position: absolute;
-  top: -359px;
-  left: 0;
-  width: 100%;
-  height: 625px;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
+  top: -209px;
+  left: 227px;
+  width: 325px;
+  height: 325px;
+  background: rgba(6, 215, 160, 0.5);
+  filter: blur(150px);
   pointer-events: none;
 }
-.profile-page__glow::before { content: ''; position: absolute; top: 150px; left: calc(50% + 32px); width: 325px; height: 325px; background: rgba(6,215,160,.5); filter: blur(150px); }
 
 .profile-header {
   position: fixed;
