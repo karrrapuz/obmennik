@@ -12,6 +12,10 @@ try {
     await page.goto(process.env.PROFILE_ICONS_TEST_URL || 'http://127.0.0.1:5188', { waitUntil: 'domcontentloaded' });
     await page.locator('.exchange-header').waitFor({ timeout: 30000 });
     await page.getByRole('navigation', { name: 'Разделы' }).getByRole('button', { name: 'Профиль', exact: true }).click();
+    const glow = await page.locator('.profile-page__glow').boundingBox();
+    const profile = await page.locator('.profile-page').boundingBox();
+    assert.equal(glow.width, profile.width, 'Profile glow stays within the page, not the desktop viewport');
+    assert.equal(glow.x, profile.x);
     const actions = page.locator('.profile-actions');
     const icons = actions.locator('.profile-actions__arrow');
     assert.equal(await icons.count(), 2);

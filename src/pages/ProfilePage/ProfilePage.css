@@ -13,10 +13,12 @@
 .profile-page__glow {
   position: absolute;
   top: -359px;
-  left: calc(50% - 50vw);
-  width: 100vw;
+  left: 0;
+  width: 100%;
   height: 625px;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16%, #000 84%, transparent);
   pointer-events: none;
 }
 .profile-page__glow::before { content: ''; position: absolute; top: 150px; left: calc(50% + 32px); width: 325px; height: 325px; background: rgba(6,215,160,.5); filter: blur(150px); }
