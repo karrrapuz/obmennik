@@ -1,0 +1,33 @@
+{
+  "id": 90001,
+  "name": "Voodoo Doll",
+  "model": "#6565",
+  "modelName": "Chromed Out",
+  "collectionId": "5836780359634649414",
+  "image": "/gifts/featured/relayer-poster.svg",
+  "price": "43.950",
+  "priceSource": "sample",
+  "tradeSupported": true,
+  "pledgeSupported": false,
+  "previewOnly": false,
+  "telegramSlug": "VoodooDoll-6565",
+  "publicOwner": "@smekz",
+  "modelRarity": "2%",
+  "availabilityIssued": 26840,
+  "availabilityTotal": 27620,
+  "symbol": {
+    "name": "Cupcake",
+    "image": "/gifts/featured/relayer-pattern.svg",
+    "rarity": "0.2%"
+  },
+  "backdrop": {
+    "name": "French Blue",
+    "rarity": "1.5%",
+    "centerColor": "#5c9bc4",
+    "edgeColor": "#37739a",
+    "patternColor": "#073b5c",
+    "textColor": "#c1e3f9"
+  },
+  "demo": true,
+  "testGrant": true
+}

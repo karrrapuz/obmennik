@@ -14,6 +14,13 @@ SAMPLE_CATALOG_PATH = DATA_PATH / 'catalog-sample.json'
 TELEGRAM_CATALOG_PATH = DATA_PATH / 'catalog-telegram.json'
 
 
+def load_featured_test_gift():
+    gift = json.loads((DATA_PATH / 'catalog-featured.json').read_text(encoding='utf-8'))
+    if gift.get('id') != 90001 or gift.get('testGrant') is not True or gift.get('demo') is not True:
+        raise ValueError('Invalid featured test gift')
+    return gift
+
+
 @dataclass(frozen=True)
 class LoadedCatalog:
     cards: tuple[dict, ...]

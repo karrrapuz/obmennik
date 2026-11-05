@@ -33,6 +33,7 @@ from .integrations import demo_route, register_integration_routes
 from .request_limits import RequestBodyLimit
 from .admin import register_admin_routes
 from .operations import register_operations_routes
+from .gift_links import register_gift_link_routes
 
 
 class AuthInput(BaseModel):
@@ -186,6 +187,7 @@ def create_app(settings: Settings):
     register_admin_routes(app, database, current_session, settings.admin_user_ids)
     register_operations_routes(app, database, current_session, settings.admin_user_ids, settings)
     register_referral_routes(app, database, current_session, settings.referral_rate_bps, settings.telegram_bot_username)
+    register_gift_link_routes(app, database, current_session, gift_provider)
     register_wallet_routes(app, database, current_session)
     register_loan_routes(app, database, current_session, gift_provider)
     register_trade_routes(app, database, current_session, gift_provider,

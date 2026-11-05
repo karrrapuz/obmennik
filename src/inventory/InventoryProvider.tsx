@@ -8,8 +8,9 @@ import { pledgeStore } from '../pages/DepositPage/services/pledgeStore';
 import { useBootReport } from '../boot/BootProvider';
 import { createRevisionGate, parseRevision } from '../services/snapshotRevision';
 import { presentationCatalog, presentationOwned, showcaseEnabled, showcaseGifts } from './showcase';
+import featured from '../pages/ExchangePage/data/relayer-preview.json';
 
-export type Snapshot = { revision: number; inventory: Gift[]; pledged: Gift[]; catalog: Gift[]; seasonalGrant?: string; seasonalGrantCatalogIds?: number[] };
+export type Snapshot = { revision: number; inventory: Gift[]; pledged: Gift[]; catalog: Gift[]; seasonalGrant?: string; seasonalGrantCatalogIds?: number[]; featuredGrant?: boolean };
 type Action = 'deposit' | 'withdraw' | 'exchange' | 'pledge' | 'release';
 type Value = Snapshot & { telegramCatalog: TelegramManifest | null; catalogError: boolean; getRevision: () => number; applySnapshot: (next: Snapshot) => void; loading: boolean; error: boolean; reload: () => Promise<void>; mutate: (action: Action, body?: Record<string, unknown>) => Promise<void> };
 const Context = createContext<Value | null>(null);
@@ -32,8 +33,14 @@ export function parseSnapshot(value: unknown): Snapshot {
 }
 function readLocal(): Snapshot {
   const saved = localStorage.getItem(localKey);
-  if (saved) { const value = JSON.parse(saved); return parseSnapshot({ ...value, catalog: showcaseEnabled ? showcaseGifts : gifts, revision: value.revision === undefined ? 0 : value.revision }); }
-  return { revision: 0, inventory: inventoryGifts.slice(0, 5), pledged: [], catalog: showcaseEnabled ? showcaseGifts : gifts };
+  const value = saved ? JSON.parse(saved) : { revision: 0, inventory: inventoryGifts.slice(0, 5), pledged: [] };
+  let next = parseSnapshot({ ...value, catalog: showcaseEnabled ? showcaseGifts : gifts, revision: value.revision ?? 0 });
+  if (showcaseEnabled && !next.featuredGrant) {
+    const id = Math.max(1000, ...next.inventory.map(gift => gift.id), ...next.pledged.map(gift => gift.id)) + 1;
+    next = { ...next, revision: next.revision + 1, featuredGrant: true, inventory: [...next.inventory, { ...featured as Gift, id, catalogId: featured.id }] };
+    localStorage.setItem(localKey, JSON.stringify(next));
+  }
+  return next;
 }
 export function grantSeasonalInventory(current: Snapshot, manifest: TelegramManifest, now = Date.now()): Snapshot {
   const granted = new Set(current.seasonalGrant === 'telegram-halloween-v1' ? current.seasonalGrantCatalogIds ?? [] : []);

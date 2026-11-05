@@ -9,6 +9,7 @@ import { applyMarketValuation, marketValuationQuery, useMarketValuation } from '
 import { mergeMarketPrices } from '../../../../services/telegramPrices';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import { shareGift, viewNativeGift } from '../../../../services/giftLinks';
+import { useAuth } from '../../../../auth/AuthProvider';
 import tonIcon from '../../../../assets/gram-outline.svg';
 import closeIcon from '../FilterModal/assets/Union.svg';
 import viewIcon from './assets/modal-gift-posmotret.svg';
@@ -26,11 +27,14 @@ type Props = {
 };
 
 export default function GiftDetailsModal({ gift: originalGift, collection, source, open, selected, onClose, onSelect }: Props) {
+  const { state: auth } = useAuth();
+  const [sharing, setSharing] = useState(false);
+  const readOnly = originalGift?.sharedReadOnly === true;
   const [attributes, setAttributes] = useState<Record<string, string[]>>({});
   const { feed: marketPrices } = useTelegramPrices();
   const currentGift = originalGift ? mergeMarketPrices([originalGift], marketPrices, { collections: collection ? [collection] : [] })[0] : null;
   const previewGift = currentGift ? previewTelegramGift(currentGift, collection, attributes, source) ?? currentGift : null;
-  const valuationEnabled = Boolean(open && originalGift?.collectionId && !originalGift.telegramSlug && isUnpricedGift(originalGift) && collection);
+  const valuationEnabled = Boolean(open && originalGift?.collectionId && !originalGift.telegramSlug && !readOnly && isUnpricedGift(originalGift) && collection);
   const valuationQuery = valuationEnabled && originalGift && collection
     ? marketValuationQuery(originalGift, collection, source === 'exchange' ? attributes : {}) : null;
   const valuation = useMarketValuation(valuationQuery);
@@ -101,14 +105,15 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
   }, [open]);
 
   const share = async () => {
-    if (!gift) return;
+    if (!gift || sharing) return;
+    setSharing(true);
     try {
-      shareGift(gift, source);
+      await shareGift(gift, source, auth.status === 'ready' ? auth.accessToken : null);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setNotice('Не удалось поделиться подарком');
       }
-    }
+    } finally { setSharing(false); }
   };
 
   return createPortal(
@@ -139,14 +144,14 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           </>}
           <div className="gift-details__actions">
             <button type="button" onClick={() => viewNativeGift(gift)}><img src={viewIcon} alt="" /><span>Посмотреть</span></button>
-            <button type="button" onClick={share}><img src={shareIcon} alt="" /><span>Поделиться</span></button>
+            <button type="button" onClick={share} disabled={sharing}><img src={shareIcon} alt="" /><span>{sharing ? 'Подготовка…' : 'Поделиться'}</span></button>
           </div>
-          <section className="gift-details__offer">
+          {!readOnly && <section className="gift-details__offer">
             <h3>{source === 'inventory' ? 'Не нравится?' : 'Нравится?'}</h3>
             <p>{unpriced ? 'Обмен и залог для коллекции недоступны' : source === 'inventory' ? 'Обменяй подарок на любой понравившийся!' : 'Обменяй на свой подарок и хвастайся!'}</p>
             <button type="button" disabled={unpriced} onClick={onSelect}>{unpriced ? 'Обмен недоступен' : selected ? 'Убрать' : 'В Обмен'}</button>
-          </section>
-          {source === 'inventory' && <section className="gift-details__offer">
+          </section>}
+          {!readOnly && source === 'inventory' && <section className="gift-details__offer">
             <h3>Нужны GRAM?</h3>
             <p>Возьми их у нас под залог своего подарка!</p>
             <button type="button" disabled={unpriced || gift.pledgeSupported === false} onClick={() => setNotice('Залог пока недоступен')}>{unpriced ? 'Залог недоступен' : 'В Залог'}</button>
@@ -155,8 +160,8 @@ export default function GiftDetailsModal({ gift: originalGift, collection, sourc
           </div>
         </div>}
         <footer className="gift-details__footer" data-at-end={scrolledToEnd}>
-          <button className="gift-details__done" type="button" onClick={source === 'exchange' && !unpriced ? onSelect : onClose}>
-            {source === 'exchange' && !unpriced ? (selected ? 'Убрать из обмена' : 'В обмен!') : 'Закрыть'}
+          <button className="gift-details__done" type="button" onClick={source === 'exchange' && !unpriced && !readOnly ? onSelect : onClose}>
+            {source === 'exchange' && !unpriced && !readOnly ? (selected ? 'Убрать из обмена' : 'В обмен!') : 'Закрыть'}
           </button>
         </footer>
       </section>

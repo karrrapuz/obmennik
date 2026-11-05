@@ -58,7 +58,7 @@ export async function loadGiftAnimation(url: string, signal: AbortSignal) {
     cache.delete(url); cache.set(url, existing);
     return structuredClone(existing);
   }
-  if (!url.startsWith('/gifts/vector/animations/') || !/^[\w/.-]+$/.test(url) || url.includes('..')) throw new Error('Invalid animation URL');
+  if ((!url.startsWith('/gifts/vector/animations/') && url !== '/gifts/featured/relayer-model.tgs') || !/^[\w/.-]+$/.test(url) || url.includes('..')) throw new Error('Invalid animation URL');
   const response = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });
   if (!response.ok || !response.body) throw new Error('Animation unavailable');
   const compressed = await boundedBytes(response.body, 100000, signal);

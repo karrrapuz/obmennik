@@ -1,8 +1,9 @@
 import extra from '../pages/ExchangePage/data/catalog-showcase-extra.json';
 import { gifts, isUnpricedGift, type Gift } from '../pages/ExchangePage/data/gifts';
+import featured from '../pages/ExchangePage/data/relayer-preview.json';
 
 export const showcaseEnabled = import.meta.env.VITE_SHOWCASE_MODE !== 'false';
-export const showcaseGifts: Gift[] = [...gifts, ...extra];
+export const showcaseGifts: Gift[] = [featured as Gift, ...gifts, ...extra];
 
 // This is a reversible presentation selection, never deletion of owned assets.
 export function presentationCatalog(catalog: Gift[]): Gift[] {

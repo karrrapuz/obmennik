@@ -35,7 +35,7 @@ import tonIcon from '../../assets/gram-outline.svg';
 import subtractObmenIcon from './assets/Subtract_obmen.svg';
 import unavailablePriceIcon from '../DepositPage/assets/block-zalog-gift.svg';
 import { openGiftRelayer } from '../../services/giftRelayer';
-import { sharedGiftId } from '../../services/giftLinks';
+import { sharedGiftPayload } from '../../services/giftLinks';
 
 
 function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfile: () => void; onTopUp: () => void; balance: number }) {
@@ -52,14 +52,33 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
   const [giftDetails, setGiftDetails] = useState<{ gift: Gift; source: 'inventory' | 'exchange' } | null>(null);
   const [giftDetailsOpen, setGiftDetailsOpen] = useState(false);
   const sharedOpened = useRef(false);
+  const [sharedError, setSharedError] = useState(false);
   useEffect(() => {
     if (sharedOpened.current || loading) return;
-    const id = sharedGiftId();
-    const gift = gifts.find(item => item.id === id);
-    if (!gift) return;
+    const payload = sharedGiftPayload();
+    const token = /^sg_([A-Za-z0-9_-]{32})$/.exec(payload)?.[1];
+    const match = /^gift_([1-9]\d{0,8})(?:_n([1-9]\d{0,9}))?$/.exec(payload);
+    if (!token && !match) return;
     sharedOpened.current = true;
-    setGiftDetails({ gift, source: 'exchange' });
-    setGiftDetailsOpen(true);
+    const show = (gift: Gift) => { setGiftDetails({ gift, source: 'exchange' }); setGiftDetailsOpen(true); };
+    if (match) {
+      const gift = gifts.find(item => item.id === Number(match[1]));
+      if (gift) show(match[2] ? { ...gift, model: `#${match[2]}`, sharedReadOnly: true } : gift);
+      else setSharedError(true);
+      return;
+    }
+    const api = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+    const controller = new AbortController();
+    let settled = false;
+    fetch(`${api}/api/gifts/shared/${token}`, { signal: controller.signal }).then(async response => {
+      if (!response.ok) throw new Error('Gift unavailable');
+      const { gift } = await response.json();
+      if (!gift || !Number.isSafeInteger(gift.id) || typeof gift.name !== 'string' || typeof gift.model !== 'string' || gift.shareToken !== token || gift.sharedReadOnly !== true) throw new Error('Invalid gift');
+      if (controller.signal.aborted) return;
+      settled = true;
+      show(gift);
+    }).catch(error => { if (error.name !== 'AbortError') { settled = true; setSharedError(true); } });
+    return () => { controller.abort(); if (!settled) sharedOpened.current = false; };
   }, [gifts, loading]);
   const [artworkReplay, setArtworkReplay] = useState<Record<string, number>>({});
   const replaySequence = useRef(0);
@@ -172,6 +191,7 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       <PageHeader balance={balance} onNavigateProfile={onNavigateProfile} onTopUp={onTopUp} />
 
       <main className="exchange-content">
+        {sharedError && <p role="status">Ссылка на подарок недоступна или устарела.</p>}
         <section className="exchange-summary" data-active={exchangeIsAnimating} data-underfunded={offeredAmount + (trade.server ? balance : 0) < receivedAmount} aria-label="Сумма обмена">
           <img className="exchange-summary__subtract" src={subtractObmenIcon} alt="" aria-hidden="true" />
           <span className="exchange-summary__reflection" style={{ opacity: exchangeAnimation.activation }} aria-hidden="true" />

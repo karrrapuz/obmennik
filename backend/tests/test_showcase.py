@@ -19,10 +19,10 @@ def test_showcase_keeps_full_templates_and_real_transfers_disabled(monkeypatch):
     from app import catalog
     monkeypatch.setattr(catalog, 'TELEGRAM_CATALOG_PATH', Path(__file__).resolve().parents[1] / 'data/catalog-telegram.json')
     provider = create_gift_provider('demo', showcase=True)
-    assert len(provider.catalog) == 181
+    assert len(provider.catalog) == 182
     assert len(provider.collections) == 151
-    assert provider.showcase_ids == tuple(range(1, 31))
-    assert not provider.seasonal_gifts()
+    assert provider.showcase_ids == (*range(1, 31), 90001)
+    assert provider.seasonal_gifts() == (90001,)
     assert provider.status()['real_transfers'] is False
     assert all(card['demo'] is True for card in provider.catalog[:30])
 
@@ -32,8 +32,8 @@ def test_thirty_priced_cards_and_new_card_exchange(settings):
         headers = bearer(login(client)['access_token'])
         initial = client.get('/api/inventory', headers=headers).json()
         assert initial['showcase_mode'] is True
-        assert len(initial['catalog']) == 30
-        assert {card['id'] for card in initial['catalog']} == set(range(1, 31))
+        assert len(initial['catalog']) == 31
+        assert {card['id'] for card in initial['catalog']} == {*range(1, 31), 90001}
         assert all(float(card['price']) > 0 and card.get('tradeSupported') is not False for card in initial['catalog'])
         funded = client.post('/api/wallet/demo-topup', headers={**headers, 'Idempotency-Key': 'showcase-fund'},
                              json={'amount_nano': '20000000000', 'source': 'wallet'})
@@ -49,7 +49,7 @@ def test_thirty_priced_cards_and_new_card_exchange(settings):
         owned = next(card for card in refreshed['inventory'] if card['catalogId'] == 30)
         assert owned['name'] == 'Mood Pack' and owned['price'] == '6.600'
         assert not owned['blockTradeGift']
-        assert len(refreshed['catalog']) == 30
+        assert len(refreshed['catalog']) == 31
     with TestClient(create_app(replace(settings, showcase_mode=False))) as client:
         restored = client.get('/api/inventory', headers=headers)
         assert restored.status_code == 200

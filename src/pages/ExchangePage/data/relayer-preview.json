@@ -5,11 +5,11 @@
   "modelName": "Chromed Out",
   "collectionId": "5836780359634649414",
   "image": "/gifts/featured/relayer-poster.svg",
-  "price": "0.000",
-  "priceSource": "unpriced",
-  "tradeSupported": false,
+  "price": "43.950",
+  "priceSource": "sample",
+  "tradeSupported": true,
   "pledgeSupported": false,
-  "previewOnly": true,
+  "previewOnly": false,
   "telegramSlug": "VoodooDoll-6565",
   "publicOwner": "@smekz",
   "modelRarity": "2%",
@@ -28,13 +28,6 @@
     "patternColor": "#073b5c",
     "textColor": "#c1e3f9"
   },
-  "marketPrice": {
-    "floorNano": "43950000000",
-    "checkedAt": 1793839485,
-    "validUntil": 1793925885,
-    "source": "telegram-resale",
-    "kind": "lowest_observed_listing",
-    "sampleCount": 100,
-    "hasMore": true
-  }
+  "demo": true,
+  "testGrant": true
 }

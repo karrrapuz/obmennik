@@ -8,6 +8,10 @@ export type Gift = {
   marketPrice?: MarketPrice;
   telegramSlug?: string;
   modelRarity?: string;
+  catalogId?: number;
+  testGrant?: boolean;
+  sharedReadOnly?: boolean;
+  shareToken?: string;
   marketStatus?: 'available' | 'no_ton_listings' | 'not_collectible' | 'error';
   presentation?: GiftPresentation;
   modelFilterId?: string;
