@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useWallet } from '../../../../wallet/WalletProvider';
 import { useModalFocus } from '../../../../hooks/useModalFocus';
 import { formatNano, MAX_ACTION, MAX_BALANCE, parseTon } from '../../../../wallet/wallet';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import GiftArtwork from '../../../../components/gifts/GiftArtwork/GiftArtwork';
 import type { ProfileGift } from '../../ProfilePage';
 import tonIcon from '../../../../assets/gram.svg';
@@ -56,6 +56,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const kind = processing ? 'payment-processing' : requestedKind ?? lastKind;
   const [mounted, setMounted] = useState(kind !== null);
   const [visible, setVisible] = useState(false);
+  const [parked, setParked] = useState(false);
   const [amount, setAmount] = useState('');
   const [walletInput, setWalletInput] = useState('');
   const [selectedGiftIds, setSelectedGiftIds] = useState<number[]>([]);
@@ -83,6 +84,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     let secondFrame = 0;
     let closeTimer = 0;
     if (requestedKind) {
+      setParked(false);
       setProcessing(false);
       setLastKind(requestedKind);
       setMounted(true);
@@ -133,6 +135,14 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const validAmount = amountNano !== null && amountNano > 0n && amountNano <= MAX_ACTION;
   const canWithdraw = validAmount && amountNano <= balanceNano && Boolean(wallet);
   const canTopUp = validAmount && balanceNano + amountNano <= MAX_BALANCE && (kind === 'crypto-amount' || Boolean(wallet));
+  const hidePaymentSheet = async (isCurrent: () => boolean) => {
+    flushSync(() => setVisible(false));
+    // Force style resolution before collecting the exit transition, including on slower WebViews.
+    panelRef.current?.getBoundingClientRect();
+    const transitions = panelRef.current?.getAnimations() ?? [];
+    await Promise.all([pause(SHEET_TRANSITION_MS), ...transitions.map(animation => animation.finished.catch(() => {}))]);
+    if (isCurrent()) flushSync(() => setParked(true));
+  };
   const submitAmount = async () => {
     const withdrawal = kind === 'withdraw-amount';
     if (pendingRef.current || walletPending || !walletAvailable || amountNano === null || !(withdrawal ? canWithdraw : canTopUp)) return;
@@ -146,19 +156,18 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
         () => ({ success: false, message: 'Не удалось подтвердить операцию. Повторите попытку.' }));
     try {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-      setVisible(false);
-      await pause(SHEET_TRANSITION_MS);
+      await hidePaymentSheet(sameScreen);
       if (!sameScreen()) return;
       setProcessing(true);
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       if (!sameScreen()) return;
+      setParked(false);
       setVisible(true);
       // Keep a full second of readable processing after the sheet finishes entering.
       await pause(SHEET_TRANSITION_MS + MIN_PROCESSING_MS);
       const result = await outcome;
       if (!sameScreen()) return;
-      setVisible(false);
-      await pause(SHEET_TRANSITION_MS);
+      await hidePaymentSheet(sameScreen);
       if (sameScreen()) complete(result.message, result.success, submittedKind);
     } finally {
       pendingRef.current = false;
@@ -194,7 +203,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     if (event.target === event.currentTarget && !requestedKind && event.propertyName === 'background-color') setMounted(false);
   }}>
     <button className="profile-modal-scrim" type="button" aria-label="Закрыть окно" onClick={() => setKind(null)} />
-    <section ref={panelRef} tabIndex={-1} className="profile-modal" data-short={short} data-kind={kind} role="dialog" aria-modal="true" aria-label={title} aria-busy={processing}>
+    <section ref={panelRef} tabIndex={-1} className="profile-modal" data-parked={parked} data-short={short} data-kind={kind} role="dialog" aria-modal="true" aria-label={title} aria-busy={processing}>
       <div className="profile-modal__handle" aria-hidden="true" />
       <header className="profile-modal__header">
         <h2>{title}</h2>

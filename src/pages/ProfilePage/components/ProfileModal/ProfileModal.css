@@ -49,6 +49,7 @@
 .profile-modal[data-kind='crypto-amount'] { height: min(288px, calc(100dvh - 24px)); }
 .profile-modal[data-kind='payment-processing'] { height: min(288px, calc(100dvh - 24px)); }
 .profile-modal-layer[data-visible='false'] .profile-modal { transition-property: transform; }
+.profile-modal[data-parked='true'] { visibility: hidden; }
 .profile-modal__processing { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 24px; min-height: 140px; padding: 8px 16px 16px; }
 .profile-modal__processing img { width: 56px; height: 56px; animation: profile-payment-spin 1s linear infinite; }
 .profile-modal__processing p { margin: 0; color: #ffffff99; text-align: center; font-size: 14px; line-height: 20px; }
