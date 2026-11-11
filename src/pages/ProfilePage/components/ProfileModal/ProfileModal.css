@@ -9,6 +9,22 @@
   transition: background 300ms ease, backdrop-filter 300ms ease;
 }
 
+.profile-payment-notice {
+  position: fixed;
+  z-index: 60;
+  inset: auto 16px max(96px, calc(72px + env(safe-area-inset-bottom, 0px)));
+  width: fit-content;
+  max-width: min(calc(100% - 32px), 358px);
+  margin-inline: auto;
+  padding: 12px 16px;
+  border-radius: 15px;
+  background: #242424;
+  color: #ff8b8d;
+  text-align: center;
+  pointer-events: none;
+}
+.profile-payment-notice[data-success='true'] { color: #06d7a0; }
+
 .profile-modal-layer[data-visible='true'] {
   background: rgba(13, 13, 13, 0.5);
   backdrop-filter: blur(15px);

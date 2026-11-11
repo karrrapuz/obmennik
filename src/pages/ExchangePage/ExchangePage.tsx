@@ -11,7 +11,8 @@ import GiftArtwork from '../../components/gifts/GiftArtwork/GiftArtwork';
 import GiftPrice from '../../components/gifts/GiftPrice';
 import AmountDigits from '../../components/gifts/AmountDigits';
 import { useTelegramPrices } from '../../hooks/useTelegramPrices';
-import { compareBrowsingPrices, comparePriceAvailability, hasMarketPrice, matchesBrowsingPrice } from '../../services/telegramPrices';
+import { hasMarketPrice, matchesBrowsingPrice } from '../../services/telegramPrices';
+import { compareExchangeGifts } from './services/giftSort';
 import { useGiftLists } from './hooks/useGiftLists';
 import { ExchangeDraft } from './services/ExchangeDraft';
 import { tradeDisplayTotals } from './services/tradeDisplay';
@@ -128,20 +129,8 @@ function ExchangePage({ onNavigateProfile, onTopUp, balance }: { onNavigateProfi
       if (!matchesBrowsingPrice(gift, appliedFilters.fromPrice, appliedFilters.toPrice, priceNow)) return false;
       return matchesGiftAttributes(gift, appliedFilters.selected);
     })
-    .sort((first, second) => {
-      if (activeSection === 'exchange' && first.telegramSlug !== second.telegramSlug) {
-        if (first.telegramSlug) return -1;
-        if (second.telegramSlug) return 1;
-      }
-      for (const option of sortOptions) {
-        let difference = 0;
-        if (option === 'newest') difference = second.id - first.id;
-        if (option === 'price-asc') difference = compareBrowsingPrices(first, second, 'asc', priceNow);
-        if (option === 'price-desc') difference = compareBrowsingPrices(first, second, 'desc', priceNow);
-        if (difference !== 0) return difference;
-      }
-      return activeSection === 'exchange' && sortOptions.length === 0 ? comparePriceAvailability(first, second, priceNow) : 0;
-    }), [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions, priceNow]);
+    .sort((first, second) => compareExchangeGifts(first, second, activeSection, sortOptions, priceNow)),
+  [activeSection, inventoryGifts, gifts, collections, appliedFilters, searchQuery, sortOptions, priceNow]);
   const pageKey = JSON.stringify([activeSection, searchQuery, appliedFilters, sortOptions]);
   useEffect(() => { setArtworkReplay({}); }, [pageKey]);
   const [page, setPage] = useState({ key: '', count: 40 });

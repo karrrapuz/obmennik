@@ -73,6 +73,9 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
   const [modal, setModal] = useState<ProfileModalKind | null>(null);
   const [referralCopied, setReferralCopied] = useState(false);
   const [walletCopied, setWalletCopied] = useState(false);
+  const withdrawableGifts = giftsExpanded && !withdrawalBusy
+    ? gifts.filter((gift) => selectedGiftIds.includes(gift.id))
+    : [];
   useEffect(() => { if (topUpRequest > 0) setModal('deposit-choice'); }, [topUpRequest]);
   const referralLink = referrals.summary?.invite_url ?? null;
   const referralPending = referrals.demo ? demoClaimPending || walletPending : referrals.pending;
@@ -165,7 +168,7 @@ function ProfilePage({ balance, topUpRequest }: { balance: number; topUpRequest:
       <AdminAccess />
     </main>
 
-    <SlideNotice show={!withdrawalBusy && gifts.some((gift) => selectedGiftIds.includes(gift.id))}><button className="profile-withdraw-selected" type="button" onClick={() => { setWithdrawalFromModal(false); setWithdrawalGifts(gifts.filter((gift) => selectedGiftIds.includes(gift.id))); }}>Вывести подарки</button></SlideNotice>
+    <SlideNotice show={withdrawableGifts.length > 0}><button className="profile-withdraw-selected" type="button" onClick={() => { if (!withdrawableGifts.length) return; setWithdrawalFromModal(false); setWithdrawalGifts(withdrawableGifts); }}>Вывести подарки</button></SlideNotice>
     <GiftWithdrawal gifts={withdrawalGifts} onClose={() => setWithdrawalGifts([])} onBusy={setWithdrawalBusy} onResult={withdrawalFromModal ? (success, withdrawn) => { setGiftResultText(success ? `Вы успешно вывели ${withdrawn.map((gift) => gift.name).join(', ')} стоимостью ${withdrawn.reduce((sum, gift) => sum + gift.price, 0).toFixed(3)} GRAM` : 'Вывод подарков не удался...'); setModal(success ? 'gift-result-success' : 'gift-result-error'); } : undefined} onSuccess={(ids) => {
       return mutate('withdraw', { ids }).then(() => {
       setSelectedGiftIds((current) => current.filter((id) => !ids.includes(id)));

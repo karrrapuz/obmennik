@@ -23,6 +23,7 @@ import successIcon from '../../assets/yspeh_galoshka.svg';
 import errorIcon from '../../assets/oshibka_krestik.svg';
 import processingIcon from '../../../DepositPage/assets/obrabotka-zaloga.svg';
 import './ProfileModal.css';
+import SlideNotice from '../../../../components/feedback/SlideNotice/SlideNotice';
 import { useModalScrollLock } from '../../../../hooks/useModalScrollLock';
 
 export type ProfileModalKind =
@@ -61,6 +62,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const [walletInput, setWalletInput] = useState('');
   const [selectedGiftIds, setSelectedGiftIds] = useState<number[]>([]);
   const [resultText, setResultText] = useState('');
+  const [paymentNotice, setPaymentNotice] = useState<{ success: boolean; message: string } | null>(null);
   const [pending, setPending] = useState(false);
   const [resultReturn, setResultReturn] = useState<ProfileModalKind | null>(null);
   const pendingRef = useRef(false);
@@ -77,6 +79,12 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   }, []);
   const [walletReturn, setWalletReturn] = useState<ProfileModalKind>('deposit-choice');
   useModalScrollLock(mounted);
+
+  useEffect(() => {
+    if (!paymentNotice) return;
+    const timer = window.setTimeout(() => setPaymentNotice(null), 6500);
+    return () => clearTimeout(timer);
+  }, [paymentNotice]);
 
   useEffect(() => {
     displayGeneration.current++;
@@ -154,6 +162,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     const outcome = operate(withdrawal ? 'withdraw' : 'topup', withdrawal ? { amount_nano: amountNano.toString(), destination: wallet } : { amount_nano: amountNano.toString(), source: submittedKind === 'crypto-amount' ? 'cryptobot' : 'wallet' })
       .then(() => ({ success: true, message: `${withdrawal ? 'Вывод' : 'Пополнение'}: ${formatNano(amountNano)} GRAM` }),
         () => ({ success: false, message: 'Не удалось подтвердить операцию. Повторите попытку.' }));
+    let shownInSheet = false;
     try {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       await hidePaymentSheet(sameScreen);
@@ -168,8 +177,18 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
       const result = await outcome;
       if (!sameScreen()) return;
       await hidePaymentSheet(sameScreen);
-      if (sameScreen()) complete(result.message, result.success, submittedKind);
+      if (sameScreen()) {
+        complete(result.message, result.success, submittedKind);
+        shownInSheet = true;
+      }
     } finally {
+      if (!shownInSheet && alive.current) {
+        const result = await outcome;
+        if (alive.current) {
+          telegramHaptic(result.success ? 'success' : 'error');
+          setPaymentNotice(result);
+        }
+      }
       pendingRef.current = false;
       if (alive.current) setPending(false);
     }
@@ -183,7 +202,14 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
     else setKind(null);
   };
 
-  if (!mounted) return null;
+  const notice = createPortal(
+    <SlideNotice show={paymentNotice !== null}>
+      <output className="profile-payment-notice" data-success={paymentNotice?.success} role="status">
+        {paymentNotice?.message}
+      </output>
+    </SlideNotice>, document.body,
+  );
+  if (!mounted) return notice;
 
   const title = kind === 'deposit-choice' ? 'Пополнение'
     : kind === 'payment-processing' ? 'Обработка…'
@@ -199,7 +225,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
   const short = kind === 'wallet-warning' || kind === 'wallet-connect';
   const selectedGifts = gifts.filter((gift) => selectedGiftIds.includes(gift.id));
 
-  return createPortal(<div className="profile-modal-layer" data-visible={visible} onTransitionEnd={(event) => {
+  return <>{notice}{createPortal(<div className="profile-modal-layer" data-visible={visible} onTransitionEnd={(event) => {
     if (event.target === event.currentTarget && !requestedKind && event.propertyName === 'background-color') setMounted(false);
   }}>
     <button className="profile-modal-scrim" type="button" aria-label="Закрыть окно" onClick={() => setKind(null)} />
@@ -273,7 +299,7 @@ function ProfileModal({ kind: requestedKind, setKind, wallet, setWallet, gifts, 
       {(kind === 'result-success' || kind === 'result-error') && <div className="profile-modal__result"><span className="profile-modal__result-icon"><img src={kind === 'result-success' ? successIcon : errorIcon} alt="" /></span><p>{resultText}</p><button type="button" onClick={() => { if (kind === 'result-success') setAmount(''); setKind(resultReturn); }}>{resultReturn ? kind === 'result-error' ? 'Попробовать снова' : 'Вернуться назад' : 'Готово'}</button></div>}
       </div>
     </section>
-  </div>, document.body);
+  </div>, document.body)}</>;
 }
 
 export default ProfileModal;

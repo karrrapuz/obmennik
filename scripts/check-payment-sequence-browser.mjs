@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 
 const browser = await chromium.launch({ executablePath: process.env.GIFT_BROWSER_EXECUTABLE });
 try {
-  for (const scenario of ['success', 'error', 'closed']) {
+  for (const scenario of ['success', 'error', 'closed', 'closed-error']) {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await page.route('https://telegram.org/**', route => route.fulfill({ body: '' }));
     await page.route('https://fonts.googleapis.com/**', route => route.abort());
@@ -35,14 +35,18 @@ try {
           return write.call(this, key, value);
         };
       }
-    }, scenario === 'error');
+    }, scenario.endsWith('error'));
     await page.locator('.profile-modal button[type=submit]').click();
     await page.locator('.profile-modal-layer[data-visible="false"]').waitFor({ state: 'attached' });
     await page.locator('.profile-modal-layer[data-visible="true"] .profile-modal[data-kind="payment-processing"]').waitFor();
-    if (scenario === 'closed') {
+    if (scenario.startsWith('closed')) {
       await page.locator('.profile-modal__close').click();
-      await page.waitForTimeout(2300);
-      assert.equal(await page.locator('.profile-modal').count(), 0, 'Closing processing must not reopen a result');
+      const notice = page.locator('.profile-payment-notice[data-shown="true"]');
+      await notice.waitFor();
+      assert.equal(await notice.getAttribute('data-success'), String(scenario === 'closed'));
+      await page.locator('.profile-modal').waitFor({ state: 'detached' });
+      const balance = await page.evaluate(() => JSON.parse(localStorage.getItem('demo-wallet-v1')).balance_nano);
+      assert.equal(balance, scenario === 'closed' ? '1000000000' : '0');
       await page.close();
       continue;
     }
@@ -63,5 +67,5 @@ try {
     assert.equal(balance, scenario === 'success' ? '1000000000' : '0');
     await page.close();
   }
-  console.log('Payment form exits fully; processing lasts >=1s; real success/error result enters separately; closed UI stays closed: OK');
+  console.log('Payment transitions and success/error notices after closing: OK');
 } finally { await browser.close(); }

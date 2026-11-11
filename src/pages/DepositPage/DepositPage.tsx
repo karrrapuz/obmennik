@@ -42,7 +42,13 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
   const [paymentIds, setPaymentIds] = useState<number[] | null>(null);
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState(false);
-  const items = tab === 'inventory' ? mergeMarketPrices(state.inventory, marketPrices, telegramCatalog).map(item => isUnpricedGift(item) ? { ...item, pledgeSupported: false } : item) : state.pledges.map((item) => item.gift);
+  const query = search.trim().toLowerCase();
+  const matchingPledges = state.pledges.filter(({ gift }) => `${gift.name} ${gift.model}`.toLowerCase().includes(query));
+  const items = tab === 'inventory' ? mergeMarketPrices(state.inventory, marketPrices, telegramCatalog).map(item => isUnpricedGift(item) ? { ...item, pledgeSupported: false } : item) : matchingPledges.map((item) => item.gift);
+  const listCollapsed = tab === 'pledges' && collapsed && items.length > 0;
+  const extendableIds = tab === 'pledges' && !listCollapsed
+    ? matchingPledges.filter(({ gift, status, legacy }) => status === 'active' && !legacy && selected.includes(gift.id)).map(({ gift }) => gift.id)
+    : [];
   return <main className="deposit-page" aria-label="Залог">
     <PageHeader balance={balance} onNavigateProfile={onNavigateProfile} onTopUp={onTopUp} />
     <section className="pledge-banner">
@@ -57,9 +63,9 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
     </section>
     <div className="pledge-tabs" role="tablist" aria-label="Подарки" data-active={tab}><span aria-hidden="true" /><button role="tab" aria-selected={tab === 'inventory'} onClick={() => setTab('inventory')}>Инвентарь</button><button role="tab" aria-selected={tab === 'pledges'} onClick={() => setTab('pledges')}>Залог{state.pledges.length > 0 && <small className="pledge-tab-count">{state.pledges.length}</small>}</button></div>
     <section className="pledge-catalog" role="tabpanel" aria-label={tab === 'inventory' ? 'Инвентарь' : 'Залоги'}>
-      {tab === 'pledges' && <div className="pledge-search"><input aria-label="Поиск залогов" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} /><button aria-label={collapsed ? 'Раскрыть подарки' : 'Свернуть подарки'} aria-expanded={!collapsed} disabled={!items.length} onClick={() => setCollapsed(!collapsed)}><img src={!items.length ? giftExpandIcon : giftExpandActiveIcon} alt="" /></button></div>}
-      <div className="pledge-collapse" data-collapsed={tab === 'pledges' && collapsed} inert={tab === 'pledges' && collapsed}><div>
-      {items.length ? <div className="pledge-grid">{items.filter((item) => tab === 'inventory' || `${item.name} ${item.model}`.toLowerCase().includes(search.toLowerCase())).map((item) => {
+      {tab === 'pledges' && <div className="pledge-search"><input aria-label="Поиск залогов" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} /><button aria-label={listCollapsed ? 'Раскрыть подарки' : 'Свернуть подарки'} aria-expanded={!listCollapsed} disabled={!items.length} onClick={() => setCollapsed(!collapsed)}><img src={!items.length ? giftExpandIcon : giftExpandActiveIcon} alt="" /></button></div>}
+      <div className="pledge-collapse" data-collapsed={listCollapsed} inert={listCollapsed}><div>
+      {items.length ? <div className="pledge-grid">{items.map((item) => {
         const loan = state.pledges.find((p) => p.gift.id === item.id);
         return <article className="pledge-card" data-loan={tab === 'pledges'} data-selected={selected.includes(item.id)} key={item.id}>
           <button className="pledge-card__open" disabled={tab === 'inventory' && item.pledgeSupported === false} aria-label={item.pledgeSupported === false ? `${item.name}: не поддерживается для залога` : `Открыть ${item.name}`} onClick={() => { setGift(item); setOpen(true); }}><div className="pledge-card__art"><GiftArtwork gift={item} playKey={selected.includes(item.id) ? 1 : 0} />{tab === 'inventory' && item.pledgeSupported === false && <div className="pledge-card__locked"><img src={LockKeyhole} alt="" /><span>Не поддерживается</span></div>}<div className="pledge-card__caption"><strong>{item.name}</strong><small>{item.modelName ?? 'Модель'}&nbsp;&nbsp;{item.model}</small></div></div></button>
@@ -69,11 +75,11 @@ export default function DepositPage({ onNavigateProfile, onTopUp, balance }: { o
             <div className="pledge-card__due"><span><img src={timeIcon} alt="" /></span><div><small>{loan?.status === 'processing' ? 'Обработка...' : 'Дата выкупа до'}</small><strong>{loan && new Date(loan.dueAt).toLocaleDateString('ru-RU')} ({loan && new Date(loan.dueAt).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})})</strong></div></div>
           </>}
         </article>;
-      })}</div> : tab === 'inventory' ? <div className="pledge-empty pledge-empty--inventory"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button onClick={openGiftRelayer}>GiftRelayer</button></div> : <div className="pledge-empty-loans"><img className="pledge-empty-loans__cards" src={giftBlur} alt="" /><p>У вас нет подарков в залоге</p></div>}
+      })}</div> : tab === 'inventory' ? <div className="pledge-empty pledge-empty--inventory"><strong>В вашем инвентаре пусто!</strong><p>Отправьте подарок нам что бы это исправить!</p><button onClick={openGiftRelayer}>GiftRelayer</button></div> : <div className="pledge-empty-loans"><img className="pledge-empty-loans__cards" src={giftBlur} alt="" /><p>{state.pledges.length ? 'Ничего не найдено' : 'У вас нет подарков в залоге'}</p></div>}
       </div></div>
       {tab === 'pledges' && <section className="pledge-supported"><h2>Поддерживаемые подарки</h2>{supportedGifts.map((item) => <button key={item.collectionId} onClick={() => setTab('inventory')}><span className="pledge-supported__icon"><img src={giftPoster(item)} alt="" /></span><span className="pledge-supported__text"><strong>{item.name}</strong><small>Получите: <span>{item.amount} GRAM</span> / 14 дней</small></span></button>)}</section>}
     </section>
-    <SlideNotice show={tab === 'pledges' && selected.some((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy))}><button className="pledge-extend-button" onClick={() => setPaymentIds(selected.filter((id) => state.pledges.some((p) => p.gift.id === id && p.status === 'active' && !p.legacy)))}>Продлить</button></SlideNotice>
+    <SlideNotice show={extendableIds.length > 0}><button className="pledge-extend-button" type="button" onClick={() => { if (extendableIds.length) setPaymentIds(extendableIds); }}>Продлить</button></SlideNotice>
     {paymentIds && <PledgePayment ids={paymentIds} onClose={() => { setPaymentIds(null); setSelected([]); }} onTopUp={onNavigateProfile} />}
     <PledgeModal gift={gift} open={open} onClose={() => setOpen(false)} pledge={state.pledges.find((item) => item.gift.id === gift?.id)} onCreated={() => setTab('pledges')} />
   </main>;

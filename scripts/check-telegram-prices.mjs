@@ -26,6 +26,27 @@ function load(filename) {
 const { parseTelegramPrices, hasMarketPrice, marketPriceLabel, mergeMarketPrices, browsingPriceNano, compareBrowsingPrices, comparePriceAvailability, matchesBrowsingPrice } = load(path.join(root, 'src/services/telegramPrices.ts'));
 const { isUnpricedGift } = load(path.join(root, 'src/pages/ExchangePage/data/gifts.ts'));
 const now = 1800000000;
+const { compareExchangeGifts } = load(path.join(root, 'src/pages/ExchangePage/services/giftSort.ts'));
+const sortableGifts = [
+  { id: 1, price: '2.000', modelRarity: '10%', telegramSlug: 'Featured-1' },
+  { id: 2, price: '1.000', modelRarity: '2,5%' },
+  { id: 3, price: '3.000' },
+  { id: 4, price: '4.000', modelRarity: '2.5%' },
+  { id: 5, price: '5.000', modelRarity: '1% invalid' },
+];
+const sortedIds = (section, ...options) => [...sortableGifts]
+  .sort((a, b) => compareExchangeGifts(a, b, section, options, now))
+  .map(gift => gift.id);
+for (const section of ['inventory', 'exchange']) {
+  assert.deepEqual(sortedIds(section, 'rarity-asc'), [2, 4, 1, 3, 5]);
+  assert.deepEqual(sortedIds(section, 'rarity-desc'), [1, 2, 4, 3, 5]);
+  assert.deepEqual(sortedIds(section, 'rarity-asc', 'newest'), [4, 2, 1, 5, 3]);
+  assert.deepEqual(sortedIds(section, 'price-asc'), [2, 1, 3, 4, 5]);
+  assert.deepEqual(sortedIds(section, 'newest'), [5, 4, 3, 2, 1]);
+}
+assert(compareExchangeGifts(sortableGifts[0], sortableGifts[1], 'exchange', [], now) < 0);
+assert.equal(compareExchangeGifts(sortableGifts[0], sortableGifts[1], 'inventory', [], now), 0);
+console.log('Exchange and inventory model rarity, sort priority and default-only featured pinning: OK');
 const fixture = () => ({ schema: 1, source: 'telegram-resale', kind: 'lowest_observed_listing', capturedAt: now - 600, validUntil: now - 600 + 86400, complete: true, collections: [{ telegramId: '18446744073709551615', catalogId: 100001, checkedAt: now - 1, status: 'available', floorNano: '5140000000', sampleCount: 200, hasMore: true }] });
 const identities = { collections: [{ telegramId: '18446744073709551615', catalogId: 100001 }] };
 const imported = { id: 1793443491986001, collectionId: identities.collections[0].telegramId, name: 'Collection', model: '—', image: '/original.webp', symbol: { name: 'Original' }, price: '0.000', telegramCatalog: true, priceSource: 'unpriced', tradeSupported: false, pledgeSupported: false };
