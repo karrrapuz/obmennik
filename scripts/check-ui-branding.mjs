@@ -29,5 +29,5 @@ const modal = fs.readFileSync('src/pages/ProfilePage/components/ProfileModal/Pro
 assert(!modal.includes("mutate('deposit')"), 'Opening the relayer must not grant a fake gift');
 assert(modal.includes('profile-modal__content'));
 assert(fs.readFileSync('src/wallet/wallet.ts', 'utf8').includes("asset: 'DEMO_TON'"), 'Display rename must preserve API identifiers');
-assert(fs.readFileSync('src/assets/gram.svg', 'utf8').includes('#30A1F5'));
+assert.match(fs.readFileSync('src/assets/gram.svg', 'utf8'), /fill="#31A1F5"/i);
 console.log('GRAM display preserves API units; relayer opens only smekz without granting gifts; haptics safe: OK');

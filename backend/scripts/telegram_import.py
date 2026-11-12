@@ -245,6 +245,9 @@ async def export(client, inspect_only=False, metadata_only=False, base_only=Fals
 async def run(args):
     from telethon import TelegramClient
     credentials = load_credentials(CREDENTIALS)
+    from scripts.telegram_session_permissions import protect_session_storage
+
+    protect_session_storage(SESSION)
     client = TelegramClient(str(SESSION), credentials.api_id, credentials.api_hash, receive_updates=False,
         request_retries=2, connection_retries=1, auto_reconnect=False, flood_sleep_threshold=0,
         raise_last_call_error=True, timeout=20, device_model='GiftMoney Local Catalog Reader')

@@ -6,8 +6,12 @@ import ts from 'typescript';
 const manifest = JSON.parse(fs.readFileSync('src/services/gift-media.json', 'utf8'));
 assert.deepEqual(manifest, JSON.parse(fs.readFileSync('public/gifts/vector/manifest.json', 'utf8')));
 assert.equal(manifest.entries.length, 30);
-const cards = [...JSON.parse(fs.readFileSync('backend/data/catalog-sample.json')), ...JSON.parse(fs.readFileSync('backend/data/catalog-showcase-extra.json'))];
-const source = fs.readFileSync('src/services/giftMedia.ts', 'utf8').replace("import manifest from './gift-media.json';", `const manifest = ${JSON.stringify(manifest)};`);
+const relayerMedia = JSON.parse(fs.readFileSync('src/services/relayer-media.json', 'utf8'));
+const featured = JSON.parse(fs.readFileSync('src/pages/ExchangePage/data/relayer-preview.json', 'utf8'));
+const cards = [...JSON.parse(fs.readFileSync('backend/data/catalog-sample.json')), ...JSON.parse(fs.readFileSync('backend/data/catalog-showcase-extra.json')), featured];
+const source = fs.readFileSync('src/services/giftMedia.ts', 'utf8')
+  .replace("import manifest from './gift-media.json';", `const manifest = ${JSON.stringify(manifest)};`)
+  .replace("import relayerMedia from './relayer-media.json';", `const relayerMedia = ${JSON.stringify(relayerMedia)};`);
 const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
 const { getGiftMedia, giftPoster, upgradeGiftImage } = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'));
 for (const card of cards) {
@@ -28,4 +32,4 @@ for (const card of cards) {
   assert(data.assets.every(asset => !('p' in asset)));
 }
 assert.equal(giftPoster({ image: '/unknown.webp', collectionId: 'unknown', modelName: 'unknown' }), '/unknown.webp');
-console.log('30 exact model mappings, pure SVG posters, bounded original TGS files, owned-ID independence and safe fallback: OK');
+console.log('31 exact model mappings, pure SVG posters, bounded original TGS files, owned-ID independence and safe fallback: OK');

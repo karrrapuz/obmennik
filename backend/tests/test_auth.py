@@ -9,6 +9,7 @@ from urllib.parse import parse_qsl, urlencode
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import TimeoutError as DatabaseTimeout
 
 from app.config import Settings
 from app.main import create_app
@@ -55,6 +56,17 @@ def settings(tmp_path):
 def client(settings):
     with TestClient(create_app(settings)) as test_client:
         yield test_client
+
+
+def test_database_checkout_timeout_is_retryable(client, monkeypatch):
+    def checkout_timeout():
+        raise DatabaseTimeout("internal pool details")
+
+    monkeypatch.setattr(client.app.state.engine.pool, "connect", checkout_timeout)
+    response = client.get("/api/health")
+    assert response.status_code == 503
+    assert response.headers["Retry-After"] == "3"
+    assert "internal pool details" not in response.text
 
 
 def assert_no_secrets(response, init_data=None, access_token=None):

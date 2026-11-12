@@ -201,7 +201,9 @@ def main(argv=None):
     previous_logging = logging.root.manager.disable
     logging.disable(logging.CRITICAL)
     try:
-        SESSION.parent.mkdir(parents=True, exist_ok=True)
+        from scripts.telegram_session_permissions import protect_session_storage
+
+        protect_session_storage(SESSION)
         client = TelegramClient(str(SESSION), credentials.api_id, credentials.api_hash,
             receive_updates=args.command == 'qr-login', request_retries=2, connection_retries=1, auto_reconnect=False,
             raise_last_call_error=True, timeout=15, flood_sleep_threshold=0,

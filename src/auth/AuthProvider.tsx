@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getTelegramInitData, isTelegramContext } from '../services/telegram';
 
 export type User = {
@@ -52,27 +52,59 @@ async function authenticate(): Promise<Session> {
   return { mode: 'telegram', accessToken: result.access_token, user };
 }
 
-const AuthContext = createContext<{ state: AuthState; retry: () => void } | null>(null);
+const AuthContext = createContext<{
+  state: AuthState;
+  retry: () => void;
+  isCurrentSession: () => boolean;
+  recoverExpiredSession: () => void;
+  confirmSessionReady: () => void;
+} | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' });
+  const currentSession = useRef<AuthState | null>(null);
+  const recovering = useRef(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
     // Share the same promise during StrictMode's effect replay, including failures.
     initialSession ??= authenticate();
     initialSession.then(
-      (session) => { if (active) setState({ status: 'ready', ...session }); },
+      (session) => {
+        if (!active) return;
+        const next = { status: 'ready', ...session } as const;
+        currentSession.current = next;
+        setState(next);
+      },
       () => { if (active) setState({ status: 'error' }); },
     );
-    return () => { active = false; };
+    return () => { active = false; currentSession.current = null; };
   }, [attempt]);
-  const retry = useCallback(() => {
+  const restart = useCallback(() => {
+    currentSession.current = null;
     initialSession = undefined;
     setState({ status: 'loading' });
     setAttempt((value) => value + 1);
   }, []);
-  const value = useMemo(() => ({ state, retry }), [state, retry]);
+  const retry = useCallback(() => {
+    recovering.current = false;
+    restart();
+  }, [restart]);
+  const isCurrentSession = useCallback(() => currentSession.current === state, [state]);
+  const recoverExpiredSession = useCallback(() => {
+    if (state.status !== 'ready' || state.mode !== 'telegram' || !isCurrentSession()) return;
+    if (recovering.current) {
+      currentSession.current = null;
+      setState({ status: 'error' });
+      return;
+    }
+    recovering.current = true;
+    restart();
+  }, [state, isCurrentSession, restart]);
+  const confirmSessionReady = useCallback(() => {
+    if (isCurrentSession()) recovering.current = false;
+  }, [isCurrentSession]);
+  const value = useMemo(() => ({ state, retry, isCurrentSession, recoverExpiredSession, confirmSessionReady }), [state, retry, isCurrentSession, recoverExpiredSession, confirmSessionReady]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

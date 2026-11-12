@@ -41,7 +41,10 @@ try {
     document.body.append(host);
     window.bootTestRoot = createRoot(host);
     function Reports({ loading, error }) {
-      for (const key of ['auth', 'inventory', 'wallet', 'loans']) useBootReport(key, loading, error, () => {});
+      useBootReport('auth', loading, error, () => {});
+      useBootReport('inventory', loading, error, () => {});
+      useBootReport('wallet', loading, error, () => {});
+      useBootReport('loans', loading, error, () => {});
       return React.createElement(BootContent, null, React.createElement('div', { id: 'boot-ready-test' }, 'ready'));
     }
     window.renderBootTest = (loading, error = false, key = 'normal') => window.bootTestRoot.render(React.createElement(BootProvider, { key }, React.createElement(Reports, { loading, error })));

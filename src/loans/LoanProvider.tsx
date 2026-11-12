@@ -4,8 +4,9 @@ import { useBootReport } from '../boot/BootProvider';
 import { parseSnapshot, useInventory, type Snapshot } from '../inventory/InventoryProvider';
 import { useWallet } from '../wallet/WalletProvider';
 import { displayTon, parseWallet, type WalletSnapshot } from '../wallet/wallet';
-import { pledgeStore, pledgeTerms, type Pledge, type Quote } from '../pages/DepositPage/services/pledgeStore';
+import { guestLoanWalletEvent, pledgeStore, pledgeTerms, type Pledge, type Quote } from '../pages/DepositPage/services/pledgeStore';
 import { createRevisionGate, parseCombinedRevision } from '../services/snapshotRevision';
+import { isConfirmedMutationRejection, mutationKey, mutationPayload } from '../services/mutationKeys';
 import { presentationOwned } from '../inventory/showcase';
 
 type Term = { weeks: 1 | 2; principal: number; repayment: number };
@@ -17,11 +18,12 @@ const nano = (value: unknown): value is string => typeof value === 'string' && /
 export function useLoanTerms() { return useContext(Terms); }
 
 export function LoanProvider({ children }: { children: ReactNode }) {
-  const { state } = useAuth();
+  const { state, isCurrentSession, recoverExpiredSession } = useAuth();
   const { applySnapshot: applyInventory, getRevision: inventoryRevision, revision: inventoryStateRevision, inventory, pledged } = useInventory();
-  const { applySnapshot: applyWallet, getRevision: walletRevision, wallet } = useWallet();
+  const { applySnapshot: applyWallet, getRevision: walletRevision, reload: reloadWallet, wallet } = useWallet();
   const demo = state.status === 'ready' && state.mode === 'demo';
   const token = state.status === 'ready' ? state.accessToken : null;
+  const userId = state.status === 'ready' ? state.user.id : null;
   const [terms, setTerms] = useState<readonly Term[]>(demo ? pledgeTerms : []);
   const [loading, setLoading] = useState(!demo);
   const [error, setError] = useState(false);
@@ -29,20 +31,20 @@ export function LoanProvider({ children }: { children: ReactNode }) {
   const [revision] = useState(createRevisionGate);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const refreshPending = useRef<Promise<void> | null>(null);
-  const keys = useRef(new Map<string, string>());
-  const request = useCallback(async (path: string, body?: Record<string, unknown>, key?: string) => {
-    if (!token || demo) throw new Error('Telegram session required');
+  const request = useCallback(async (path: string, body?: string, receipt?: ReturnType<typeof mutationKey>) => {
+    if (!alive.current || !isCurrentSession() || !token || demo) throw new Error('Telegram session required');
     const response = await fetch(`${base}/api/loans${path}`, {
       method: body ? 'POST' : 'GET',
-      headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}), ...(key ? { 'Idempotency-Key': key } : {}) },
-      body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(90000),
+      headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}), ...(receipt ? { 'Idempotency-Key': receipt.key } : {}) },
+      body, signal: AbortSignal.timeout(90000),
     });
     if (!response.ok) {
-      if (key && response.status < 500 && response.status !== 408) keys.current.forEach((value, signature) => { if (value === key) keys.current.delete(signature); });
+      if (response.status === 401) recoverExpiredSession();
+      if (isConfirmedMutationRejection(response.status)) receipt?.settle();
       throw new Error(response.status === 401 ? 'Сессия истекла. Повторите вход.' : 'Не удалось выполнить операцию. Повторите попытку.');
     }
     return response.json();
-  }, [demo, token]);
+  }, [demo, isCurrentSession, recoverExpiredSession, token]);
   const apply = useCallback((raw: Combined) => {
     parseCombinedRevision(raw?.revision, raw?.wallet?.revision, raw?.inventory?.revision);
     const nextWallet = parseWallet(raw.wallet);
@@ -56,14 +58,14 @@ export function LoanProvider({ children }: { children: ReactNode }) {
       if (!gift) throw new Error('Loan gift missing');
       return { id: loan.id, legacy: loan.legacy, gift, weeks: loan.weeks, principal: displayTon(loan.principal_nano), repayment: displayTon(loan.repayment_nano), interest: displayTon((BigInt(loan.repayment_nano) - BigInt(loan.principal_nano)).toString()), dueAt: loan.due_at * 1000, autopay: loan.autopay, status: 'active' };
     });
-    if (!alive.current || raw.revision < Math.max(revision.current(), walletRevision(), inventoryRevision())) return false;
+    if (!alive.current || !isCurrentSession() || raw.revision < Math.max(revision.current(), walletRevision(), inventoryRevision())) return false;
     revision.accept(raw.revision);
     applyWallet(nextWallet); applyInventory(nextInventory);
     pledgeStore.applyServer({ inventory: presentationOwned(nextInventory.inventory), pledges: next, balance: displayTon(nextWallet.balance_nano) });
     setTerms(raw.terms.map((term) => ({ weeks: term.weeks, principal: displayTon(term.principal_nano), repayment: displayTon(term.repayment_nano) })));
     setLoading(false); setError(false);
     return true;
-  }, [applyInventory, applyWallet, inventoryRevision, walletRevision, revision]);
+  }, [applyInventory, applyWallet, inventoryRevision, isCurrentSession, walletRevision, revision]);
   const reconcile = useCallback(async () => {
     // A replayed idempotency response can predate a newer read or operation.
     for (let attempt = 0; attempt < 3 && alive.current; attempt++) {
@@ -86,13 +88,27 @@ export function LoanProvider({ children }: { children: ReactNode }) {
     if (demo) { pledgeStore.useDemo(); setLoading(false); return () => { alive.current = false; }; }
     const disconnect = pledgeStore.connectServer({
       mutate: (action, body) => enqueue(async () => {
-        const signature = `${action}:${JSON.stringify(body)}`;
-        const key = keys.current.get(signature) ?? crypto.randomUUID(); keys.current.set(signature, key);
-        try { const result = await request(`/${action}`, body, key); if (!apply(result)) await reconcile(); keys.current.delete(signature); return true; }
-        catch (cause) { try { await reconcile(); } catch { /* Keep the last confirmed snapshot on network failure. */ } throw cause; }
+        if (!alive.current || !isCurrentSession() || userId === null) throw new Error('Telegram session required');
+        const payload = mutationPayload(action === 'extend' && Array.isArray(body.gift_ids)
+          ? { ...body, gift_ids: [...body.gift_ids].sort((a, b) => a - b) }
+          : body);
+        const receipt = mutationKey(userId, `loans:${action}`, payload);
+        try {
+          const applied = apply(await request(`/${action}`, payload, receipt));
+          if (!alive.current || !isCurrentSession()) throw new Error('Telegram session changed');
+          if (!applied) await reconcile();
+          if (!alive.current || !isCurrentSession()) throw new Error('Telegram session changed');
+          receipt.settle();
+          return true;
+        } catch (cause) {
+          if (alive.current && isCurrentSession()) {
+            try { await reconcile(); } catch { /* Keep the last confirmed snapshot on network failure. */ }
+          }
+          throw cause;
+        }
       }),
       quote: async (ids): Promise<Quote> => {
-        const result = await request('/quote', { gift_ids: ids });
+        const result = await request('/quote', JSON.stringify({ gift_ids: ids }));
         if (![result.interest_nano, result.fee_nano, result.total_nano].every(nano)) throw new Error('Invalid quote');
         return { interest: displayTon(result.interest_nano), fee: displayTon(result.fee_nano), total: displayTon(result.total_nano) };
       },
@@ -101,11 +117,17 @@ export function LoanProvider({ children }: { children: ReactNode }) {
     const refresh = () => { void reload(); };
     window.addEventListener('focus', refresh);
     return () => { alive.current = false; disconnect(); window.removeEventListener('focus', refresh); };
-  }, [demo, enqueue, apply, reload, request, reconcile]);
+  }, [demo, enqueue, apply, isCurrentSession, reload, request, reconcile, userId]);
+  useEffect(() => {
+    if (!demo) return;
+    const refresh = () => { void reloadWallet().catch(() => {}); };
+    window.addEventListener(guestLoanWalletEvent, refresh);
+    return () => window.removeEventListener(guestLoanWalletEvent, refresh);
+  }, [demo, reloadWallet]);
   useEffect(() => {
     if (!demo && !loading && Math.max(wallet.revision, inventoryStateRevision) > revision.current()) void reload();
   }, [demo, loading, wallet.revision, inventoryStateRevision, revision, reload]);
-  useEffect(() => { if (!demo && !loading) pledgeStore.setBalance(displayTon(wallet.balance_nano)); }, [demo, loading, wallet.balance_nano]);
+  useEffect(() => { if (!loading) pledgeStore.setBalance(displayTon(wallet.balance_nano)); }, [loading, wallet.balance_nano]);
   useEffect(() => {
     if (demo || loading) return;
     // Inventory refreshes can update artwork, but never reconstruct server loan terms.

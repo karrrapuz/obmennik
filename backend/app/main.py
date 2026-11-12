@@ -15,6 +15,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import TimeoutError as DatabaseTimeout
 from sqlalchemy.orm import Session
 
 from .config import Settings
@@ -43,8 +44,9 @@ class AuthInput(BaseModel):
 def create_app(settings: Settings):
     gift_provider = create_gift_provider(settings.gift_provider_mode, settings.showcase_mode)
     price_provider = SamplePriceProvider(gift_provider.catalog)
-    engine = create_engine(settings.database_url, pool_pre_ping=True,
-                           connect_args={'check_same_thread': False} if settings.database_url.startswith('sqlite') else {})
+    sqlite = settings.database_url.startswith('sqlite')
+    engine_options = {'connect_args': {'check_same_thread': False}} if sqlite else {'pool_timeout': 3}
+    engine = create_engine(settings.database_url, pool_pre_ping=True, **engine_options)
     if settings.database_url.startswith('sqlite'):
         @event.listens_for(engine, 'connect')
         def foreign_keys(connection, record):
@@ -74,6 +76,11 @@ def create_app(settings: Settings):
             engine.dispose()
 
     app = FastAPI(title='GiftMoney API', lifespan=lifespan)
+    @app.exception_handler(DatabaseTimeout)
+    async def database_busy(_request, _exc):
+        return JSONResponse(status_code=503, content={'detail': 'Database busy, retry shortly'},
+                            headers={'Retry-After': '3', 'Cache-Control': 'no-store'})
+
     app.state.engine = engine
     app.state.price_provider = price_provider
     app.add_middleware(RequestBodyLimit)
@@ -159,12 +166,13 @@ def create_app(settings: Settings):
             if existing is None:
                 db.add(LoginSession(token_hash=digest, user_id=identity.id, init_hash=init_hash,
                                     created_at=now, expires_at=auth_date + settings.session_ttl, revoked=0))
+            result = public_user(user)
             db.commit()
         except IntegrityError:
             db.rollback()
             # Concurrent login of the same launch/user; retry safely on client.
             raise HTTPException(409, 'Login in progress, retry') from None
-        return {'access_token': access_token, 'token_type': 'bearer', 'user': public_user(user)}
+        return {'access_token': access_token, 'token_type': 'bearer', 'user': result}
 
     @app.get('/api/me')
     def me(session=Depends(current_session), db: Session = Depends(database)):

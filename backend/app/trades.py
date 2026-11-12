@@ -118,8 +118,9 @@ def register_trade_routes(app, database, current_session, provider: GiftProvider
                 'offered_nano': str(offer), 'received_nano': str(receive),
                 'wallet_delta_nano': str(delta), 'required_balance_nano': str(max(-delta, 0))})
         db.add(quote)
+        result = public_quote(quote)
         db.commit()
-        return public_quote(quote)
+        return result
 
     @app.get('/api/trades/quotes/{quote_id}')
     def get_quote(quote_id: str, db: Session = Depends(database), session=Depends(current_session)):

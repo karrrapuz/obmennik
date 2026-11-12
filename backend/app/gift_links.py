@@ -11,7 +11,8 @@ from sqlalchemy import BigInteger, ForeignKey, JSON, String, select
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from .models import Base
-from .inventory import ensure_inventory, inventory_snapshot
+from .inventory import catalog_gift, ensure_inventory, owned_gift
+from .inventory_models import InventoryGift
 from .ledger import lock_actor
 
 
@@ -31,14 +32,20 @@ class ShareInput(BaseModel):
 
 
 def register_gift_link_routes(app, database, current_session, provider):
+    templates = {gift['id']: gift for gift in provider.catalog}
+
     @app.post('/api/gifts/share')
     def prepare(body: ShareInput, db: Session = Depends(database), session=Depends(current_session)):
         user_id = lock_actor(db, session)
         provider.require_available()
         ensure_inventory(db, user_id, provider)
-        snapshot = inventory_snapshot(db, user_id, provider)
-        candidates = snapshot['catalog'] if body.source == 'exchange' else snapshot['inventory'] + snapshot['pledged']
-        gift = next((item for item in candidates if item['id'] == body.gift_id), None)
+        if body.source == 'exchange':
+            template = templates.get(body.gift_id)
+            gift = catalog_gift(template, provider) if template is not None else None
+        else:
+            row = db.scalar(select(InventoryGift).where(
+                InventoryGift.id == body.gift_id, InventoryGift.user_id == user_id))
+            gift = owned_gift(row, templates[row.catalog_id]) if row is not None else None
         if gift is None:
             raise HTTPException(404, 'Gift unavailable')
         fingerprint = hashlib.sha256(json.dumps([user_id, body.source, gift], sort_keys=True).encode()).hexdigest()
@@ -50,8 +57,9 @@ def register_gift_link_routes(app, database, current_session, provider):
             db.add(shared)
         elif shared.expires_at <= now:
             shared.expires_at = now + 30 * 86400
+        result = {'share_ref': shared.token, 'expires_at': shared.expires_at}
         db.commit()
-        return {'share_ref': shared.token, 'expires_at': shared.expires_at}
+        return result
 
     @app.get('/api/gifts/shared/{token}')
     def resolve(token: str, db: Session = Depends(database)):

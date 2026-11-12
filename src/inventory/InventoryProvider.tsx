@@ -120,13 +120,29 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       }
     });
   }, [commit, demo, enqueue, reload, token]);
+  const moveGuestPledge = useCallback((action: 'pledge' | 'release', id: number, saveLoan: () => boolean) => {
+    let applied = false;
+    return enqueue(async () => {
+      if (!alive.current) throw new Error('Inventory session changed');
+      const current = readLocal();
+      const next = parseSnapshot(localMutation(current, action, { id }));
+      // Keep the gift move and loan write in the same queue turn; publish only after both succeed.
+      localStorage.setItem(localKey, JSON.stringify(next));
+      try {
+        applied = saveLoan();
+      } finally {
+        if (!applied) localStorage.setItem(localKey, JSON.stringify(current));
+      }
+      if (applied) commit(next);
+    }).then(() => applied);
+  }, [commit, enqueue]);
   useEffect(() => {
     alive.current = true;
     const refresh = () => { void reload().catch(() => {}); }; refresh();
     window.addEventListener('focus', refresh); window.addEventListener('storage', refresh);
-    const disconnect = demo ? pledgeStore.connectInventory((id) => mutate('pledge', { id }), (id) => mutate('release', { id })) : () => {};
+    const disconnect = demo ? pledgeStore.connectInventory((id, save) => moveGuestPledge('pledge', id, save), (id, save) => moveGuestPledge('release', id, save)) : () => {};
     return () => { alive.current = false; window.removeEventListener('focus', refresh); window.removeEventListener('storage', refresh); disconnect(); };
-  }, [demo, mutate, reload]);
+  }, [demo, moveGuestPledge, reload]);
   const applySnapshot = commit;
   useEffect(() => {
     if (showcaseEnabled || !demo || !telegramCatalog || !telegramCatalog.halloweenCatalogIds.length) return;

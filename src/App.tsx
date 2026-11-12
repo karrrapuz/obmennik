@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import AppShell from './components/layout/AppShell/AppShell';
 import HomePage from './pages/HomePage/HomePage';
 import './styles/app.css';
@@ -7,12 +8,18 @@ import { useAuth } from './auth/AuthProvider';
 import { InventoryProvider } from './inventory/InventoryProvider';
 import { WalletProvider } from './wallet/WalletProvider';
 
+function ReadyApp() {
+  const { confirmSessionReady } = useAuth();
+  useEffect(confirmSessionReady, [confirmSessionReady]);
+  return <AppShell><HomePage /></AppShell>;
+}
+
 function Session() {
   const { state, retry } = useAuth();
   useBootReport('auth', state.status === 'loading', state.status === 'error', retry);
   if (state.status !== 'ready') return null;
   return (
-    <InventoryProvider><WalletProvider><LoanProvider><BootContent><AppShell><HomePage /></AppShell></BootContent></LoanProvider></WalletProvider></InventoryProvider>
+    <InventoryProvider><WalletProvider><LoanProvider><BootContent><ReadyApp /></BootContent></LoanProvider></WalletProvider></InventoryProvider>
   );
 }
 

@@ -10,6 +10,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
       - run: node scripts/check-gift-sample.mjs
@@ -24,6 +25,8 @@ jobs:
       - run: node scripts/check-catalog-filters.mjs
       - run: node scripts/check-gift-presentation.mjs
       - run: node scripts/check-wallet.mjs
+      - run: node scripts/check-guest-pledge.mjs
+      - run: node scripts/check-mutation-keys.mjs
       - run: node scripts/check-trade-display.mjs
       - run: node scripts/check-referrals.mjs
       - run: node scripts/check-market-hooks.mjs

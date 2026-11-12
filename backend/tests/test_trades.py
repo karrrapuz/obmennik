@@ -8,6 +8,7 @@ from threading import Barrier
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 
 from app.config import Settings
 from app.ledger import CAP
@@ -57,6 +58,27 @@ def fund(client, amount='1000000000000'):
     return ok(client.post('/api/wallet/demo-topup',
                          json={'amount_nano': amount, 'source': 'wallet'},
                          headers={'Idempotency-Key': 'fund'}))
+
+
+def test_login_and_quote_each_use_one_pool_checkout(settings):
+    app = create_app(settings)
+    checkouts = []
+
+    @event.listens_for(app.state.engine, 'checkout')
+    def checkout(*args):
+        checkouts.append(1)
+
+    with TestClient(app) as client:
+        client.headers.update(bearer(login(client)['access_token']))
+        assert len(checkouts) == 1
+        inventory = ok(client.get('/api/inventory'))
+        checkouts.clear()
+        result = ok(client.post('/api/trades/quote', json={
+            'offered_ids': [inventory['inventory'][0]['id']],
+            'received_ids': [inventory['catalog'][1]['id']],
+        }))
+        assert len(checkouts) == 1
+        assert ok(client.get('/api/trades/quotes/' + result['id'])) == result
 
 
 def test_quote_exact_nano_frozen_and_read_only(client, monkeypatch):

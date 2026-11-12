@@ -16,6 +16,9 @@ from scripts.telegram_prices import ton_amounts
 async def main():
     from telethon import TelegramClient, functions, types
     credentials = load_credentials(CREDENTIALS)
+    from scripts.telegram_session_permissions import protect_session_storage
+
+    protect_session_storage(SESSION)
     client = TelegramClient(str(SESSION), credentials.api_id, credentials.api_hash, receive_updates=False,
         request_retries=0, connection_retries=0, auto_reconnect=False, flood_sleep_threshold=0, timeout=20)
     client.session.save_entities = False

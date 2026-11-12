@@ -1,7 +1,7 @@
 from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
@@ -56,3 +56,33 @@ def test_share_is_exact_read_only_deduplicated_and_survives_removal(settings):
             shared.expires_at = 0
             db.commit()
         assert client.get(f'/api/gifts/shared/{token}').status_code == 404
+
+
+def test_share_queries_only_the_requested_gift_and_does_not_recheckout(settings):
+    app = create_app(settings)
+    with TestClient(app) as client:
+        headers = bearer(login(client)['access_token'])
+        inventory = client.get('/api/inventory', headers=headers).json()
+        checkouts = []
+        gift_queries = []
+
+        @event.listens_for(app.state.engine, 'checkout')
+        def checkout(*args):
+            checkouts.append(1)
+
+        @event.listens_for(app.state.engine, 'before_cursor_execute')
+        def record(conn, cursor, statement, parameters, context, executemany):
+            if 'FROM inventory_gifts' in statement:
+                gift_queries.append(statement)
+
+        for source, original in [('exchange', inventory['catalog'][0]),
+                                 ('inventory', inventory['inventory'][0])]:
+            response = client.post('/api/gifts/share', headers=headers,
+                                   json={'source': source, 'gift_id': original['id']})
+            assert response.status_code == 200, response.text
+        assert len(checkouts) == 2
+        assert len(gift_queries) == 1
+        assert 'WHERE inventory_gifts.id =' in gift_queries[0]
+        assert 'AND inventory_gifts.user_id =' in gift_queries[0]
+        public = client.get('/api/gifts/shared/' + response.json()['share_ref']).json()['gift']
+        assert {key: public[key] for key in original} == original

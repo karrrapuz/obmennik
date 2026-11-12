@@ -16,7 +16,7 @@ export function BootProvider({ children }: { children: ReactNode }) {
 function BootScreen({ entries }: { entries: Record<string, Entry> }) {
   const failed = Object.values(entries).filter((entry) => entry.error);
   if (!failed.length && ['auth', 'inventory', 'wallet', 'loans'].some((key) => !entries[key] || entries[key].loading)) return <LoadingPage />;
-  if (failed.length) return <main className="auth-error"><p role="alert">{entries.auth?.error ? 'Не удалось войти через Telegram.' : 'Не удалось загрузить данные. Повторите попытку.'}</p><button onClick={() => failed.forEach((entry) => entry.retry())}>Повторить</button></main>;
+  if (failed.length) return <main className="auth-error"><p role="alert">{entries.auth?.error ? 'Не удалось войти. Закройте и снова откройте приложение в Telegram или повторите попытку.' : 'Не удалось загрузить данные. Повторите попытку.'}</p><button onClick={() => failed.forEach((entry) => entry.retry())}>Повторить</button></main>;
   return null;
 }
 export function useBootReport(key: string, loading: boolean, error: boolean, retry: () => void) {

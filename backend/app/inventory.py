@@ -6,7 +6,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .inventory_models import InventoryGift, InventoryInit, InventoryReceipt
@@ -16,6 +16,7 @@ from .ledger import lock_actor
 from .grant_models import DemoSeasonalGrant
 
 DEFAULT_GIFT_PROVIDER = create_gift_provider('demo')
+DEMO_DEPOSIT_QUOTA = 100
 
 
 GiftId = Annotated[StrictInt, Field(gt=0)]
@@ -60,19 +61,30 @@ def ensure_inventory(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER
         db.flush()
 
 
+def catalog_gift(gift, provider):
+    gift_id = gift['id']
+    if (gift_id not in provider.showcase_ids if getattr(provider, 'showcase_mode', False)
+            else 21 <= gift_id <= 30 or gift_id == 90001):
+        return None
+    return {**gift, 'blockTradeGift': gift_id == provider.catalog[0]['id'] or gift.get('tradeSupported') is False}
+
+
+def owned_gift(row, template):
+    return {**template, 'id': row.id, 'catalogId': row.catalog_id,
+            'blockTradeGift': template.get('tradeSupported') is False,
+            'pledgeSupported': row.pledge_supported and template.get('pledgeSupported', True)}
+
+
 def inventory_snapshot(db, user_id, provider: GiftProvider = DEFAULT_GIFT_PROVIDER):
     catalog = provider.catalog
     showcase = getattr(provider, 'showcase_mode', False)
     templates = {gift['id']: gift for gift in catalog}
     result = {'revision': db.get(User, user_id).state_revision, 'inventory': [], 'pledged': [], 'catalog': [
-        {**gift, 'blockTradeGift': gift['id'] == catalog[0]['id'] or gift.get('tradeSupported') is False}
-        for gift in catalog if (gift['id'] in provider.showcase_ids if showcase else gift['id'] not in (*range(21, 31), 90001))]}
+        item for gift in catalog if (item := catalog_gift(gift, provider)) is not None]}
     if showcase:
         result['showcase_mode'] = True
     for row in db.scalars(select(InventoryGift).where(InventoryGift.user_id == user_id).order_by(InventoryGift.id)).all():
-        gift = {**templates[row.catalog_id], 'id': row.id, 'catalogId': row.catalog_id,
-                'blockTradeGift': templates[row.catalog_id].get('tradeSupported') is False,
-                'pledgeSupported': row.pledge_supported and templates[row.catalog_id].get('pledgeSupported', True)}
+        gift = owned_gift(row, templates[row.catalog_id])
         result['pledged' if row.pledged else 'inventory'].append(gift)
     return result
 
@@ -107,12 +119,21 @@ def register_inventory_routes(app, database, current_session, provider: GiftProv
         digest = hashlib.sha256(json.dumps(
             {"operation": operation, "payload": body.model_dump()},
             sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-        receipt = db.get(InventoryReceipt, (user_id, key))
-        if receipt is not None:
-            if receipt.payload_hash != digest:
+        previous_digest = db.scalar(select(InventoryReceipt.payload_hash).where(
+            InventoryReceipt.user_id == user_id, InventoryReceipt.key == key))
+        if previous_digest is not None:
+            if previous_digest != digest:
                 raise HTTPException(409, "Idempotency key already used")
             # Idempotent business effect, but always return current canonical state.
-            return snapshot(db, user_id)
+            result = snapshot(db, user_id)
+            db.rollback()
+            return result
+        if operation == "deposit":
+            # The actor lock serializes the quota check with receipt insertion.
+            deposits = db.scalar(select(func.count()).select_from(InventoryReceipt).where(
+                InventoryReceipt.user_id == user_id, InventoryReceipt.payload_hash == digest))
+            if deposits >= DEMO_DEPOSIT_QUOTA:
+                raise HTTPException(429, "Demo deposit quota reached")
         seed(db, user_id)
         if operation == "deposit":
             db.add(InventoryGift(user_id=user_id, catalog_id=provider.deposit_catalog_id(),
@@ -134,7 +155,8 @@ def register_inventory_routes(app, database, current_session, provider: GiftProv
         db.get(User, user_id).state_revision += 1
         db.flush()
         result = snapshot(db, user_id)
-        db.add(InventoryReceipt(user_id=user_id, key=key, payload_hash=digest, result=result))
+        # Keep the legacy non-null column without storing a redundant response.
+        db.add(InventoryReceipt(user_id=user_id, key=key, payload_hash=digest, result={}))
         db.commit()
         return result
 

@@ -2,8 +2,12 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
+from sqlalchemy.orm import Session
 
+from app import inventory
 from app.config import Settings
+from app.inventory_models import InventoryReceipt
 from app.main import create_app
 from test_auth import USER, bearer, login
 
@@ -65,6 +69,50 @@ def test_deposit_receipt_persists_and_conflicts(client, settings):
         reopened.headers.update({"Authorization": client.headers["Authorization"]})
         assert post(reopened, "deposit", {}).json() == later.json()
         assert len(snapshot(reopened)["inventory"]) == 7
+
+
+def test_receipts_skip_snapshot_storage_and_legacy_snapshot_reads(client):
+    engine = client.app.state.engine
+    original = post(client, "deposit", {}, key="compact").json()
+    with Session(engine) as db:
+        receipt = db.get(InventoryReceipt, (USER["id"], "compact"))
+        assert receipt.result == {}
+        receipt.result = original
+        db.commit()
+
+    latest = post(client, "deposit", {}, key="later").json()
+    queries = []
+
+    @event.listens_for(engine, "before_cursor_execute")
+    def record(conn, cursor, statement, parameters, context, executemany):
+        if "FROM inventory_receipts" in statement:
+            queries.append(statement)
+
+    assert post(client, "deposit", {}, key="compact").json() == latest
+    assert len(queries) == 1
+    assert "inventory_receipts.payload_hash" in queries[0]
+    assert "inventory_receipts.result" not in queries[0]
+
+
+def test_demo_deposit_quota_is_per_user_and_replay_still_works(client, monkeypatch):
+    monkeypatch.setattr(inventory, "DEMO_DEPOSIT_QUOTA", 1)
+    first = post(client, "deposit", {}, key="first")
+    assert first.status_code == 200, first.text
+    deposited = first.json()["inventory"][-1]["id"]
+    assert post(client, "withdraw", {"ids": [deposited]}, key="withdraw").status_code == 200
+    before = snapshot(client)
+
+    denied = post(client, "deposit", {}, key="over-quota")
+    assert denied.status_code == 429
+    assert snapshot(client) == before
+    replay = post(client, "deposit", {}, key="first")
+    assert replay.status_code == 200
+    assert replay.json() == before
+    with Session(client.app.state.engine) as db:
+        assert db.get(InventoryReceipt, (USER["id"], "over-quota")) is None
+
+    client.headers.update(bearer(login(client, {**USER, "id": USER["id"] + 1})["access_token"]))
+    assert post(client, "deposit", {}, key="first").status_code == 200
 
 
 def test_actor_ownership_and_per_user_keys(client):

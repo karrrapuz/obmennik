@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
+import './check-mutation-keys.mjs';
 
 const revisionSource = fs.readFileSync('src/services/snapshotRevision.ts', 'utf8');
 const revisionJavascript = ts.transpileModule(revisionSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
